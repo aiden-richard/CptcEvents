@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CptcEventHub.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<Models.ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
