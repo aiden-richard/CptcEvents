@@ -1,6 +1,3 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: .NET
 
 on:
@@ -11,32 +8,34 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: checkout main
-    - uses: actions/checkout@v4
+      # Step 1: Checkout main branch
+      - name: Checkout main
+        uses: actions/checkout@v4
 
-    # Step 2: Install .NET 10 Preview manually
-    # setup-dotnet doesn't automatically include previews yet
-    - name: Install .NET 10 Preview SDK
-      run: |
-        wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
-        chmod +x dotnet-install.sh
-        ./dotnet-install.sh --channel 10.0.100-rc.2.25502.107 --quality preview
-        echo "DOTNET_ROOT=$HOME/.dotnet" >> $GITHUB_ENV
-        echo "$HOME/.dotnet:$HOME/.dotnet/tools" >> $GITHUB_PATH
+      # Step 2: Install .NET 10 Preview manually
+      - name: Install .NET 10 Preview SDK
+        run: |
+          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+          chmod +x dotnet-install.sh
+          ./dotnet-install.sh --version 10.0.100-rc.2.25502.107
+          echo "DOTNET_ROOT=$HOME/.dotnet" >> $GITHUB_ENV
+          echo "$HOME/.dotnet:$HOME/.dotnet/tools" >> $GITHUB_PATH
 
-    # Step 3: Verify .NET
-    - name: Verify .NET version
-      run: dotnet --info
-        
-    - name: Restore dependencies
-      run: dotnet restore
-      
-    - name: Build
-      run: dotnet build --no-restore
-      
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      # Step 3: Verify .NET version
+      - name: Verify .NET version
+        run: dotnet --info
+
+      # Step 4: Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Step 5: Build
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # Step 6: Test
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
