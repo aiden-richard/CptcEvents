@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: checkout main
     - uses: actions/checkout@v4
-    - name: Setup .NET
 
     # Step 2: Install .NET 10 Preview manually
     # setup-dotnet doesn't automatically include previews yet
