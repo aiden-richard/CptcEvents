@@ -9,5 +9,7 @@ namespace CptcEventHub.Data
             : base(options)
         {
         }
+
+        public DbSet<Models.Event> Events { get; set; } = null!;
     }
 }
