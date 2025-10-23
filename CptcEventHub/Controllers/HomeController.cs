@@ -1,12 +1,20 @@
-using System.Diagnostics;
 using CptcEventHub.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
+using CptcEvents.Services;
 
 namespace CptcEventHub.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly IEventService _eventsService;
+
+        public HomeController(IEventService eventsService)
+        {
+            _eventsService = eventsService;
+        }
+
+        public async Task<IActionResult> Index()
         {
             return View();
         }
