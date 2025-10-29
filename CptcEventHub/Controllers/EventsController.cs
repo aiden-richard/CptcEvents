@@ -18,6 +18,23 @@ namespace CptcEvents.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Create(Event newEvent)
+        {
+            if (ModelState.IsValid)
+            {
+                _eventsService.AddEventAsync(newEvent);
+                return RedirectToAction("Index");
+            }
+            return View(newEvent);
+        }
+
         /// <summary>
         /// Retrieves all calendar events and returns them in a format compatible with FullCalendar.
         /// Links, emails, and phone numbers in event descriptions are converted to clickable HTML links.
