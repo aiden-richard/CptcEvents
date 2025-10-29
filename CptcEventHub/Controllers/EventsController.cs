@@ -26,7 +26,7 @@ namespace CptcEvents.Controllers
         /// formatted for the FullCalendar JavaScript library. The returned list will be empty if no events are
         /// found.</remarks>
         /// <returns>A JSON result containing a list of event objects, where each object includes the event title, start and end
-        /// date-times in ISO 8601 format, and a flag indicating whether the event is a PC2 event.</returns>
+        /// date-times in ISO8601 format, and a flag indicating whether the event is a PC2 event.</returns>
         public async Task<IActionResult> GetEvents()
         {
             // Get events from the database
@@ -38,7 +38,7 @@ namespace CptcEvents.Controllers
             // Loop through the events and add them to the list
             foreach (Event e in events)
             {
-                fullCalendarEvents.Add(e.ToFullCalendarEventJson());
+                fullCalendarEvents.Add(e.ToFullCalendarEvent());
             }
 
             return Json(fullCalendarEvents);
