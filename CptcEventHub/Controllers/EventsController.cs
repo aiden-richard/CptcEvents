@@ -36,14 +36,12 @@ namespace CptcEvents.Controllers
         }
 
         /// <summary>
-        /// Retrieves all calendar events and returns them in a format compatible with FullCalendar.
-        /// Links, emails, and phone numbers in event descriptions are converted to clickable HTML links.
+        /// Retrieves all calendar events and returns their data formatted for FullCalendar.
         /// </summary>
         /// <remarks>This method is intended for use by pages that require event data
         /// formatted for the FullCalendar JavaScript library. The returned list will be empty if no events are
         /// found.</remarks>
-        /// <returns>A JSON result containing a list of event objects, where each object includes the event title, start and end
-        /// date-times in ISO8601 format, and a flag indicating whether the event is a PC2 event.</returns>
+        /// <returns>A JSON result containing a list of event objects formatted for FullCalendar.</returns>
         public async Task<IActionResult> GetEvents()
         {
             // Get events from the database
