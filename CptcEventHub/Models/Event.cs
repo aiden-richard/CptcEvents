@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 
 namespace CptcEventHub.Models;
 
@@ -45,7 +44,10 @@ public class Event
     [Url]
     public string? Url { get; set; }
 
-    // Convert DateOnly and TimeOnly to DateTime
+    /// <summary>
+    /// Gets the starting date and time of the event by combining DateOfEvent and StartTime.
+    /// If IsAllDay is true, returns the start of the day (00:00).
+    /// </summary>
     public DateTime StartingDateTime
     {
         get
@@ -54,6 +56,10 @@ public class Event
         }
     }
 
+    /// <summary>
+    /// Gets the ending date and time of the event by combining DateOfEvent and EndTime.
+    /// If IsAllDay is true, returns the end of the day (23:59).
+    /// </summary>
     public DateTime EndingDateTime
     {
         get
@@ -63,32 +69,37 @@ public class Event
     }
 
     /// <summary>
-    /// Builds a FullCalendar-compatible JSON object string representing this event.
-    /// Example output: {"title":"The Title","start":"2018-09-01T09:00:00","end":"2018-09-01T11:00:00","url":"https://..."}
-    /// Uses ISO-8601 datetime format which FullCalendar can parse. If `Url` is not set it will be omitted.
+    /// Builds a FullCalendar-compatible object representing this event.
+    /// Returns a dictionary that will be serialized by MVC into a JSON object
+    /// instead of returning a pre-serialized JSON string (which becomes a JSON string value).
     /// </summary>
-    public string ToFullCalendarEventJson()
+    public object ToFullCalendarEvent()
     {
         var obj = new Dictionary<string, object?>
         {
+            ["id"] = Id,
             ["title"] = Title,
-            ["description"] = Description,
-            // Use sortable ISO format without timezone: yyyy-MM-ddTHH:mm:ss
-            ["start"] = StartingDateTime.ToString("s"),
-            ["end"] = EndingDateTime.ToString("s")
         };
 
-        if (!string.IsNullOrWhiteSpace(Url))
+        if (IsAllDay)
         {
-            obj["url"] = Url;
+            // FullCalendar supports all-day events with a date string
+            obj["start"] = DateOfEvent;
+        }
+        else
+        {
+            // Provide ISO-8601 datetimes for start/end when not all-day
+            obj["start"] = StartingDateTime.ToString("s");
+            obj["end"] = EndingDateTime.ToString("s");
         }
 
-        var options = new JsonSerializerOptions
-        {
-            // Keep property names as provided (already camel-case keys)
-            WriteIndented = false
-        };
+        // Include URL if provided
+        // not included for now until we need it
+        //if (!string.IsNullOrWhiteSpace(Url))
+        //{
+        //    obj["url"] = Url;
+        //}
 
-        return JsonSerializer.Serialize(obj, options);
+        return obj;
     }
 }

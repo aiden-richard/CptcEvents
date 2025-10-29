@@ -1,0 +1,85 @@
+﻿@model Event
+@{
+    ViewData["Title"] = "Create Event";
+}
+
+<h2>Create Event</h2>
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsPublic" class="form-check-input" />
+        <label asp-for="IsPublic" class="form-check-label"></label>
+        <span asp-validation-for="IsPublic" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsAllDay" class="form-check-input" id="IsAllDay" />
+        <label asp-for="IsAllDay" class="form-check-label"></label>
+        <span asp-validation-for="IsAllDay" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="DateOfEvent" class="form-label"></label>
+        <input asp-for="DateOfEvent" class="form-control" type="date" />
+        <span asp-validation-for="DateOfEvent" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 time-fields">
+        <label asp-for="StartTime" class="form-label"></label>
+        <input asp-for="StartTime" class="form-control" type="time" />
+        <span asp-validation-for="StartTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 time-fields">
+        <label asp-for="EndTime" class="form-label"></label>
+        <input asp-for="EndTime" class="form-control" type="time" />
+        <span asp-validation-for="EndTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Url" class="form-label"></label>
+        <input asp-for="Url" class="form-control" type="url" />
+        <span asp-validation-for="Url" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+            const isAllDay = document.getElementById('IsAllDay');
+            const timeFieldWrappers = document.querySelectorAll('.time-fields');
+
+            function updateTimeFields() {
+                const hidden = isAllDay && isAllDay.checked;
+                timeFieldWrappers.forEach(w => {
+                    const inputs = w.querySelectorAll('input');
+                    inputs.forEach(i => i.disabled = hidden);
+                    w.style.display = hidden ? 'none' : '';
+                });
+            }
+
+            if (isAllDay) {
+                isAllDay.addEventListener('change', updateTimeFields);
+                updateTimeFields();
+            }
+        })();
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

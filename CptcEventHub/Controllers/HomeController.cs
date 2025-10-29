@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using CptcEventHub.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace CptcEventHub.Controllers
 {
