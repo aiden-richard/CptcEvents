@@ -25,11 +25,11 @@ namespace CptcEvents.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Event newEvent)
+        public async Task<IActionResult> Create(Event newEvent)
         {
             if (ModelState.IsValid)
             {
-                _eventsService.AddEventAsync(newEvent);
+                await _eventsService.AddEventAsync(newEvent);
                 return RedirectToAction("Index");
             }
             return View(newEvent);
