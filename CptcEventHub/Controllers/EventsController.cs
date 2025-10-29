@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CptcEvents.Controllers
 {
-    public class Events : Controller
+    public class EventsController : Controller
     {
         private readonly IEventService _eventsService;
 
-        public Events(IEventService eventsService)
+        public EventsController(IEventService eventsService)
         {
             _eventsService = eventsService;
         }
