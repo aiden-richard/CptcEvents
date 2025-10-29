@@ -57,7 +57,7 @@ public class Event
     }
 
     /// <summary>
-    /// Gets the ending date and time of the event by ombining DateOfEvent and EndTime.
+    /// Gets the ending date and time of the event by combining DateOfEvent and EndTime.
     /// If IsAllDay is true, returns the end of the day (23:59).
     /// </summary>
     public DateTime EndingDateTime
