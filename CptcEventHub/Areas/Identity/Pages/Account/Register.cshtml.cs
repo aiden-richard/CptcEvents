@@ -81,6 +81,22 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             /// <summary>
+            /// Gets or sets the first name of the person.
+            /// </summary>
+            [Required]
+            [StringLength(50)]
+            [Display(Name = "First Name")]
+            public string FirstName { get; set; }
+
+            /// <summary>
+            /// Gets or sets the last name of the person.
+            /// </summary>
+            [Required]
+            [StringLength(50)]
+            [Display(Name = "Last Name")]
+            public string LastName { get; set; }
+
+            /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
@@ -114,6 +130,10 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
+
+                // Set additional properties
+                user.FirstName = Input.FirstName;
+                user.LastName = Input.LastName;
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
