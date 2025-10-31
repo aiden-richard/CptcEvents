@@ -1,8 +1,8 @@
-using CptcEventHub.Models;
+using CptcEvents.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
-namespace CptcEventHub.Controllers
+namespace CptcEvents.Controllers
 {
     public class HomeController : Controller
     {

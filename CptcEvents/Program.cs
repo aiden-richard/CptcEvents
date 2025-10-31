@@ -1,5 +1,5 @@
-using CptcEventHub.Data;
-using CptcEventHub.Models;
+using CptcEvents.Data;
+using CptcEvents.Models;
 using CptcEvents.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

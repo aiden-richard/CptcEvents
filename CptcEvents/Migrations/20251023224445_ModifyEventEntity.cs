@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace CptcEventHub.Migrations
+namespace CptcEvents.Migrations
 {
     /// <inheritdoc />
     public partial class ModifyEventEntity : Migration

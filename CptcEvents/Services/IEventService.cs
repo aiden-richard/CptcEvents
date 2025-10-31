@@ -1,5 +1,5 @@
-﻿using CptcEventHub.Data;
-using CptcEventHub.Models;
+﻿using CptcEvents.Data;
+using CptcEvents.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CptcEvents.Services;
@@ -7,6 +7,7 @@ namespace CptcEvents.Services;
 public interface IEventService
 {
     Task<IEnumerable<Event>> GetAllEventsAsync();
+    Task<IEnumerable<Event>> GetPublicEventsAsync();
     Task<Event?> GetEventByIdAsync(int id);
     Task AddEventAsync(Event newEvent);
     Task UpdateEventAsync(Event updatedEvent);
@@ -20,10 +21,19 @@ public class EventService : IEventService
     {
         _context = context;
     }
+
     public async Task<IEnumerable<Event>> GetAllEventsAsync()
     {
         return await _context.Events.ToListAsync();
     }
+
+    public async Task<IEnumerable<Event>> GetPublicEventsAsync()
+    {
+        return await _context.Events
+            .Where(e => e.IsPublic)
+            .ToListAsync();
+    }
+
     public async Task<Event?> GetEventByIdAsync(int id)
     {
         return await _context.Events.FindAsync(id);

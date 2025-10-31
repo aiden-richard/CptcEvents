@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace CptcEventHub.Migrations
+namespace CptcEvents.Migrations
 {
     /// <inheritdoc />
     public partial class CustomizeUser : Migration

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace CptcEventHub.Data
+namespace CptcEvents.Data
 {
     public class ApplicationDbContext : IdentityDbContext<Models.ApplicationUser>
     {

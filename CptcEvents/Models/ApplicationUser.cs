@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace CptcEventHub.Models;
+namespace CptcEvents.Models;
 
 /// <summary>
 /// Represents an application user with additional profile information.

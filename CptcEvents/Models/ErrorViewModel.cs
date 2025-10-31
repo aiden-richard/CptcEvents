@@ -1,4 +1,4 @@
-namespace CptcEventHub.Models
+namespace CptcEvents.Models
 {
     public class ErrorViewModel
     {
