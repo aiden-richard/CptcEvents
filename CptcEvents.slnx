@@ -1,3 +1,7 @@
 <Solution>
-  <Project Path="CptcEventHub/CptcEvents.csproj" />
+  <Folder Name="/Solution Items/">
+    <File Path=".github/workflows/dotnet.yml" />
+  </Folder>
+  <Project Path="CptcEvents/CptcEvents.csproj" />
+  <Project Path="CptcEventsTests/CptcEventsTests.csproj" Id="cd43fa4b-60d0-4bdc-a3c5-e70d0801230e" />
 </Solution>
