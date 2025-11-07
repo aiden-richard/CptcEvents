@@ -40,7 +40,7 @@ namespace CptcEventsTests
 
             public Task<Event?> GetEventByIdAsync(int id) => Task.FromResult<Event?>(_events.FirstOrDefault(e => e.Id == id));
 
-            public Task<IEnumerable<Event>> GetPublicEventsAsync() => Task.FromResult<IEnumerable<Event>>(_events);
+            public Task<IEnumerable<Event>> GetPublicEventsAsync() => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.IsPublic));
 
             public Task UpdateEventAsync(Event updatedEvent) => Task.CompletedTask;
 
@@ -118,8 +118,8 @@ namespace CptcEventsTests
             // Arrange
             var events = new List<Event>
             {
-                new Event { Id = 1, Title = "AllDay", IsAllDay = true, DateOfEvent = new DateOnly(2025, 10, 5) },
-                new Event { Id = 2, Title = "Timed", IsAllDay = false, DateOfEvent = new DateOnly(2025, 10, 5), StartTime = new TimeOnly(8,0), EndTime = new TimeOnly(9,0) }
+                new Event { Id = 1, Title = "AllDay", IsAllDay = true, IsPublic = true, DateOfEvent = new DateOnly(2025, 10, 5) },
+                new Event { Id = 2, Title = "Timed", IsAllDay = false, IsPublic = true, DateOfEvent = new DateOnly(2025, 10, 5), StartTime = new TimeOnly(8,0), EndTime = new TimeOnly(9,0) }
             };
             var svc = new DummyEventService(events);
             var controller = new EventsController(svc);
