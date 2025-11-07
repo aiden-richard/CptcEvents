@@ -60,6 +60,23 @@ namespace CptcEvents.Controllers
         }
 
         /// <summary>
+        /// Returns events within an inclusive date range formatted for FullCalendar.
+        /// Query parameters: start=yyyy-MM-dd, end=yyyy-MM-dd
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetEventsInRange([FromQuery] DateOnly start, [FromQuery] DateOnly end)
+        {
+            if (end < start)
+            {
+                return BadRequest("End date must be on or after start date.");
+            }
+
+            IEnumerable<Event> events = await _eventsService.GetEventsInRangeAsync(start, end);
+            var fullCalendarEvents = events.Select(e => ToFullCalendarEvent(e)).ToList();
+            return Json(fullCalendarEvents);
+        }
+
+        /// <summary>
         /// Builds a FullCalendar-compatible object representing this event.
         /// Returns a dictionary that will be serialized by MVC into a JSON object
         /// instead of returning a pre-serialized JSON string (which becomes a JSON string value).

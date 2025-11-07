@@ -12,6 +12,7 @@ public interface IEventService
     Task AddEventAsync(Event newEvent);
     Task UpdateEventAsync(Event updatedEvent);
     Task DeleteEventAsync(int id);
+    Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end);
 }
 
 public class EventService : IEventService
@@ -56,5 +57,11 @@ public class EventService : IEventService
             _context.Events.Remove(eventToDelete);
             await _context.SaveChangesAsync();
         }
+    }
+    public async Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end)
+    {
+        return await _context.Events
+            .Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end)
+            .ToListAsync();
     }
 }
