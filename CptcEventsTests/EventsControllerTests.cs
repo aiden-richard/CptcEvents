@@ -11,50 +11,40 @@ namespace CptcEventsTests
     [TestClass]
     public class EventsControllerTests
     {
-        /*
-           1) DummyEventService:
-              - Minimal implementation that tracks whether AddEventAsync was called.
-              - Returns empty collections or null for read methods.
-              - Used in tests that only need to verify side-effects (e.g., Create POST).
-           2) DummyEventServiceWithEvents:
-              - Accepts a list of Event objects in its constructor and returns them from GetAll/GetPublic.
-              - Used in tests that need the controller to produce shaped JSON from a known events list.
-         - Add an explanatory comment above the second fake explaining why two exist instead of one combined fake.
-        */
-
         // Helper to access ToFullCalendarEvent without needing real IEventService
         private class DummyEventService : CptcEvents.Services.IEventService
         {
+            private readonly List<Event> _events;
             public bool AddCalled { get; private set; }
+
+            // Default constructor -> no events
+            public DummyEventService() : this(null)
+            {
+            }
+
+            // Overloaded constructor -> supply events to be returned by read methods
+            public DummyEventService(IEnumerable<Event>? events)
+            {
+                _events = events?.ToList() ?? new List<Event>();
+            }
 
             public Task AddEventAsync(Event newEvent)
             {
                 AddCalled = true;
                 return Task.CompletedTask;
             }
-            public Task DeleteEventAsync(int id) => Task.CompletedTask;
-            public Task<IEnumerable<Event>> GetAllEventsAsync() => Task.FromResult<IEnumerable<Event>>(new List<Event>());
-            public Task<Event?> GetEventByIdAsync(int id) => Task.FromResult<Event?>(null);
-            public Task<IEnumerable<Event>> GetPublicEventsAsync() => Task.FromResult<IEnumerable<Event>>(new List<Event>());
-            public Task UpdateEventAsync(Event updatedEvent) => Task.CompletedTask;
-            public Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end) => Task.FromResult<IEnumerable<Event>>(new List<Event>());
-        }
 
-        private class DummyEventServiceWithEvents : CptcEvents.Services.IEventService
-        {
-            private readonly IEnumerable<Event> _events;
-            public DummyEventServiceWithEvents(IEnumerable<Event> events)
-            {
-                _events = events;
-            }
-
-            public Task AddEventAsync(Event newEvent) => Task.CompletedTask;
             public Task DeleteEventAsync(int id) => Task.CompletedTask;
-            public Task<IEnumerable<Event>> GetAllEventsAsync() => Task.FromResult(_events);
-            public Task<Event?> GetEventByIdAsync(int id) => Task.FromResult<Event?>(null);
-            public Task<IEnumerable<Event>> GetPublicEventsAsync() => Task.FromResult(_events);
+
+            public Task<IEnumerable<Event>> GetAllEventsAsync() => Task.FromResult<IEnumerable<Event>>(_events);
+
+            public Task<Event?> GetEventByIdAsync(int id) => Task.FromResult<Event?>(_events.FirstOrDefault(e => e.Id == id));
+
+            public Task<IEnumerable<Event>> GetPublicEventsAsync() => Task.FromResult<IEnumerable<Event>>(_events);
+
             public Task UpdateEventAsync(Event updatedEvent) => Task.CompletedTask;
-            public Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end) => Task.FromResult(_events.Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end));
+
+            public Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end) => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end));
         }
 
         [TestMethod]
@@ -131,7 +121,7 @@ namespace CptcEventsTests
                 new Event { Id = 1, Title = "AllDay", IsAllDay = true, DateOfEvent = new DateOnly(2025, 10, 5) },
                 new Event { Id = 2, Title = "Timed", IsAllDay = false, DateOfEvent = new DateOnly(2025, 10, 5), StartTime = new TimeOnly(8,0), EndTime = new TimeOnly(9,0) }
             };
-            var svc = new DummyEventServiceWithEvents(events);
+            var svc = new DummyEventService(events);
             var controller = new EventsController(svc);
 
             // Act
@@ -205,7 +195,7 @@ namespace CptcEventsTests
                 new Event { Id = 2, Title = "B", IsAllDay = true, DateOfEvent = new DateOnly(2025, 10, 5) },
                 new Event { Id = 3, Title = "C", IsAllDay = true, DateOfEvent = new DateOnly(2025, 10, 10) }
             };
-            var svc = new DummyEventServiceWithEvents(events);
+            var svc = new DummyEventService(events);
             var controller = new EventsController(svc);
 
             // Act
@@ -226,7 +216,7 @@ namespace CptcEventsTests
         public async Task GetEventsInRange_EndBeforeStart_ReturnsBadRequest()
         {
             // Arrange
-            var svc = new DummyEventServiceWithEvents(new List<Event>());
+            var svc = new DummyEventService(new List<Event>());
             var controller = new EventsController(svc);
 
             // Act
