@@ -45,6 +45,12 @@ public class Event : IValidatableObject
     [Url]
     public string? Url { get; set; }
 
+    // Foreign key to Group (nullable - event may be standalone)
+    [Display(Name = "Group")]
+    public int? GroupId { get; set; }
+
+    public Group? Group { get; set; }
+
     /// <summary>
     /// Model-level validation. Ensures that for timed events the end time is after the start time.
     /// Additional cross-property rules can be added here.
