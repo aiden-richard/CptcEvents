@@ -1,0 +1,43 @@
+﻿@model CptcEvents.Models.Group
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Group</h4>
+<hr />
+<form asp-action="Create">
+    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="Name" class="form-control border-secondary-subtle bg-light" placeholder="Group Name" />
+        <label asp-for="Name">Name</label>
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="Description" class="form-control border-secondary-subtle bg-light" placeholder="Description" />
+        <label asp-for="Description">Description</label>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-floating mb-3">
+        <select asp-for="Privacy" class="form-select border-secondary-subtle bg-light" asp-items="@(Html.GetEnumSelectList<CptcEvents.Models.GroupPrivacy>())"></select>
+        <label asp-for="Privacy">Privacy</label>
+        <span asp-validation-for="Privacy" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-1">
+        <input type="submit" value="Create" class="w-100 btn btn-lg btn-primary" />
+    </div>
+</form>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
