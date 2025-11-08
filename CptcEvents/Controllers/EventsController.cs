@@ -1,16 +1,24 @@
 ﻿using CptcEvents.Models;
 using CptcEvents.Services;
 using Microsoft.AspNetCore.Mvc;
+using CptcEvents.Data;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace CptcEvents.Controllers
 {
     public class EventsController : Controller
     {
         private readonly IEventService _eventsService;
+        private readonly IGroupService? _groupService;
+        private readonly UserManager<ApplicationUser>? _userManager;
 
-        public EventsController(IEventService eventsService)
+        public EventsController(IEventService eventsService, IGroupService? groupService = null, UserManager<ApplicationUser>? userManager = null)
         {
             _eventsService = eventsService;
+            _groupService = groupService;
+            _userManager = userManager;
         }
 
         public IActionResult Index()
@@ -19,8 +27,21 @@ namespace CptcEvents.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var groups = new List<Group>();
+
+            // Only attempt to load joined groups when we have a group service and a user manager and an authenticated user
+            if (_groupService != null && _userManager != null && User?.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    groups = (await _groupService.GetGroupsForUserAsync(user.Id)).ToList();
+                }
+            }
+
+            ViewData["Groups"] = new SelectList(groups, "Id", "Name");
             return View();
         }
 
@@ -32,6 +53,20 @@ namespace CptcEvents.Controllers
                 await _eventsService.AddEventAsync(newEvent);
                 return RedirectToAction("Index");
             }
+
+            // repopulate groups for the view when model state is invalid
+            var groups = new List<Group>();
+            if (_groupService != null && _userManager != null && User?.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    groups = (await _groupService.GetGroupsForUserAsync(user.Id)).ToList();
+                }
+            }
+
+            ViewData["Groups"] = new SelectList(groups, "Id", "Name", newEvent.GroupId);
+
             return View(newEvent);
         }
 
