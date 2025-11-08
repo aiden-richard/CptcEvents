@@ -18,6 +18,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
 
 var app = builder.Build();
 
