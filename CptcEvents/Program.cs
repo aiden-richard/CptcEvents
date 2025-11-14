@@ -19,6 +19,9 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IEventService, EventService>();
 
+// Wire up SendGrid email sender for Identity confirmation emails
+builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, SendGridEmailSender>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
