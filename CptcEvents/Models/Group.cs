@@ -41,25 +41,25 @@ public class Group
     public required string Name { get; set; }
 
     /// <summary>
-    /// Optional description of the server
+    /// Optional description of the group
     /// </summary>
     [MaxLength(1000)]
     public string? Description { get; set; } = string.Empty;
 
     /// <summary>
-	/// Foreign key referencing the <see cref="UserAccount"/> that owns the server.
+	/// Foreign key referencing the <see cref="UserAccount"/> that owns the group.
 	/// </summary>
 	[Required]
     public required string OwnerId { get; set; }
 
     /// <summary>
-    /// Navigation property for the server owner.
+    /// Navigation property for the group owner.
     /// </summary>
     [ForeignKey(nameof(OwnerId))]
     public ApplicationUser Owner { get; set; } = null!;
 
     /// <summary>
-    /// UTC timestamp when the server was created. Set at construction time by default.
+    /// UTC timestamp when the group was created. Set at construction time by default.
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

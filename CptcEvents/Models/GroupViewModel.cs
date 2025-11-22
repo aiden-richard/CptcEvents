@@ -12,7 +12,7 @@ public class GroupViewModel
     public required string Name { get; set; }
 
     /// <summary>
-    /// Optional description of the server
+    /// Optional description of the group
     /// </summary>
     [MaxLength(1000)]
     public string? Description { get; set; } = string.Empty;
