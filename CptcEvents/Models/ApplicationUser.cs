@@ -24,7 +24,7 @@ public class ApplicationUser : IdentityUser
     public string? ProfilePictureUrl { get; set; }
 
     /// <summary>
-    /// Groups that this user has joined. Many-to-many relationship with Group.Members.
+    /// Groups that this user has joined. Many-to-many relationship with Group.Members
     /// </summary>
-    public List<Group> JoinedGroups { get; set; } = new();
+    public ICollection<GroupMember> GroupMemberships { get; set; } = new List<GroupMember>();
 }
