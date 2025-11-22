@@ -30,17 +30,7 @@ namespace CptcEvents.Controllers
         public async Task<IActionResult> Create()
         {
             // Load groups for the current user
-            var groups = new List<Group>();
-            if (User?.Identity?.IsAuthenticated == true)
-            {
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null)
-                {
-                    groups = (await _groupService.GetGroupsForUserAsync(user.Id)).ToList();
-                }
-            }
-
-            ViewData["Groups"] = new SelectList(groups, "Id", "Name");
+            await PopulateGroupsSelectListAsync();
             return View();
         }
 
@@ -54,6 +44,14 @@ namespace CptcEvents.Controllers
             }
 
             // Load groups for the current user
+            await PopulateGroupsSelectListAsync();
+
+            return View(newEvent);
+        }
+
+        // Helper that populates ViewData["Groups"] with groups available to the current user.
+        private async Task PopulateGroupsSelectListAsync()
+        {
             var groups = new List<Group>();
             if (User?.Identity?.IsAuthenticated == true)
             {
@@ -65,8 +63,6 @@ namespace CptcEvents.Controllers
             }
 
             ViewData["Groups"] = new SelectList(groups, "Id", "Name");
-
-            return View(newEvent);
         }
 
         /// <summary>
