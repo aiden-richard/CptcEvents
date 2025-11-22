@@ -3,6 +3,7 @@ using System;
 using CptcEvents.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,29 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CptcEvents.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251108045954_AddGroupModel")]
+    partial class AddGroupModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0-rc.2.25502.107");
+
+            modelBuilder.Entity("ApplicationUserGroup", b =>
+                {
+                    b.Property<int>("JoinedGroupsId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MembersId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("JoinedGroupsId", "MembersId");
+
+                    b.HasIndex("MembersId");
+
+                    b.ToTable("ApplicationUserGroup");
+                });
 
             modelBuilder.Entity("CptcEvents.Models.ApplicationUser", b =>
                 {
@@ -109,7 +127,7 @@ namespace CptcEvents.Migrations
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("GroupId")
+                    b.Property<int?>("GroupId")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsAllDay")
@@ -143,58 +161,20 @@ namespace CptcEvents.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PrivacyLevel")
+                    b.Property<int>("Privacy")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerId");
-
-                    b.ToTable("Groups");
-                });
-
-            modelBuilder.Entity("CptcEvents.Models.GroupMember", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("GroupId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Role")
-                        .HasMaxLength(50)
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("GroupMemberships");
+                    b.ToTable("Group");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -329,45 +309,28 @@ namespace CptcEvents.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("ApplicationUserGroup", b =>
+                {
+                    b.HasOne("CptcEvents.Models.Group", null)
+                        .WithMany()
+                        .HasForeignKey("JoinedGroupsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CptcEvents.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("MembersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CptcEvents.Models.Event", b =>
                 {
                     b.HasOne("CptcEvents.Models.Group", "Group")
                         .WithMany()
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("GroupId");
 
                     b.Navigation("Group");
-                });
-
-            modelBuilder.Entity("CptcEvents.Models.Group", b =>
-                {
-                    b.HasOne("CptcEvents.Models.ApplicationUser", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Owner");
-                });
-
-            modelBuilder.Entity("CptcEvents.Models.GroupMember", b =>
-                {
-                    b.HasOne("CptcEvents.Models.Group", "Group")
-                        .WithMany("Members")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CptcEvents.Models.ApplicationUser", "User")
-                        .WithMany("GroupMemberships")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Group");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -419,16 +382,6 @@ namespace CptcEvents.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("CptcEvents.Models.ApplicationUser", b =>
-                {
-                    b.Navigation("GroupMemberships");
-                });
-
-            modelBuilder.Entity("CptcEvents.Models.Group", b =>
-                {
-                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using CptcEvents.Models;
 
 namespace CptcEvents.Data
 {
@@ -10,6 +11,8 @@ namespace CptcEvents.Data
         {
         }
 
-        public DbSet<Models.Event> Events { get; set; } = null!;
+        public DbSet<Event> Events { get; set; } = null!;
+        public DbSet<Group> Groups { get; set; } = default!;
+        public DbSet<GroupMember> GroupMemberships { get; set; }
     }
 }

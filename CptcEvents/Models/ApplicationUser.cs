@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic;
 
 namespace CptcEvents.Models;
 
@@ -21,4 +22,9 @@ public class ApplicationUser : IdentityUser
     /// Gets or sets the URL of the user's profile picture.
     /// </summary>
     public string? ProfilePictureUrl { get; set; }
+
+    /// <summary>
+    /// Groups that this user has joined. Many-to-many relationship with Group.Members
+    /// </summary>
+    public ICollection<GroupMember> GroupMemberships { get; set; } = new List<GroupMember>();
 }

@@ -1,16 +1,24 @@
 ﻿using CptcEvents.Models;
 using CptcEvents.Services;
 using Microsoft.AspNetCore.Mvc;
+using CptcEvents.Data;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace CptcEvents.Controllers
 {
     public class EventsController : Controller
     {
         private readonly IEventService _eventsService;
+        private readonly IGroupService _groupService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public EventsController(IEventService eventsService)
+        public EventsController(IEventService eventsService, IGroupService groupService, UserManager<ApplicationUser> userManager)
         {
             _eventsService = eventsService;
+            _groupService = groupService;
+            _userManager = userManager;
         }
 
         public IActionResult Index()
@@ -19,8 +27,10 @@ namespace CptcEvents.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            // Load groups for the current user
+            await PopulateGroupsSelectListAsync();
             return View();
         }
 
@@ -32,7 +42,27 @@ namespace CptcEvents.Controllers
                 await _eventsService.AddEventAsync(newEvent);
                 return RedirectToAction("Index");
             }
+
+            // Load groups for the current user
+            await PopulateGroupsSelectListAsync();
+
             return View(newEvent);
+        }
+
+        // Helper that populates ViewData["Groups"] with groups available to the current user.
+        private async Task PopulateGroupsSelectListAsync()
+        {
+            var groups = new List<Group>();
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    groups = (await _groupService.GetGroupsForUserAsync(user.Id)).ToList();
+                }
+            }
+
+            ViewData["Groups"] = new SelectList(groups, "Id", "Name");
         }
 
         /// <summary>
@@ -53,7 +83,7 @@ namespace CptcEvents.Controllers
             // Loop through the events and add them to the list
             foreach (Event e in events)
             {
-                fullCalendarEvents.Add(ToFullCalendarEvent(e));
+                fullCalendarEvents.Add(EventMapper.ToFullCalendarEvent(e));
             }
 
             return Json(fullCalendarEvents);
@@ -72,45 +102,8 @@ namespace CptcEvents.Controllers
             }
 
             IEnumerable<Event> events = await _eventsService.GetEventsInRangeAsync(start, end);
-            var fullCalendarEvents = events.Select(e => ToFullCalendarEvent(e)).ToList();
+            var fullCalendarEvents = events.Select(e => EventMapper.ToFullCalendarEvent(e)).ToList();
             return Json(fullCalendarEvents);
-        }
-
-        /// <summary>
-        /// Builds a FullCalendar-compatible object representing this event.
-        /// Returns a dictionary that will be serialized by MVC into a JSON object
-        /// instead of returning a pre-serialized JSON string (which becomes a JSON string value).
-        /// </summary>
-        public object ToFullCalendarEvent(Event e)
-        {
-            var obj = new Dictionary<string, object?>
-            {
-                ["id"] = e.Id,
-                ["title"] = e.Title,
-            };
-
-            if (e.IsAllDay)
-            {
-                // FullCalendar supports all-day events with a date string
-                obj["start"] = e.DateOfEvent;
-                obj["end"] = e.DateOfEvent.AddDays(1);
-            }
-            else
-            {
-                // Provide ISO-8601 datetimes for start/end when not all-day
-                obj["start"] = e.DateOfEvent.ToDateTime(e.StartTime).ToString("s");
-                obj["end"] = e.DateOfEvent.ToDateTime(e.EndTime).ToString("s");
-            }
-
-            // Include URL if provided
-            // *not included for now until we need it
-            // fullcalendar will make the title a link if url is provided*
-            //if (!string.IsNullOrWhiteSpace(Url))
-            //{
-            //    obj["url"] = Url;
-            //}
-
-            return obj;
         }
     }
 }
