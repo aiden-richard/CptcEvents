@@ -33,7 +33,7 @@ public class GroupMember
     public int GroupId { get; set; }
 
     /// <summary>
-    /// Navigation property for the server.
+    /// Navigation property for the group.
     /// </summary>
     [ForeignKey(nameof(GroupId))]
     public Group Group { get; set; } = null!;
@@ -51,14 +51,14 @@ public class GroupMember
     public ApplicationUser User { get; set; } = null!;
 
     /// <summary>
-    /// Role of the member within the server (e.g. "member", "admin"). Defaults to "member".
+    /// Role of the member within the group from <see cref="RoleType"/>.
     /// </summary>
     [Required]
     [MaxLength(50)]
     public RoleType Role { get; set; } = RoleType.Member;
 
     /// <summary>
-    /// UTC timestamp when the user joined the server. Defaults to the time the instance is created.
+    /// UTC timestamp when the user joined the group. Defaults to the time the instance is created.
     /// </summary>
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 }
