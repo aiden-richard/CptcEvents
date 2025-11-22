@@ -11,25 +11,16 @@ namespace CptcEvents.Models;
 /// <summary>
 /// Defines the privacy modes available for a <see cref="Group"/>.
 /// </summary>
-public enum GroupPrivacy
+public enum PrivacyLevel
 {
-    /// <summary>
-    /// The group is visible to everyone and may be joined without approval.
-    /// </summary>
     [Display(Name = "Public")]
-    Public = 0,
+    Public,
 
-    /// <summary>
-    /// The group is visible and users may request to join; membership requires approval.
-    /// </summary>
-    [Display(Name = "Request to Join")]
-    RequestToJoin = 1,
+    [Display(Name = "Moderators and above can create invites")]
+    ModeratorInvitePrivate,
 
-    /// <summary>
-    /// The group is invite-only; users can only join by invitation.
-    /// </summary>
-    [Display(Name = "Invite Only")]
-    InviteOnly = 2
+    [Display(Name = "Only owner can create invites")]
+    OwnerInvitePrivate
 }
 
 /// <summary>
@@ -50,41 +41,38 @@ public class Group
     public required string Name { get; set; }
 
     /// <summary>
-    /// A longer description of the group's purpose.
+    /// Optional description of the server
     /// </summary>
-    public string Description { get; set; } = string.Empty;
+    [MaxLength(1000)]
+    public string? Description { get; set; } = string.Empty;
+
+    /// <summary>
+	/// Foreign key referencing the <see cref="UserAccount"/> that owns the server.
+	/// </summary>
+	[Required]
+    public required string OwnerId { get; set; }
+
+    /// <summary>
+    /// Navigation property for the server owner.
+    /// </summary>
+    [ForeignKey(nameof(OwnerId))]
+    public ApplicationUser Owner { get; set; } = null!;
+
+    /// <summary>
+    /// UTC timestamp when the server was created. Set at construction time by default.
+    /// </summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Tracks the privacy level of the group.
     /// </summary>
     [Required]
-    public GroupPrivacy Privacy { get; set; } = GroupPrivacy.Public;
+    public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.ModeratorInvitePrivate;
     
     /// <summary>
     /// Collection of users who are members of the group.
     /// </summary>
-    public List<ApplicationUser> Members { get; set; } = new();
+    public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
 
-    // Convenience helpers (not mapped to the DB)
-
-    /// <summary>
-    /// Indicates if the group is public (no approval required to join).
-    /// This property is not persisted to the database.
-    /// </summary>
-    [NotMapped]
-    public bool IsPublic => Privacy == GroupPrivacy.Public;
-
-    /// <summary>
-    /// Indicates if joining the group requires approval.
-    /// This property is not persisted to the database.
-    /// </summary>
-    [NotMapped]
-    public bool RequiresApproval => Privacy == GroupPrivacy.RequestToJoin;
-
-    /// <summary>
-    /// Indicates if the group is invite-only.
-    /// This property is not persisted to the database.
-    /// </summary>
-    [NotMapped]
-    public bool IsInviteOnly => Privacy == GroupPrivacy.InviteOnly;
+    public int MemberCount => Members.Count;
 }
