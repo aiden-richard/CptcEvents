@@ -11,10 +11,10 @@ namespace CptcEvents.Controllers
     public class EventsController : Controller
     {
         private readonly IEventService _eventsService;
-        private readonly IGroupService? _groupService;
-        private readonly UserManager<ApplicationUser>? _userManager;
+        private readonly IGroupService _groupService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public EventsController(IEventService eventsService, IGroupService? groupService = null, UserManager<ApplicationUser>? userManager = null)
+        public EventsController(IEventService eventsService, IGroupService groupService, UserManager<ApplicationUser> userManager)
         {
             _eventsService = eventsService;
             _groupService = groupService;
@@ -29,10 +29,9 @@ namespace CptcEvents.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
+            // Load groups for the current user
             var groups = new List<Group>();
-
-            // Only attempt to load joined groups when we have a group service and a user manager and an authenticated user
-            if (_groupService != null && _userManager != null && User?.Identity?.IsAuthenticated == true)
+            if (User?.Identity?.IsAuthenticated == true)
             {
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)
@@ -54,9 +53,9 @@ namespace CptcEvents.Controllers
                 return RedirectToAction("Index");
             }
 
-            // repopulate groups for the view when model state is invalid
+            // Load groups for the current user
             var groups = new List<Group>();
-            if (_groupService != null && _userManager != null && User?.Identity?.IsAuthenticated == true)
+            if (User?.Identity?.IsAuthenticated == true)
             {
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)
@@ -65,7 +64,7 @@ namespace CptcEvents.Controllers
                 }
             }
 
-            ViewData["Groups"] = new SelectList(groups, "Id", "Name", newEvent.GroupId);
+            ViewData["Groups"] = new SelectList(groups, "Id", "Name");
 
             return View(newEvent);
         }
