@@ -55,7 +55,7 @@ namespace CptcEvents.Controllers
             };
 
             // Persist the new group to the database
-            var created = await _groupService.CreateGroupAsync(newGroup);
+            await _groupService.CreateGroupAsync(newGroup);
 
             return RedirectToAction(nameof(Index));
         }
