@@ -87,7 +87,7 @@ namespace CptcEvents.Controllers
             // Loop through the events and add them to the list
             foreach (Event e in events)
             {
-                fullCalendarEvents.Add(ToFullCalendarEvent(e));
+                fullCalendarEvents.Add(EventMapper.ToFullCalendarEvent(e));
             }
 
             return Json(fullCalendarEvents);
@@ -106,45 +106,8 @@ namespace CptcEvents.Controllers
             }
 
             IEnumerable<Event> events = await _eventsService.GetEventsInRangeAsync(start, end);
-            var fullCalendarEvents = events.Select(e => ToFullCalendarEvent(e)).ToList();
+            var fullCalendarEvents = events.Select(e => EventMapper.ToFullCalendarEvent(e)).ToList();
             return Json(fullCalendarEvents);
-        }
-
-        /// <summary>
-        /// Builds a FullCalendar-compatible object representing this event.
-        /// Returns a dictionary that will be serialized by MVC into a JSON object
-        /// instead of returning a pre-serialized JSON string (which becomes a JSON string value).
-        /// </summary>
-        public object ToFullCalendarEvent(Event e)
-        {
-            var obj = new Dictionary<string, object?>
-            {
-                ["id"] = e.Id,
-                ["title"] = e.Title,
-            };
-
-            if (e.IsAllDay)
-            {
-                // FullCalendar supports all-day events with a date string
-                obj["start"] = e.DateOfEvent;
-                obj["end"] = e.DateOfEvent.AddDays(1);
-            }
-            else
-            {
-                // Provide ISO-8601 datetimes for start/end when not all-day
-                obj["start"] = e.DateOfEvent.ToDateTime(e.StartTime).ToString("s");
-                obj["end"] = e.DateOfEvent.ToDateTime(e.EndTime).ToString("s");
-            }
-
-            // Include URL if provided
-            // *not included for now until we need it
-            // fullcalendar will make the title a link if url is provided*
-            //if (!string.IsNullOrWhiteSpace(Url))
-            //{
-            //    obj["url"] = Url;
-            //}
-
-            return obj;
         }
     }
 }
