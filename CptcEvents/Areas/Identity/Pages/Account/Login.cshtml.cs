@@ -123,7 +123,7 @@ namespace CptcEvents.Areas.Identity.Pages.Account
                         var userByEmail = await _userManager.FindByEmailAsync(identifier);
                         if (userByEmail != null)
                         {
-                            userName = userByEmail.UserName;
+                            userName = userByEmail.UserName ?? identifier;
                         }
                     }
                 }
