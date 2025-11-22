@@ -5,6 +5,12 @@ using CptcEvents.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using CptcEvents.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using System.Threading;
 
 namespace CptcEventsTests
 {
@@ -47,11 +53,65 @@ namespace CptcEventsTests
             public Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end) => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end));
         }
 
+        // Minimal dummy group service for constructor compatibility
+        private class DummyGroupService : IGroupService
+        {
+            public Task<Group> CreateGroupAsync(Group group) => Task.FromResult(group);
+            public Task<IEnumerable<Group>> GetGroupsForUserAsync(string userId) => Task.FromResult<IEnumerable<Group>>(new List<Group>());
+        }
+
+        // Minimal IUserStore implementation for constructing a UserManager in tests
+        private class NoopUserStore : IUserStore<ApplicationUser>
+        {
+            public Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
+                => Task.FromResult(IdentityResult.Success);
+            public Task<IdentityResult> DeleteAsync(ApplicationUser user, CancellationToken cancellationToken)
+                => Task.FromResult(IdentityResult.Success);
+            public void Dispose() { }
+            public Task<ApplicationUser?> FindByIdAsync(string userId, CancellationToken cancellationToken)
+                => Task.FromResult<ApplicationUser?>(null);
+            public Task<ApplicationUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+                => Task.FromResult<ApplicationUser?>(null);
+            public Task<string?> GetNormalizedUserNameAsync(ApplicationUser user, CancellationToken cancellationToken)
+                => Task.FromResult<string?>(user?.UserName?.ToUpperInvariant());
+            public Task<string?> GetUserIdAsync(ApplicationUser user, CancellationToken cancellationToken)
+                => Task.FromResult<string?>(user?.Id);
+            public Task<string?> GetUserNameAsync(ApplicationUser user, CancellationToken cancellationToken)
+                => Task.FromResult<string?>(user?.UserName);
+            public Task SetNormalizedUserNameAsync(ApplicationUser user, string? normalizedName, CancellationToken cancellationToken)
+            {
+                // noop
+                return Task.CompletedTask;
+            }
+            public Task SetUserNameAsync(ApplicationUser user, string? userName, CancellationToken cancellationToken)
+            {
+                if (user != null) user.UserName = userName;
+                return Task.CompletedTask;
+            }
+            public Task<IdentityResult> UpdateAsync(ApplicationUser user, CancellationToken cancellationToken)
+                => Task.FromResult(IdentityResult.Success);
+        }
+
+        // Simple helper to create a UserManager suitable for tests
+        private static UserManager<ApplicationUser> CreateTestUserManager()
+        {
+            var store = new NoopUserStore();
+            var options = Options.Create(new IdentityOptions());
+            var passwordHasher = new PasswordHasher<ApplicationUser>();
+            var userValidators = new List<IUserValidator<ApplicationUser>>();
+            var passwordValidators = new List<IPasswordValidator<ApplicationUser>>();
+            var keyNormalizer = new UpperInvariantLookupNormalizer();
+            var errors = new IdentityErrorDescriber();
+            var services = null as System.IServiceProvider;
+            var logger = NullLogger<UserManager<ApplicationUser>>.Instance;
+
+            return new UserManager<ApplicationUser>(store, options, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger);
+        }
+
         [TestMethod]
         public void ToFullCalendarEvent_AllDay_SetsStartAndEndAsDateOnly()
         {
             // Arrange
-            var controller = new EventsController(new DummyEventService());
             var e = new Event
             {
                 Id = 42,
@@ -61,7 +121,7 @@ namespace CptcEventsTests
             };
 
             // Act
-            var result = controller.ToFullCalendarEvent(e) as Dictionary<string, object?>;
+            var result = EventMapper.ToFullCalendarEvent(e) as Dictionary<string, object?>;
 
             // Assert
             Assert.IsNotNull(result);
@@ -81,7 +141,6 @@ namespace CptcEventsTests
         public void ToFullCalendarEvent_TimedEvent_FormatsIsoStrings()
         {
             // Arrange
-            var controller = new EventsController(new DummyEventService());
             var e = new Event
             {
                 Id = 7,
@@ -93,7 +152,7 @@ namespace CptcEventsTests
             };
 
             // Act
-            var result = controller.ToFullCalendarEvent(e) as Dictionary<string, object?>;
+            var result = EventMapper.ToFullCalendarEvent(e) as Dictionary<string, object?>;
 
             // Assert
             Assert.IsNotNull(result);
@@ -122,7 +181,7 @@ namespace CptcEventsTests
                 new Event { Id = 2, Title = "Timed", IsAllDay = false, IsPublic = true, DateOfEvent = new DateOnly(2025, 10, 5), StartTime = new TimeOnly(8,0), EndTime = new TimeOnly(9,0) }
             };
             var svc = new DummyEventService(events);
-            var controller = new EventsController(svc);
+            var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
 
             // Act
             var actionResult = await controller.GetEvents();
@@ -153,7 +212,7 @@ namespace CptcEventsTests
         {
             // Arrange
             var svc = new DummyEventService();
-            var controller = new EventsController(svc);
+            var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
             var newEvent = new Event { Id = 10, Title = "New Event", DateOfEvent = new DateOnly(2025, 9, 1), IsAllDay = true };
 
             // Act
@@ -171,7 +230,7 @@ namespace CptcEventsTests
         {
             // Arrange
             var svc = new DummyEventService();
-            var controller = new EventsController(svc);
+            var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
             var newEvent = new Event { Id = 11, Title = "Invalid Event", DateOfEvent = new DateOnly(2025, 9, 2) };
             controller.ModelState.AddModelError("Title", "Required");
 
@@ -196,7 +255,7 @@ namespace CptcEventsTests
                 new Event { Id = 3, Title = "C", IsAllDay = true, DateOfEvent = new DateOnly(2025, 10, 10) }
             };
             var svc = new DummyEventService(events);
-            var controller = new EventsController(svc);
+            var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
 
             // Act
             var actionResult = await controller.GetEventsInRange(new DateOnly(2025, 10, 1), new DateOnly(2025, 10, 5));
@@ -217,7 +276,7 @@ namespace CptcEventsTests
         {
             // Arrange
             var svc = new DummyEventService(new List<Event>());
-            var controller = new EventsController(svc);
+            var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
 
             // Act
             var actionResult = await controller.GetEventsInRange(new DateOnly(2025, 10, 5), new DateOnly(2025, 10, 1));
