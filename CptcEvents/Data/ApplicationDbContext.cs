@@ -11,7 +11,8 @@ namespace CptcEvents.Data
         {
         }
 
-        public DbSet<Models.Event> Events { get; set; } = null!;
-        public DbSet<CptcEvents.Models.Group> Group { get; set; } = default!;
+        public DbSet<Event> Events { get; set; } = null!;
+        public DbSet<Group> Groups { get; set; } = default!;
+        public DbSet<GroupMember> GroupMemberships { get; set; }
     }
 }
