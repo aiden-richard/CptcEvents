@@ -33,25 +33,29 @@ namespace CptcEvents.Controllers
         // POST: Groups/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Group group)
+        public async Task<IActionResult> Create(GroupViewModel model)
         {
+            string? userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
             if (!ModelState.IsValid)
             {
-                return View(group);
+                return View(model);
             }
+
+            Group newGroup = new Group
+            {
+                Name = model.Name,
+                Description = model.Description,
+                PrivacyLevel = model.PrivacyLevel,
+                OwnerId = userId
+            };
 
             // Persist the new group to the database
-            var created = await _groupService.AddGroupAsync(group);
-
-            // If user is authenticated, automatically add them as a member
-            if (User?.Identity?.IsAuthenticated == true)
-            {
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null)
-                {
-                    await _groupService.AddMemberToGroupAsync(created.Id, user.Id);
-                }
-            }
+            var created = await _groupService.CreateGroupAsync(newGroup);
 
             return RedirectToAction(nameof(Index));
         }
