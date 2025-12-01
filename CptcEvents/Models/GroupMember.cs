@@ -27,6 +27,17 @@ public class GroupMember
     public int Id { get; set; }
 
     /// <summary>
+    /// Foreign key to the <see cref="GroupInvite"/> that was used to join, if applicable.
+    /// </summary>
+    public int? InviteId { get; set; }
+
+    /// <summary>
+    /// Navigation property for the invite that created this membership, if any.
+    /// </summary>
+    [ForeignKey(nameof(InviteId))]
+    public GroupInvite? Invite { get; set; }
+
+    /// <summary>
     /// Foreign key to the <see cref="Group"/> this membership belongs to.
     /// </summary>
     [Required]
