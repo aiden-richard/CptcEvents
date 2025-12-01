@@ -19,9 +19,10 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IInviteService, InviteService>();
 
 // Wire up SendGrid email sender for Identity confirmation emails
-builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, SendGridEmailSender>();
+//builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, SendGridEmailSender>();
 
 var app = builder.Build();
 
