@@ -9,6 +9,8 @@ namespace CptcEvents.Services
 {
     public interface IGroupService
     {
+        Task<Group?> GetGroupAsync(int id);
+        Task<bool> IsUserModeratorAsync(int groupId, string userId);
         Task<IEnumerable<Group>> GetGroupsForUserAsync(string userId);
         Task<Group> CreateGroupAsync(Group group);
     }
@@ -20,6 +22,19 @@ namespace CptcEvents.Services
         public GroupService(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<Group?> GetGroupAsync(int id)
+        {
+            return await _context.Groups
+                .Include(g => g.Members)
+                .FirstOrDefaultAsync(g => g.Id == id);
+        }
+
+        public async Task<bool> IsUserModeratorAsync(int groupId, string userId)
+        {
+            return await _context.GroupMemberships
+                .AnyAsync(m => m.GroupId == groupId && m.UserId == userId && (m.Role == RoleType.Moderator || m.Role == RoleType.Owner));
         }
 
         public async Task<IEnumerable<Group>> GetGroupsForUserAsync(string userId)
