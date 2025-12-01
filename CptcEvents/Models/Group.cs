@@ -47,9 +47,9 @@ public class Group
     public string? Description { get; set; } = string.Empty;
 
     /// <summary>
-	/// Foreign key referencing the <see cref="UserAccount"/> that owns the group.
-	/// </summary>
-	[Required]
+    /// Foreign key referencing the <see cref="ApplicationUser"/> that owns the group.
+    /// </summary>
+    [Required]
     public required string OwnerId { get; set; }
 
     /// <summary>
