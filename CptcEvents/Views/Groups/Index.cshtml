@@ -1,6 +1,24 @@
-﻿@{
+﻿@model IEnumerable<CptcEvents.Models.Group>
+@{
 }
 
-<h1>Groups</h1>
-
-<p>This page will be where the user can see events by group and manage their groups</p>
+<h1>Group</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <td></td>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (Group group in Model)
+        {
+            <tr>
+                <td>@group.Name</td>
+                <td>
+                    <a asp-action="Index" asp-controller="Groups" asp-route-groupId="@group.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
