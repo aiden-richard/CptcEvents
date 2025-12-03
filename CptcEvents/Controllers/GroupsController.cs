@@ -368,7 +368,7 @@ namespace CptcEvents.Controllers
             }
 
             GroupInvite? invite = await _inviteService.GetInviteAsync(inviteId);
-            if (invite == null || invite.CreatedById != userId)
+            if (invite == null || invite.GroupId != groupId)
             {
                 return NotFound();
             }
