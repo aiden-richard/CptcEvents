@@ -58,8 +58,15 @@ namespace CptcEventsTests
         {
             public Task<Group> CreateGroupAsync(Group group) => Task.FromResult(group);
             public Task<IEnumerable<Group>> GetGroupsForUserAsync(string userId) => Task.FromResult<IEnumerable<Group>>(new List<Group>());
-            public Task<Group?> GetGroupAsync(int id) => Task.FromResult<Group?>(null);
+            public Task<Group?> GetGroupByIdAsync(int id) => Task.FromResult<Group?>(null);
             public Task<bool> IsUserModeratorAsync(int groupId, string userId) => Task.FromResult(false);
+            public Task<bool> IsUserOwnerAsync(int groupId, string userId) => Task.FromResult(false);
+            public Task<bool> IsUserMemberAsync(int groupId, string userId) => Task.FromResult(false);
+            public Task<Group?> UpdateGroupAsync(Group group, string requestingUserId) => Task.FromResult<Group?>(null);
+            public Task DeleteGroupAsync(int groupId) => Task.CompletedTask;
+            public Task<GroupMember?> AddUserToGroupAsync(int groupId, string userId, RoleType role, int? inviteId) => Task.FromResult<GroupMember?>(null);
+            public Task<GroupMember?> UpdateUserRoleAsync(int groupId, string userId, RoleType newRole) => Task.FromResult<GroupMember?>(null);
+            public Task RemoveUserFromGroupAsync(int groupId, string userId) => Task.CompletedTask;
         }
 
         // Minimal IUserStore implementation for constructing a UserManager in tests
