@@ -29,7 +29,7 @@ namespace CptcEvents.Controllers
         [HttpGet("Events/{eventId?}")]
         public async Task<IActionResult> Index(int? eventId)
         {
-            string? userId = _userManager.GetUserId(User);
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
             if (userId == null)
             {
                 return Challenge();
@@ -44,11 +44,7 @@ namespace CptcEvents.Controllers
         [HttpGet("Events/Details/{eventId}")]
         public async Task<IActionResult> Details(int eventId)
         {
-            string? userId = _userManager.GetUserId(User);
-            if (userId == null)
-            {
-                return Challenge();
-            }
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
 
             Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
             if (eventItem == null)
@@ -56,11 +52,20 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            // Check if user is a member of the event's group
-            bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
-            if (!isMember && !eventItem.IsPublic)
+            // If user isn't authenticated, only allow viewing public events
+            if (userId == null && !eventItem.IsPublic)
             {
-                return Forbid();
+                return Challenge();
+            }
+
+            // If authenticated, check membership for private events
+            if (userId != null && !eventItem.IsPublic)
+            {
+                bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+                if (!isMember)
+                {
+                    return Forbid();
+                }
             }
 
             return View(eventItem);
@@ -70,6 +75,13 @@ namespace CptcEvents.Controllers
         [HttpGet("Events/Create")]
         public async Task<IActionResult> Create()
         {
+            // Ensure user is authenticated
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
             // Load groups for the current user
             await PopulateGroupsSelectListAsync();
             return View();
@@ -80,7 +92,7 @@ namespace CptcEvents.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(EventViewModel model)
         {
-            string? userId = _userManager.GetUserId(User);
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
             if (userId == null)
             {
                 return Challenge();
@@ -123,7 +135,7 @@ namespace CptcEvents.Controllers
         [HttpGet("Events/Edit/{eventId}")]
         public async Task<IActionResult> Edit(int eventId)
         {
-            string? userId = _userManager.GetUserId(User);
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
             if (userId == null)
             {
                 return Challenge();
@@ -166,7 +178,7 @@ namespace CptcEvents.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int eventId, EventEditViewModel model)
         {
-            string? userId = _userManager.GetUserId(User);
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
             if (userId == null)
             {
                 return Challenge();
@@ -221,7 +233,7 @@ namespace CptcEvents.Controllers
         [HttpGet("Events/Delete/{eventId}")]
         public async Task<IActionResult> Delete(int eventId)
         {
-            string? userId = _userManager.GetUserId(User);
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
             if (userId == null)
             {
                 return Challenge();
@@ -248,7 +260,7 @@ namespace CptcEvents.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int eventId)
         {
-            string? userId = _userManager.GetUserId(User);
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
             if (userId == null)
             {
                 return Challenge();

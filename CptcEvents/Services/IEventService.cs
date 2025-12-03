@@ -31,14 +31,12 @@ public class EventService : IEventService
     public async Task<IEnumerable<Event>> GetAllEventsAsync()
     {
         return await _context.Events
-            .Include(e => e.Group)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Event>> GetPublicEventsAsync()
     {
         return await _context.Events
-            .Include(e => e.Group)
             .Where(e => e.IsPublic)
             .ToListAsync();
     }
@@ -46,7 +44,6 @@ public class EventService : IEventService
     public async Task<IEnumerable<Event>> GetEventsForGroupAsync(int groupId)
     {
         return await _context.Events
-            .Include(e => e.Group)
             .Where(e => e.GroupId == groupId)
             .OrderByDescending(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
@@ -59,8 +56,7 @@ public class EventService : IEventService
 
         // Get events from groups where the user is a member
         return await _context.Events
-            .Include(e => e.Group)
-            .Where(e => e.Group != null && e.Group.Members.Any(m => m.UserId == userId))
+            .Where(e => _context.GroupMemberships.Any(m => m.GroupId == e.GroupId && m.UserId == userId))
             .OrderByDescending(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
             .ToListAsync();
@@ -69,7 +65,6 @@ public class EventService : IEventService
     public async Task<Event?> GetEventByIdAsync(int id)
     {
         return await _context.Events
-            .Include(e => e.Group)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
@@ -116,7 +111,6 @@ public class EventService : IEventService
     public async Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end)
     {
         return await _context.Events
-            .Include(e => e.Group)
             .Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end)
             .ToListAsync();
     }
