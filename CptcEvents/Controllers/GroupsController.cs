@@ -219,6 +219,7 @@ namespace CptcEvents.Controllers
 
         // POST: Groups/Leave/5
         [HttpPost("Groups/Leave/{groupId}")]
+        [ActionName("Leave")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "GroupMember")]
         public async Task<IActionResult> LeaveConfirmed(int groupId)
@@ -248,7 +249,7 @@ namespace CptcEvents.Controllers
             {
                 ViewBag.IsOwner = true;
                 ModelState.AddModelError(string.Empty, "Group owners cannot leave their own group. Please transfer ownership or delete the group.");
-                return View("Leave", group);
+                return View(group);
             }
 
             await _groupService.RemoveUserFromGroupAsync(groupId, userId);
