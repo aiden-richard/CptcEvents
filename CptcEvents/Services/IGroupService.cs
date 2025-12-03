@@ -81,11 +81,8 @@ namespace CptcEvents.Services
         {
             // Run within the same DbContext and save changes once to ensure consistency.
             _context.Groups.Add(group);
-            await _context.SaveChangesAsync();
-
             await AddUserToGroupAsync(group.Id, group.OwnerId, RoleType.Owner, null);
 
-            await _context.SaveChangesAsync();
             return group;
         }
 
