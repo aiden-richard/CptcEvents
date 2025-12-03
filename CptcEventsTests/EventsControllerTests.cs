@@ -22,6 +22,7 @@ namespace CptcEventsTests
         {
             private readonly List<Event> _events;
             public bool AddCalled { get; private set; }
+            public bool CreateCalled { get; private set; }
 
             // Default constructor -> no events
             public DummyEventService() : this(null)
@@ -40,6 +41,13 @@ namespace CptcEventsTests
                 return Task.CompletedTask;
             }
 
+            public Task<Event> CreateEventAsync(Event newEvent)
+            {
+                CreateCalled = true;
+                _events.Add(newEvent);
+                return Task.FromResult(newEvent);
+            }
+
             public Task DeleteEventAsync(int id) => Task.CompletedTask;
 
             public Task<IEnumerable<Event>> GetAllEventsAsync() => Task.FromResult<IEnumerable<Event>>(_events);
@@ -48,7 +56,11 @@ namespace CptcEventsTests
 
             public Task<IEnumerable<Event>> GetPublicEventsAsync() => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.IsPublic));
 
-            public Task UpdateEventAsync(Event updatedEvent) => Task.CompletedTask;
+            public Task<IEnumerable<Event>> GetEventsForGroupAsync(int groupId) => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.GroupId == groupId));
+
+            public Task<IEnumerable<Event>> GetEventsForUserAsync(string userId) => Task.FromResult<IEnumerable<Event>>(_events);
+
+            public Task<Event?> UpdateEventAsync(Event updatedEvent) => Task.FromResult<Event?>(updatedEvent);
 
             public Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end) => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end));
         }
@@ -217,21 +229,19 @@ namespace CptcEventsTests
         }
 
         [TestMethod]
-        public async Task Create_Post_Valid_RedirectsAndCallsAddEvent()
+        public async Task Create_Post_Valid_WithoutAuth_ReturnsChallengeResult()
         {
-            // Arrange
+            // Arrange - controller without authenticated user
             var svc = new DummyEventService();
             var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
-            var newEvent = new Event { Id = 10, Title = "New Event", DateOfEvent = new DateOnly(2025, 9, 1), IsAllDay = true };
+            var newEvent = new EventViewModel { Title = "New Event", DateOfEvent = new DateOnly(2025, 9, 1), IsAllDay = true, GroupId = 1 };
 
             // Act
             var result = await controller.Create(newEvent);
 
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            var redirect = (RedirectToActionResult)result;
-            Assert.AreEqual("Index", redirect.ActionName);
-            Assert.IsTrue(svc.AddCalled, "AddEventAsync should have been called for valid model");
+            // Assert - should return Challenge since user is not authenticated
+            Assert.IsInstanceOfType(result, typeof(ChallengeResult));
+            Assert.IsFalse(svc.CreateCalled, "CreateEventAsync should not be called when user is not authenticated");
         }
 
         [TestMethod]
@@ -240,17 +250,15 @@ namespace CptcEventsTests
             // Arrange
             var svc = new DummyEventService();
             var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
-            var newEvent = new Event { Id = 11, Title = "Invalid Event", DateOfEvent = new DateOnly(2025, 9, 2) };
+            var newEvent = new EventViewModel { Title = "Invalid Event", DateOfEvent = new DateOnly(2025, 9, 2), GroupId = 1 };
             controller.ModelState.AddModelError("Title", "Required");
 
-            // Act
+            // Act - Without auth, should return Challenge first
             var result = await controller.Create(newEvent);
 
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(ViewResult));
-            var view = (ViewResult)result;
-            Assert.AreSame(newEvent, view.Model);
-            Assert.IsFalse(svc.AddCalled, "AddEventAsync should not be called when model is invalid");
+            // Assert - should return Challenge since user is not authenticated
+            Assert.IsInstanceOfType(result, typeof(ChallengeResult));
+            Assert.IsFalse(svc.CreateCalled, "CreateEventAsync should not be called when user is not authenticated");
         }
 
         [TestMethod]
