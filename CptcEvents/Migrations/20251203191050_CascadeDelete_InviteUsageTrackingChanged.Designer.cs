@@ -3,6 +3,7 @@ using System;
 using CptcEvents.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CptcEvents.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251203191050_CascadeDelete_InviteUsageTrackingChanged")]
+    partial class CascadeDelete_InviteUsageTrackingChanged
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0-rc.2.25502.107");
@@ -223,6 +226,9 @@ namespace CptcEvents.Migrations
                     b.Property<int>("GroupId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("GroupId1")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("InviteId")
                         .HasColumnType("INTEGER");
 
@@ -240,6 +246,8 @@ namespace CptcEvents.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("GroupId");
+
+                    b.HasIndex("GroupId1");
 
                     b.HasIndex("InviteId");
 
@@ -429,9 +437,15 @@ namespace CptcEvents.Migrations
 
             modelBuilder.Entity("CptcEvents.Models.GroupMember", b =>
                 {
-                    b.HasOne("CptcEvents.Models.Group", "Group")
+                    b.HasOne("CptcEvents.Models.Group", null)
                         .WithMany("Members")
                         .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CptcEvents.Models.Group", "Group")
+                        .WithMany()
+                        .HasForeignKey("GroupId1")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
