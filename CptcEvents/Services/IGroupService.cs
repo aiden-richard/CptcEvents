@@ -1,11 +1,6 @@
 ﻿using CptcEvents.Data;
 using CptcEvents.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace CptcEvents.Services
 {
