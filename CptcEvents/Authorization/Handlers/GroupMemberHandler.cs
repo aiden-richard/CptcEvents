@@ -67,10 +67,8 @@ namespace CptcEvents.Authorization.Handlers
                 context.Succeed(requirement);
                 return;
             }
-
-
             
-            
+            context.Fail();
         }
     }
 }
