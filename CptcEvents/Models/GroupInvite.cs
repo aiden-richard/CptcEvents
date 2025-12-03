@@ -78,11 +78,8 @@ public class GroupInvite : IValidatableObject
 	/// </summary>
 	public bool OneTimeUse { get; set; } = true;
 
-	/// <summary>
-	/// Indicates whether the invite has already been used at least once.
-	/// This is updated when the invite is redeemed.
-	/// </summary>
-	public bool IsUsed { get; set; } = false;
+	public bool IsExpired => (ExpiresAt != null && DateTime.UtcNow >= ExpiresAt) ||
+							(OneTimeUse && TimesUsed >= 1);
 
 	/// <summary>
 	/// Number of times the invite has been used. Useful when <see cref="OneTimeUse"/> is false.
