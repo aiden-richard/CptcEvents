@@ -44,7 +44,7 @@ namespace CptcEvents.Controllers
 
             GroupInvite? invite = await _inviteService.GetInviteByCodeAsync(code);
 
-            if (invite == null || (invite.OneTimeUse && invite.IsUsed) || (invite.ExpiresAt != null && invite.ExpiresAt < DateTime.UtcNow))
+            if (invite == null || invite.IsExpired)
             {
                 return NotFound();
             }
@@ -82,7 +82,7 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            if ((invite.OneTimeUse && invite.IsUsed) || (invite.ExpiresAt != null && invite.ExpiresAt < DateTime.UtcNow))
+            if (invite.IsExpired)
             {
                 ModelState.AddModelError(string.Empty, "This invite is expired or already used.");
                 return View(invite);
