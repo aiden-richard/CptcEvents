@@ -21,11 +21,11 @@ public class SendGridEmailSender : IEmailSender
     /// </summary>
     public async Task SendEmailAsync(string email, string subject, string htmlMessage)
     {
-        string apiKey = _config["SendGrid:ApiKey"];
+        string? apiKey = _config["SendGrid:ApiKey"];
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException("SendGrid:ApiKey is not configured.");
 
-        string fromEmail = _config["SendGrid:FromEmail"];
+        string? fromEmail = _config["SendGrid:FromEmail"];
         string fromName = _config["SendGrid:FromName"] ?? "";
         if (string.IsNullOrWhiteSpace(fromEmail))
             throw new InvalidOperationException("SendGrid:FromEmail is not configured.");

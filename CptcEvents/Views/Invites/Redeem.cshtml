@@ -1,0 +1,49 @@
+@model CptcEvents.Models.GroupInvite
+@{
+    ViewData["Title"] = "Redeem Invite";
+}
+
+@* View for invite redemption - users see group info and confirm joining *@
+<h1>Redeem Invite</h1>
+
+@if (ViewData["Error"] != null)
+{
+    <div class="alert alert-danger">@ViewData["Error"]</div>
+}
+
+@if (Model != null)
+{
+    <div class="card">
+        <div class="card-body">
+            <h2>You've been invited to join: @Model.Group.Name</h2>
+            <p>Group ID: @Model.Group.Id</p>
+            <p>Invite Code: @Model.InviteCode</p>
+            @if (Model.ExpiresAt != null)
+            {
+                <p>Expires: @Model.ExpiresAt.Value.ToString("g")</p>
+            }
+            
+            <form asp-action="Redeem" method="post">
+                <input type="hidden" asp-for="InviteCode" />
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-primary">Join Group</button>
+                    <a asp-controller="Groups" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <h3>Redeem an Invite Code</h3>
+        <p>Enter an invite code to join a group.</p>
+        <form asp-action="Redeem" method="get">
+            <div class="form-group">
+                <label for="code">Invite Code:</label>
+                <input type="text" name="code" id="code" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary mt-2">Look Up</button>
+        </form>
+    </div>
+}
