@@ -78,6 +78,9 @@ public interface IInviteService
 public class InviteService : IInviteService
 {
     private readonly ApplicationDbContext _context;
+
+	private readonly IGroupService _groupService;
+
 	private readonly Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> _userManager;
 
 	/// <summary>
@@ -85,9 +88,10 @@ public class InviteService : IInviteService
 	/// </summary>
 	/// <param name="context">Application DbContext (injected).</param>
 	/// <param name="userManager">User manager for identity operations (injected).</param>
-	public InviteService(ApplicationDbContext context, Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> userManager)
+	public InviteService(ApplicationDbContext context, IGroupService groupService, Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> userManager)
 	{
 		_context = context;
+		_groupService = groupService;
 		_userManager = userManager;
 	}
 
@@ -122,9 +126,6 @@ public class InviteService : IInviteService
 	/// <inheritdoc/>
 	public async Task<GroupMember?> RedeemInviteAsync(int inviteId, string userId)
 	{
-		// Use a transaction to reduce race conditions when redeeming invites.
-		using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync();
-
 		GroupInvite? invite = await _context.GroupInvites
 			.Include(i => i.Group)
 			.FirstOrDefaultAsync(i => i.Id == inviteId);
@@ -134,61 +135,23 @@ public class InviteService : IInviteService
 			return null;
 		}
 
-		// Reject if invite is one-time and already used
-		if (invite.OneTimeUse && invite.IsUsed)
-		{
-			return null;
-		}
-
 		// Reject if expired
-		if (invite.ExpiresAt != null && invite.ExpiresAt < DateTime.UtcNow)
+		if (invite.IsExpired)
+        {
+            return null;
+        }
+
+		GroupMember? newMember = await _groupService.AddUserToGroupAsync(invite.GroupId, userId, RoleType.Member, invite.Id);
+		if (newMember == null)
 		{
 			return null;
 		}
-
-		// Don't add duplicate membership (fast pre-check)
-		bool alreadyMember = await _context.GroupMemberships
-			.AnyAsync(m => m.GroupId == invite.GroupId && m.UserId == userId);
-		if (alreadyMember)
-		{
-			return null;
-		}
-
-		GroupMember member = new GroupMember
-		{
-			InviteId = invite.Id,
-			GroupId = invite.GroupId,
-			UserId = userId,
-			Role = RoleType.Member
-		};
-
-		_context.GroupMemberships.Add(member);
 
 		// Update invite usage metadata
 		invite.TimesUsed += 1;
-		if (invite.OneTimeUse)
-		{
-			invite.IsUsed = true;
-		}
 
-		try
-		{
-			await _context.SaveChangesAsync();
-			await transaction.CommitAsync();
-			return member;
-		}
-		catch (Microsoft.EntityFrameworkCore.DbUpdateException)
-		{
-			// If a concurrent request inserted the same GroupMember, treat as already-member.
-			await transaction.RollbackAsync();
-			bool nowMember = await _context.GroupMemberships.AnyAsync(m => m.GroupId == invite.GroupId && m.UserId == userId);
-			if (nowMember)
-			{
-				return null;
-			}
-			// Unknown DB error - rethrow so callers can handle/log it.
-			throw;
-		}
+		await _context.SaveChangesAsync();
+		return newMember;
 	}
 
 	/// <inheritdoc/>
@@ -245,7 +208,7 @@ public class InviteService : IInviteService
 			return result;
 		}
 
-		Group? group = await _context.Groups.FindAsync(invite.GroupId);
+		Group? group = await _groupService.GetGroupByIdAsync(invite.GroupId);
 		if (group == null)
 		{
 			result.IsValid = false;
