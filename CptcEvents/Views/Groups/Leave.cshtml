@@ -1,0 +1,49 @@
+@model CptcEvents.Models.Group
+
+@{
+    ViewData["Title"] = "Leave Group";
+    bool isOwner = ViewBag.IsOwner ?? false;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Leave Group</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">@Model.Name</h5>
+                    
+                    @if (isOwner)
+                    {
+                        <div class="alert alert-warning">
+                            <strong>You cannot leave this group.</strong> As the owner, you must either transfer ownership to another member or delete the group.
+                        </div>
+                        <p class="card-text">
+                            <a asp-action="Edit" asp-route-groupId="@Model.Id" class="btn btn-outline-primary">Manage Group</a>
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <strong>Warning:</strong> If you leave this group, you will need to be invited back by a group administrator to rejoin.
+                        </div>
+                        <p class="card-text">Are you sure you want to leave this group?</p>
+                    }
+                    
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    @if (!isOwner)
+                    {
+                        <form asp-action="Leave" asp-route-groupId="@Model.Id" method="post">
+                            <button type="submit" class="btn btn-danger">Leave Group</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

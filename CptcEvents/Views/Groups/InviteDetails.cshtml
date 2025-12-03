@@ -14,7 +14,7 @@
     <p>Expires: @(Model.ExpiresAt?.ToString("g") ?? "Never")</p>
     <p>Current Uses: @Model.TimesUsed</p>
     <p>One Time Use: @(Model.OneTimeUse ? "Yes" : "No")</p>
-    <p>Status: @(Model.IsUsed ? "Used" : "Active")</p>
+    <p>Status: @(Model.TimesUsed >= 1 ? "Used" : "Active")</p>
     @if (Model.InvitedUserId != null)
     {
         <p>Invited User ID: @Model.InvitedUserId</p>

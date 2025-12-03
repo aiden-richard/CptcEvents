@@ -25,7 +25,6 @@
         @foreach (var invite in Model ?? Enumerable.Empty<GroupInvite>())
         {
             @* Determine if the invite is still active *@
-            var isUsed = invite.IsUsed || (invite.ExpiresAt != null && invite.ExpiresAt < DateTime.UtcNow);
             <tr>
                 <td>@invite.InviteCode</td>
                 <td>@(invite.Group?.Name ?? invite.GroupId.ToString())</td>
@@ -33,11 +32,11 @@
                 <td>@(invite.ExpiresAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
                 <td>
                     @* Show the current status of the invite *@
-                    @if (invite.IsUsed)
+                    @if (invite.TimesUsed >= 1 && !invite.IsExpired)
                     {
-                        <span class="text-muted">Used</span>
+                        <span class="text-muted">Used (still active)</span>
                     }
-                    else if (invite.ExpiresAt != null && invite.ExpiresAt < DateTime.UtcNow)
+                    else if (invite.IsExpired)
                     {
                         <span class="text-warning">Expired</span>
                     }
