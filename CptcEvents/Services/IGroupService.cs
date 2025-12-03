@@ -74,8 +74,12 @@ namespace CptcEvents.Services
 
         public async Task<Group> CreateGroupAsync(Group group)
         {
-            // Run within the same DbContext and save changes once to ensure consistency.
+            // Add the group and persist it so the database generates an Id
+            // before we attempt to add the owner membership that relies on group.Id.
             _context.Groups.Add(group);
+            await _context.SaveChangesAsync();
+
+            // Now group.Id is populated; add the owner membership.
             await AddUserToGroupAsync(group.Id, group.OwnerId, RoleType.Owner, null);
 
             return group;
