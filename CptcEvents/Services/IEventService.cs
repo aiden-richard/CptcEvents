@@ -12,7 +12,7 @@ public interface IEventService
     Task<IEnumerable<Event>> GetEventsForUserAsync(string userId);
     Task<Event?> GetEventByIdAsync(int id);
     Task<Event> CreateEventAsync(Event newEvent);
-    Task<Event?> UpdateEventAsync(Event updatedEvent);
+    Task<Event?> UpdateEventAsync(int eventId, Event updatedEvent);
     Task DeleteEventAsync(int id);
     Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end);
     
@@ -72,12 +72,16 @@ public class EventService : IEventService
     {
         _context.Events.Add(newEvent);
         await _context.SaveChangesAsync();
-        return newEvent;
+        
+        // Reload with navigation property
+        return await _context.Events
+            .Include(e => e.Group)
+            .FirstAsync(e => e.Id == newEvent.Id);
     }
 
-    public async Task<Event?> UpdateEventAsync(Event updatedEvent)
+    public async Task<Event?> UpdateEventAsync(int eventId, Event updatedEvent)
     {
-        Event? existingEvent = await _context.Events.FindAsync(updatedEvent.Id);
+        Event? existingEvent = await _context.Events.FindAsync(eventId);
         if (existingEvent == null)
         {
             return null;

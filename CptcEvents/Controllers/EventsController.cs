@@ -208,17 +208,17 @@ namespace CptcEvents.Controllers
                 return Forbid();
             }
 
-            // Update event properties
-            existingEvent.Title = model.Title;
-            existingEvent.Description = model.Description;
-            existingEvent.IsPublic = model.IsPublic;
-            existingEvent.IsAllDay = model.IsAllDay;
-            existingEvent.DateOfEvent = model.DateOfEvent;
-            existingEvent.StartTime = model.StartTime;
-            existingEvent.EndTime = model.EndTime;
-            existingEvent.Url = model.Url;
-
-            Event? result = await _eventsService.UpdateEventAsync(existingEvent);
+            Event? result = await _eventsService.UpdateEventAsync(existingEvent.Id, new Event
+            {
+                Title = model.Title,
+                Description = model.Description,
+                IsPublic = model.IsPublic,
+                IsAllDay = model.IsAllDay,
+                DateOfEvent = model.DateOfEvent,
+                StartTime = model.StartTime,
+                EndTime = model.EndTime,
+                Url = model.Url
+            });
             if (result == null)
             {
                 ModelState.AddModelError(string.Empty, "Failed to update event.");
