@@ -76,7 +76,5 @@ public class EventViewModel : IValidatableObject
                 "End time must be later than start time for timed events.",
                 new[] { nameof(EndTime), nameof(StartTime) });
         }
-
-        yield break;
     }
 }
