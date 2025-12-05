@@ -70,14 +70,11 @@ public class EventViewModel : IValidatableObject
     /// </summary>
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (!IsAllDay)
+        if (!IsAllDay && EndTime <= StartTime)
         {
-            if (EndTime <= StartTime)
-            {
-                yield return new ValidationResult(
-                    "End time must be later than start time for timed events.",
-                    new[] { nameof(EndTime), nameof(StartTime) });
-            }
+            yield return new ValidationResult(
+                "End time must be later than start time for timed events.",
+                new[] { nameof(EndTime), nameof(StartTime) });
         }
 
         yield break;
