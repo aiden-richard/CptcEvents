@@ -145,7 +145,7 @@ namespace CptcEventsTests
                 var updated = new Event { Id = 100, Title = "Updated", DateOfEvent = new DateOnly(2025, 12, 2) };
 
                 // Act
-                await svc.UpdateEventAsync(updated);
+                await svc.UpdateEventAsync(100, updated);
             }
 
             using (var context = new ApplicationDbContext(options))

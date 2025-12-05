@@ -60,7 +60,7 @@ namespace CptcEventsTests
 
             public Task<IEnumerable<Event>> GetEventsForUserAsync(string userId) => Task.FromResult<IEnumerable<Event>>(_events);
 
-            public Task<Event?> UpdateEventAsync(Event updatedEvent) => Task.FromResult<Event?>(updatedEvent);
+            public Task<Event?> UpdateEventAsync(int eventId, Event updatedEvent) => Task.FromResult<Event?>(updatedEvent);
 
             public Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end) => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end));
         }
@@ -245,7 +245,7 @@ namespace CptcEventsTests
         }
 
         [TestMethod]
-        public async Task Create_Post_Invalid_ReturnsViewWithModel()
+        public async Task Create_Post_Invalid_WithoutAuth_ReturnsChallengeResult()
         {
             // Arrange
             var svc = new DummyEventService();
