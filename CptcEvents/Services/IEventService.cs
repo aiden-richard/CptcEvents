@@ -133,6 +133,7 @@ public class EventService : IEventService
 
         // Get events from groups where the user is a member
         return await _context.Events
+            .Include(e => e.Group)
             .Where(e => _context.GroupMemberships.Any(m => m.GroupId == e.GroupId && m.UserId == userId))
             .OrderByDescending(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
