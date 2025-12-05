@@ -14,14 +14,22 @@ using System.Threading;
 
 namespace CptcEventsTests
 {
+    /// <summary>
+    /// Unit tests for the <see cref="EventsController"/> class.
+    /// Tests cover event retrieval, creation, and date range filtering functionality.
+    /// </summary>
     [TestClass]
     public class EventsControllerTests
     {
-        // Helper to access ToFullCalendarEvent without needing real IEventService
+        /// <summary>
+        /// A mock implementation of <see cref="IEventService"/> for testing purposes.
+        /// Provides in-memory event storage and tracks method invocations.
+        /// </summary>
         private class DummyEventService : CptcEvents.Services.IEventService
         {
             private readonly List<Event> _events;
             public bool AddCalled { get; private set; }
+            public bool CreateCalled { get; private set; }
 
             // Default constructor -> no events
             public DummyEventService() : this(null)
@@ -40,6 +48,13 @@ namespace CptcEventsTests
                 return Task.CompletedTask;
             }
 
+            public Task<Event> CreateEventAsync(Event newEvent)
+            {
+                CreateCalled = true;
+                _events.Add(newEvent);
+                return Task.FromResult(newEvent);
+            }
+
             public Task DeleteEventAsync(int id) => Task.CompletedTask;
 
             public Task<IEnumerable<Event>> GetAllEventsAsync() => Task.FromResult<IEnumerable<Event>>(_events);
@@ -48,12 +63,19 @@ namespace CptcEventsTests
 
             public Task<IEnumerable<Event>> GetPublicEventsAsync() => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.IsPublic));
 
-            public Task UpdateEventAsync(Event updatedEvent) => Task.CompletedTask;
+            public Task<IEnumerable<Event>> GetEventsForGroupAsync(int groupId) => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.GroupId == groupId));
+
+            public Task<IEnumerable<Event>> GetEventsForUserAsync(string userId) => Task.FromResult<IEnumerable<Event>>(_events);
+
+            public Task<Event?> UpdateEventAsync(int eventId, Event updatedEvent) => Task.FromResult<Event?>(updatedEvent);
 
             public Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end) => Task.FromResult<IEnumerable<Event>>(_events.Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end));
         }
 
-        // Minimal dummy group service for constructor compatibility
+        /// <summary>
+        /// A minimal mock implementation of <see cref="IGroupService"/> for controller constructor compatibility.
+        /// Returns default/empty values for all operations.
+        /// </summary>
         private class DummyGroupService : IGroupService
         {
             public Task<Group> CreateGroupAsync(Group group) => Task.FromResult(group);
@@ -69,7 +91,10 @@ namespace CptcEventsTests
             public Task RemoveUserFromGroupAsync(int groupId, string userId) => Task.CompletedTask;
         }
 
-        // Minimal IUserStore implementation for constructing a UserManager in tests
+        /// <summary>
+        /// A minimal no-op implementation of <see cref="IUserStore{TUser}"/> for constructing
+        /// a <see cref="UserManager{TUser}"/> in tests without requiring a real data store.
+        /// </summary>
         private class NoopUserStore : IUserStore<ApplicationUser>
         {
             public Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
@@ -101,7 +126,11 @@ namespace CptcEventsTests
                 => Task.FromResult(IdentityResult.Success);
         }
 
-        // Simple helper to create a UserManager suitable for tests
+        /// <summary>
+        /// Creates a <see cref="UserManager{TUser}"/> instance configured for unit testing.
+        /// Uses a no-op user store and default identity options.
+        /// </summary>
+        /// <returns>A <see cref="UserManager{ApplicationUser}"/> suitable for testing.</returns>
         private static UserManager<ApplicationUser> CreateTestUserManager()
         {
             var store = new NoopUserStore();
@@ -117,6 +146,10 @@ namespace CptcEventsTests
             return new UserManager<ApplicationUser>(store, options, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger);
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventMapper.ToFullCalendarEvent"/> correctly formats
+        /// all-day events with DateOnly start and end values (end = start + 1 day).
+        /// </summary>
         [TestMethod]
         public void ToFullCalendarEvent_AllDay_SetsStartAndEndAsDateOnly()
         {
@@ -146,6 +179,10 @@ namespace CptcEventsTests
             Assert.AreEqual(new DateOnly(2025, 11, 1), end);
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventMapper.ToFullCalendarEvent"/> correctly formats
+        /// timed events with ISO 8601 datetime strings for start and end.
+        /// </summary>
         [TestMethod]
         public void ToFullCalendarEvent_TimedEvent_FormatsIsoStrings()
         {
@@ -180,6 +217,11 @@ namespace CptcEventsTests
             Assert.AreEqual("2025-12-01T11:00:00", endStr);
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventsController.GetEvents"/> returns a JSON list
+        /// of events formatted for FullCalendar, with correct property types for both
+        /// all-day and timed events.
+        /// </summary>
         [TestMethod]
         public async Task GetEvents_ReturnsJsonList_ShapedForFullCalendar()
         {
@@ -216,43 +258,52 @@ namespace CptcEventsTests
             Assert.IsInstanceOfType(second["start"], typeof(string));
         }
 
+        /// <summary>
+        /// Verifies that attempting to create an event without authentication
+        /// returns a <see cref="ChallengeResult"/> and does not persist the event.
+        /// </summary>
         [TestMethod]
-        public async Task Create_Post_Valid_RedirectsAndCallsAddEvent()
+        public async Task Create_Post_Valid_WithoutAuth_ReturnsChallengeResult()
         {
-            // Arrange
+            // Arrange - controller without authenticated user
             var svc = new DummyEventService();
             var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
-            var newEvent = new Event { Id = 10, Title = "New Event", DateOfEvent = new DateOnly(2025, 9, 1), IsAllDay = true };
+            var newEvent = new EventViewModel { Title = "New Event", DateOfEvent = new DateOnly(2025, 9, 1), IsAllDay = true, GroupId = 1 };
 
             // Act
             var result = await controller.Create(newEvent);
 
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            var redirect = (RedirectToActionResult)result;
-            Assert.AreEqual("Index", redirect.ActionName);
-            Assert.IsTrue(svc.AddCalled, "AddEventAsync should have been called for valid model");
+            // Assert - should return Challenge since user is not authenticated
+            Assert.IsInstanceOfType(result, typeof(ChallengeResult));
+            Assert.IsFalse(svc.CreateCalled, "CreateEventAsync should not be called when user is not authenticated");
         }
 
+        /// <summary>
+        /// Verifies that attempting to create an event with invalid model state
+        /// and without authentication returns a <see cref="ChallengeResult"/>
+        /// (authentication check takes precedence over validation).
+        /// </summary>
         [TestMethod]
-        public async Task Create_Post_Invalid_ReturnsViewWithModel()
+        public async Task Create_Post_Invalid_WithoutAuth_ReturnsChallengeResult()
         {
             // Arrange
             var svc = new DummyEventService();
             var controller = new EventsController(svc, new DummyGroupService(), CreateTestUserManager());
-            var newEvent = new Event { Id = 11, Title = "Invalid Event", DateOfEvent = new DateOnly(2025, 9, 2) };
+            var newEvent = new EventViewModel { Title = "Invalid Event", DateOfEvent = new DateOnly(2025, 9, 2), GroupId = 1 };
             controller.ModelState.AddModelError("Title", "Required");
 
-            // Act
+            // Act - Without auth, should return Challenge first
             var result = await controller.Create(newEvent);
 
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(ViewResult));
-            var view = (ViewResult)result;
-            Assert.AreSame(newEvent, view.Model);
-            Assert.IsFalse(svc.AddCalled, "AddEventAsync should not be called when model is invalid");
+            // Assert - should return Challenge since user is not authenticated
+            Assert.IsInstanceOfType(result, typeof(ChallengeResult));
+            Assert.IsFalse(svc.CreateCalled, "CreateEventAsync should not be called when user is not authenticated");
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventsController.GetEventsInRange"/> returns only
+        /// events within the specified inclusive date range.
+        /// </summary>
         [TestMethod]
         public async Task GetEventsInRange_ReturnsEventsWithinRange()
         {
@@ -280,6 +331,10 @@ namespace CptcEventsTests
             CollectionAssert.AreEquivalent(new List<object> { 1, 2 }, ids);
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventsController.GetEventsInRange"/> returns a
+        /// <see cref="BadRequestObjectResult"/> when the end date is before the start date.
+        /// </summary>
         [TestMethod]
         public async Task GetEventsInRange_EndBeforeStart_ReturnsBadRequest()
         {

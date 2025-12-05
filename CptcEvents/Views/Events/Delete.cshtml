@@ -1,0 +1,61 @@
+@model CptcEvents.Models.Event
+@{
+    ViewData["Title"] = "Delete Event";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Delete Event</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">@Model.Title</h5>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <p class="text-muted">@Model.Description</p>
+                    }
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Group</dt>
+                        <dd class="col-sm-8">@Model.Group?.Name</dd>
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">@Model.DateOfEvent.ToString("dddd, MMMM d, yyyy")</dd>
+                        <dt class="col-sm-4">Time</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsAllDay)
+                            {
+                                <span>All Day</span>
+                            }
+                            else
+                            {
+                                @Model.StartTime.ToString("h:mm tt") <text>-</text> @Model.EndTime.ToString("h:mm tt")
+                            }
+                        </dd>
+                        <dt class="col-sm-4">Visibility</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsPublic)
+                            {
+                                <span class="badge bg-success">Public</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Private</span>
+                            }
+                        </dd>
+                    </dl>
+                    <div class="alert alert-danger mt-3 mb-0">
+                        <strong>Warning:</strong> This action cannot be undone. The event will be permanently deleted.
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    <form asp-action="Delete" asp-route-eventId="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">Delete Event</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,9 +6,17 @@ using System.Linq;
 
 namespace CptcEventsTests
 {
+    /// <summary>
+    /// Unit tests for the <see cref="Event"/> model's validation logic.
+    /// Tests cover time validation rules for timed and all-day events.
+    /// </summary>
     [TestClass]
     public class EventModelTests
     {
+        /// <summary>
+        /// Verifies that a timed event with an end time before or equal to the start time
+        /// produces a validation error.
+        /// </summary>
         [TestMethod]
         public void Validate_TimedEvent_EndNotAfterStart_ReturnsValidationError()
         {
@@ -33,6 +41,10 @@ namespace CptcEventsTests
             Assert.IsTrue(results.Any(r => (r.MemberNames?.Contains(nameof(Event.EndTime)) ?? false) || (r.MemberNames?.Contains(nameof(Event.StartTime)) ?? false)), "Expected validation error to reference StartTime/EndTime.");
         }
 
+        /// <summary>
+        /// Verifies that a timed event with an end time after the start time
+        /// passes validation without errors.
+        /// </summary>
         [TestMethod]
         public void Validate_TimedEvent_EndAfterStart_NoValidationErrors()
         {
@@ -56,6 +68,10 @@ namespace CptcEventsTests
             Assert.IsFalse(results.Any(), "Did not expect validation errors when end time is after start time.");
         }
 
+        /// <summary>
+        /// Verifies that all-day events ignore start/end time validation,
+        /// even when the times would be invalid for a timed event.
+        /// </summary>
         [TestMethod]
         public void Validate_AllDayEvent_IgnoresTimes_NoValidationErrors()
         {

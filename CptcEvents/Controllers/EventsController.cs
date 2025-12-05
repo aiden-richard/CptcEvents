@@ -5,9 +5,11 @@ using CptcEvents.Data;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CptcEvents.Controllers
 {
+    [Authorize]
     public class EventsController : Controller
     {
         private readonly IEventService _eventsService;
@@ -21,33 +23,272 @@ namespace CptcEvents.Controllers
             _userManager = userManager;
         }
 
-        public IActionResult Index()
+        #region Event CRUD Operations
+
+        // GET: Events or Events/{eventId}
+        [HttpGet("Events/{eventId?}")]
+        public async Task<IActionResult> Index(int? eventId)
         {
-            return View();
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            IEnumerable<Event> events = await _eventsService.GetEventsForUserAsync(userId);
+
+            return View(events);
         }
 
-        [HttpGet]
+        // GET: Events/Details/5
+        [HttpGet("Events/Details/{eventId}")]
+        public async Task<IActionResult> Details(int eventId)
+        {
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            // If user isn't authenticated, only allow viewing public events
+            if (userId == null && !eventItem.IsPublic)
+            {
+                return Challenge();
+            }
+
+            // If authenticated, check membership for private events
+            if (userId != null && !eventItem.IsPublic)
+            {
+                bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+                if (!isMember)
+                {
+                    return Forbid();
+                }
+            }
+
+            return View(eventItem);
+        }
+
+        // GET: Events/Create
+        [HttpGet("Events/Create")]
         public async Task<IActionResult> Create()
         {
-            // Load groups for the current user
-            await PopulateGroupsSelectListAsync();
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Create(Event newEvent)
-        {
-            if (ModelState.IsValid)
+            // Ensure user is authenticated
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            if (userId == null)
             {
-                await _eventsService.AddEventAsync(newEvent);
-                return RedirectToAction("Index");
+                return Challenge();
             }
 
             // Load groups for the current user
             await PopulateGroupsSelectListAsync();
-
-            return View(newEvent);
+            return View();
         }
+
+        // POST: Events/Create
+        [HttpPost("Events/Create")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(EventViewModel model)
+        {
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await PopulateGroupsSelectListAsync();
+                return View(model);
+            }
+
+            // Verify user is at least a moderator of the group to create events
+            bool isModerator = await _groupService.IsUserModeratorAsync(model.GroupId, userId);
+            if (!isModerator)
+            {
+                ModelState.AddModelError(string.Empty, "You must be a moderator of the group to create events.");
+                await PopulateGroupsSelectListAsync();
+                return View(model);
+            }
+
+            Event newEvent = new Event
+            {
+                Title = model.Title,
+                Description = model.Description,
+                GroupId = model.GroupId,
+                IsPublic = model.IsPublic,
+                IsAllDay = model.IsAllDay,
+                DateOfEvent = model.DateOfEvent,
+                StartTime = model.StartTime,
+                EndTime = model.EndTime,
+                Url = model.Url
+            };
+
+            await _eventsService.CreateEventAsync(newEvent);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Events/Edit/5
+        [HttpGet("Events/Edit/{eventId}")]
+        public async Task<IActionResult> Edit(int eventId)
+        {
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is at least a moderator of the event's group
+            bool isModerator = await _groupService.IsUserModeratorAsync(eventItem.GroupId, userId);
+            if (!isModerator)
+            {
+                return Forbid();
+            }
+
+            var viewModel = new EventEditViewModel
+            {
+                Id = eventItem.Id,
+                Title = eventItem.Title,
+                Description = eventItem.Description,
+                GroupId = eventItem.GroupId,
+                GroupName = eventItem.Group?.Name,
+                IsPublic = eventItem.IsPublic,
+                IsAllDay = eventItem.IsAllDay,
+                DateOfEvent = eventItem.DateOfEvent,
+                StartTime = eventItem.StartTime,
+                EndTime = eventItem.EndTime,
+                Url = eventItem.Url,
+                IsModerator = isModerator
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: Events/Edit/5
+        [HttpPost("Events/Edit/{eventId}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int eventId, EventEditViewModel model)
+        {
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            if (eventId != model.Id)
+            {
+                return BadRequest();
+            }
+
+            // Retrieve existing event
+            Event? existingEvent = await _eventsService.GetEventByIdAsync(eventId);
+            if (existingEvent == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is at least a moderator of the event's group
+            bool isModerator = await _groupService.IsUserModeratorAsync(existingEvent.GroupId, userId);
+            if (!isModerator)
+            {
+                return Forbid();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.IsModerator = isModerator;
+                model.GroupName = existingEvent.Group?.Name;
+                return View(model);
+            }
+
+            Event? result = await _eventsService.UpdateEventAsync(existingEvent.Id, new Event
+            {
+                Title = model.Title,
+                Description = model.Description,
+                IsPublic = model.IsPublic,
+                IsAllDay = model.IsAllDay,
+                DateOfEvent = model.DateOfEvent,
+                StartTime = model.StartTime,
+                EndTime = model.EndTime,
+                Url = model.Url
+            });
+            if (result == null)
+            {
+                ModelState.AddModelError(string.Empty, "Failed to update event.");
+                model.IsModerator = isModerator;
+                return View(model);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Events/Delete/5
+        [HttpGet("Events/Delete/{eventId}")]
+        public async Task<IActionResult> Delete(int eventId)
+        {
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is at least a moderator of the event's group
+            bool isModerator = await _groupService.IsUserModeratorAsync(eventItem.GroupId, userId);
+            if (!isModerator)
+            {
+                return Forbid();
+            }
+
+            return View(eventItem);
+        }
+
+        // POST: Events/Delete/5
+        [HttpPost("Events/Delete/{eventId}"), ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int eventId)
+        {
+            string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is at least a moderator of the event's group
+            bool isModerator = await _groupService.IsUserModeratorAsync(eventItem.GroupId, userId);
+            if (!isModerator)
+            {
+                return Forbid();
+            }
+
+            await _eventsService.DeleteEventAsync(eventId);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        #endregion
+
+        #region Helper Methods
 
         // Helper that populates ViewData["Groups"] with groups available to the current user.
         private async Task PopulateGroupsSelectListAsync()
@@ -58,12 +299,25 @@ namespace CptcEvents.Controllers
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)
                 {
-                    groups = (await _groupService.GetGroupsForUserAsync(user.Id)).ToList();
+                    // Only get groups where user is at least a moderator (can create events)
+                    var allGroups = await _groupService.GetGroupsForUserAsync(user.Id);
+                    foreach (var group in allGroups)
+                    {
+                        bool isModerator = await _groupService.IsUserModeratorAsync(group.Id, user.Id);
+                        if (isModerator)
+                        {
+                            groups.Add(group);
+                        }
+                    }
                 }
             }
 
             ViewData["Groups"] = new SelectList(groups, "Id", "Name");
         }
+
+        #endregion
+
+        #region API Endpoints
 
         /// <summary>
         /// Retrieves all public calendar events and returns their data formatted for FullCalendar.
@@ -72,6 +326,7 @@ namespace CptcEvents.Controllers
         /// formatted for the FullCalendar JavaScript library. The returned list will be empty if no events are
         /// found.</remarks>
         /// <returns>A JSON result containing a list of event objects formatted for FullCalendar.</returns>
+        [AllowAnonymous]
         public async Task<IActionResult> GetEvents()
         {
             // Get events from the database
@@ -94,6 +349,7 @@ namespace CptcEvents.Controllers
         /// Query parameters: start=yyyy-MM-dd, end=yyyy-MM-dd
         /// </summary>
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetEventsInRange([FromQuery] DateOnly start, [FromQuery] DateOnly end)
         {
             if (end < start)
@@ -105,5 +361,7 @@ namespace CptcEvents.Controllers
             var fullCalendarEvents = events.Select(e => EventMapper.ToFullCalendarEvent(e)).ToList();
             return Json(fullCalendarEvents);
         }
+
+        #endregion
     }
 }
