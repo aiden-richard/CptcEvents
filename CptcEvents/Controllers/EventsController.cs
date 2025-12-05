@@ -189,12 +189,7 @@ namespace CptcEvents.Controllers
                 return BadRequest();
             }
 
-            if (!ModelState.IsValid)
-            {
-                model.IsModerator = await _groupService.IsUserModeratorAsync(model.GroupId, userId);
-                return View(model);
-            }
-
+            // Retrieve existing event
             Event? existingEvent = await _eventsService.GetEventByIdAsync(eventId);
             if (existingEvent == null)
             {
@@ -206,6 +201,13 @@ namespace CptcEvents.Controllers
             if (!isModerator)
             {
                 return Forbid();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.IsModerator = isModerator;
+                model.GroupName = existingEvent.Group?.Name;
+                return View(model);
             }
 
             Event? result = await _eventsService.UpdateEventAsync(existingEvent.Id, new Event
