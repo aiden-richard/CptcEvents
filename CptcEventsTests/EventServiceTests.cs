@@ -9,9 +9,19 @@ using System.Linq;
 
 namespace CptcEventsTests
 {
+    /// <summary>
+    /// Unit tests for the <see cref="EventService"/> class.
+    /// Tests cover CRUD operations and date range filtering using an in-memory database.
+    /// </summary>
     [TestClass]
     public class EventServiceTests
     {
+        /// <summary>
+        /// Creates <see cref="DbContextOptions{TContext}"/> configured to use an in-memory database.
+        /// Each test should use a unique database name to ensure test isolation.
+        /// </summary>
+        /// <param name="dbName">A unique name for the in-memory database.</param>
+        /// <returns>Options configured for in-memory database usage.</returns>
         private static DbContextOptions<ApplicationDbContext> CreateOptions(string dbName)
         {
             return new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -19,6 +29,10 @@ namespace CptcEventsTests
                 .Options;
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventService.GetEventsInRangeAsync"/> returns only events
+        /// within the inclusive date range (start and end dates are included).
+        /// </summary>
         [TestMethod]
         public async Task GetEventsInRangeAsync_ReturnsOnlyEventsWithinInclusiveRange()
         {
@@ -50,6 +64,10 @@ namespace CptcEventsTests
             }
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventService.GetEventsInRangeAsync"/> returns an empty
+        /// collection when no events fall within the specified date range.
+        /// </summary>
         [TestMethod]
         public async Task GetEventsInRangeAsync_EmptyWhenNoMatches()
         {
@@ -76,6 +94,10 @@ namespace CptcEventsTests
             }
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventService.GetPublicEventsAsync"/> returns only
+        /// events where <see cref="Event.IsPublic"/> is true.
+        /// </summary>
         [TestMethod]
         public async Task GetPublicEventsAsync_ReturnsOnlyPublicEvents()
         {
@@ -105,6 +127,10 @@ namespace CptcEventsTests
             }
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventService.AddEventAsync"/> correctly persists
+        /// a new event to the database.
+        /// </summary>
         [TestMethod]
         public async Task AddEventAsync_PersistsEvent()
         {
@@ -112,8 +138,15 @@ namespace CptcEventsTests
             var options = CreateOptions("add_test_db");
             using (var context = new ApplicationDbContext(options))
             {
+                // Create a group first since events require a GroupId
+                context.Groups.Add(new Group { Id = 1, Name = "Test Group", OwnerId = "test-user" });
+                await context.SaveChangesAsync();
+            }
+
+            using (var context = new ApplicationDbContext(options))
+            {
                 var svc = new EventService(context);
-                var e = new Event { Title = "New", DateOfEvent = new DateOnly(2025, 12, 1) };
+                var e = new Event { Title = "New", DateOfEvent = new DateOnly(2025, 12, 1), GroupId = 1 };
 
                 // Act
                 await svc.AddEventAsync(e);
@@ -128,6 +161,10 @@ namespace CptcEventsTests
             }
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventService.UpdateEventAsync"/> correctly updates
+        /// an existing event's properties in the database.
+        /// </summary>
         [TestMethod]
         public async Task UpdateEventAsync_UpdatesExistingEvent()
         {
@@ -156,6 +193,10 @@ namespace CptcEventsTests
             }
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventService.DeleteEventAsync"/> correctly removes
+        /// an event from the database.
+        /// </summary>
         [TestMethod]
         public async Task DeleteEventAsync_RemovesEvent()
         {
@@ -182,6 +223,10 @@ namespace CptcEventsTests
             }
         }
 
+        /// <summary>
+        /// Verifies that <see cref="EventService.GetEventsInRangeAsync"/> returns an empty
+        /// collection when the start date is after the end date (invalid range).
+        /// </summary>
         [TestMethod]
         public async Task GetEventsInRangeAsync_StartAfterEnd_ReturnsEmpty()
         {
