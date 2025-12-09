@@ -4,7 +4,10 @@
 
 @* List all groups available to the current user *@
 
-<h1>Group</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Groups</h1>
+    <a asp-action="Join" asp-controller="Groups" class="btn btn-primary">Join Group</a>
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -13,6 +16,12 @@
         </tr>
     </thead>
     <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="2">You are not a member of any groups yet.</td>
+            </tr>
+        }
         @foreach (Group group in Model)
         {
             <tr>
