@@ -56,7 +56,7 @@ public class GroupInviteViewModel : IValidatableObject
 			{
 				yield return new ValidationResult("Expiration date/time must be provided when expiry is enabled.", new[] { nameof(ExpiresAt) });
 			}
-			else if (ExpiresAt.Value <= DateTime.UtcNow)
+			else if (DateTime.SpecifyKind(ExpiresAt.Value, DateTimeKind.Local).ToUniversalTime() <= DateTime.UtcNow)
 			{
 				yield return new ValidationResult("Expiration must be a future date/time.", new[] { nameof(ExpiresAt) });
 			}
