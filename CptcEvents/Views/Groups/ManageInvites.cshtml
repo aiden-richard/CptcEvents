@@ -1,0 +1,85 @@
+@using System.Linq
+@model CptcEvents.Models.ManageInvitesViewModel
+
+@{
+    ViewData["Title"] = $"Invites · {Model.Group.Name}";
+}
+
+<div class="page-shell">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <p class="text-muted small mb-1">Group invites</p>
+            <h2 class="mb-0">@Model.Group.Name</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="@Url.Action("ManageGroup", "Groups", new { groupId = Model.Group.Id })">Back to manage</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+            @if (Model.UserIsOwner || Model.ModeratorsCanInvite)
+            {
+                <a class="btn btn-primary" href="@Url.Action("CreateInvite", "Groups", new { groupId = Model.Group.Id })">Create invite</a>
+            }
+            else
+            {
+                <button class="btn btn-primary" disabled title="Only the owner can create invites">Create invite</button>
+            }
+            <span class="text-muted small">@Model.Invites.Count invites</span>
+            <span class="badge @(Model.ModeratorsCanInvite ? "text-bg-success" : "text-bg-secondary")">
+                @(Model.ModeratorsCanInvite ? "Moderators can invite" : "Owner only invites")
+            </span>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model.Invites.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Created By</th>
+                                <th>Invited User</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var invite in Model.Invites)
+                            {
+                                var status = invite.IsExpired ? "Expired" : invite.TimesUsed > 0 && invite.OneTimeUse ? "Used" : "Active";
+                                <tr>
+                                    <td class="fw-semibold">@invite.InviteCode</td>
+                                    <td>@invite.CreatedBy</td>
+                                    <td>@(invite.InvitedUser ?? "—")</td>
+                                    <td>@invite.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@(invite.ExpiresAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? (invite.OneTimeUse ? "When used" : "Never"))</td>
+                                    <td>
+                                        <span class="badge @(status == "Active" ? "text-bg-success" : status == "Expired" ? "text-bg-secondary" : "text-bg-warning")">@status</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-secondary me-1" href="@Url.Action("EditInvite", "Groups", new { groupId = Model.Group.Id, inviteId = invite.Id })">Edit</a>
+                                        <form method="post" class="d-inline" asp-action="DeleteInvite" asp-route-groupId="@Model.Group.Id" asp-route-inviteId="@invite.Id" onsubmit="return confirm('Delete this invite?');">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">No invites have been created for this group yet.</p>
+            }
+        </div>
+    </div>
+</div>

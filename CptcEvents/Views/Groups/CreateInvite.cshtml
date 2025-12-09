@@ -55,14 +55,10 @@
             @* Submit button to create the invite *@
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-action="ManageInvites" asp-route-groupId="@Model.GroupId" class="btn btn-outline-secondary">Back to invites</a>
             </div>
         </form>
     </div>
-</div>
-
-@* Link back to the invites list *@
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @* Include validation scripts and toggle script for expiry date picker *@
@@ -92,15 +88,25 @@
             var oneTimeUseCheckbox = document.getElementById('OneTimeUse');
             var usernameInput = document.getElementById('Username');
 
-            // Disable oneTimeUse if a username is specified
-            usernameInput.addEventListener('input', function() {
-                if (this.value.trim() !== '') {
+            function syncOneTimeUseWithUsername() {
+                var hasUser = usernameInput.value.trim() !== '';
+                if (hasUser) {
                     oneTimeUseCheckbox.checked = true;
-                    oneTimeUseCheckbox.disabled = true;
+                    oneTimeUseCheckbox.dataset.locked = "true";
                 } else {
-                    oneTimeUseCheckbox.disabled = false;
+                    delete oneTimeUseCheckbox.dataset.locked;
+                }
+            }
+
+            usernameInput.addEventListener('input', syncOneTimeUseWithUsername);
+            oneTimeUseCheckbox.addEventListener('change', function () {
+                if (oneTimeUseCheckbox.dataset.locked === "true") {
+                    this.checked = true; // enforce one-time when inviting a specific user
                 }
             });
+
+            // initialize on load
+            syncOneTimeUseWithUsername();
         });
     </script>
 }
