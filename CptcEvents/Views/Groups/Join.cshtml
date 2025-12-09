@@ -1,6 +1,5 @@
 @model CptcEvents.Models.Group?
 @using CptcEvents.Models
-@using Microsoft.CodeAnalysis.Elfie.Model
 @{
     ViewData["Title"] = "Join Group";
     bool canJoin = Model != null && Model.PrivacyLevel == PrivacyLevel.Public;
