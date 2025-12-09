@@ -271,6 +271,83 @@ namespace CptcEvents.Controllers
 
         #region Membership Operations
 
+        // GET: Groups/{groupId}/Join
+        [HttpGet("Groups/Join/{groupId?}")]
+        [HttpGet("Groups/Join")]
+        public async Task<IActionResult> Join(int? groupId)
+        {
+            string? userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            if (groupId == null)
+            {
+                return View(model: null);
+            }
+
+            Group? group = await _groupService.GetGroupByIdAsync(groupId.Value);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            bool isMember = await _groupService.IsUserMemberAsync(groupId.Value, userId);
+            if (isMember)
+            {
+                TempData["Info"] = "You are already a member of this group.";
+                return RedirectToAction(nameof(Events), new { groupId = groupId });
+            }
+
+            if (group.PrivacyLevel != PrivacyLevel.Public)
+            {
+                return NotFound();
+            }
+
+            return View(group);
+        }
+
+        // POST: Groups/Join
+        [HttpPost("Groups/Join/{groupId}")]
+        [ValidateAntiForgeryToken]
+        [ActionName("Join")]
+        public async Task<IActionResult> JoinConfirmed(int groupId)
+        {
+            string? userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            bool isMember = await _groupService.IsUserMemberAsync(groupId, userId);
+            if (isMember)
+            {
+                TempData["Info"] = "You are already a member of this group.";
+                return RedirectToAction(nameof(Events), new { groupId = groupId });
+            }
+
+            if (group.PrivacyLevel != PrivacyLevel.Public)
+            {
+                return NotFound();
+            }
+
+            GroupMember? newMember = await _groupService.AddUserToGroupAsync(groupId, userId, RoleType.Member, null);
+            if (newMember == null)
+            {
+                TempData["Error"] = "Unable to join the group. Please try again or contact a moderator.";
+                return RedirectToAction(nameof(Join), new { groupId = groupId });
+            }
+
+            return RedirectToAction(nameof(Events), new { groupId = groupId });
+        }
+
         // GET: Groups/Leave/5
         [HttpGet("Groups/Leave/{groupId}")]
         [Authorize(Policy = "GroupMember")]
