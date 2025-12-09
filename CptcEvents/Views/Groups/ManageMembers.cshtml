@@ -1,0 +1,88 @@
+@using System.Linq
+@model CptcEvents.Models.ManageMembersViewModel
+
+@{
+    ViewData["Title"] = $"Members · {Model.Group.Name}";
+}
+
+<div class="page-shell">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <p class="text-muted small mb-1">Group members</p>
+            <h2 class="mb-0">@Model.Group.Name</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="@Url.Action("ManageGroup", "Groups", new { groupId = Model.Group.Id })">Back to manage</a>
+            <a class="btn btn-primary" href="@Url.Action("ManageInvites", "Groups", new { groupId = Model.Group.Id })">Manage invites</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model.Members.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var member in Model.Members)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@member.DisplayName</td>
+                                    <td>@member.UserName</td>
+                                    <td>
+                                        <span class="badge @(member.Role == CptcEvents.Models.RoleType.Owner ? "text-bg-dark" : member.Role == CptcEvents.Models.RoleType.Moderator ? "text-bg-primary" : "text-bg-secondary")">@member.Role</span>
+                                        @if (member.IsCurrentUser)
+                                        {
+                                            <span class="badge text-bg-light">You</span>
+                                        }
+                                    </td>
+                                    <td>@member.JoinedAt.ToString("yyyy-MM-dd")</td>
+                                    <td class="text-end">
+                                        <div class="btn-group" role="group">
+                                            @if (member.CanPromote)
+                                            {
+                                                <form method="post" asp-action="UpdateMemberRole" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="newRole" value="@((int)CptcEvents.Models.RoleType.Moderator)" />
+                                                    <button class="btn btn-sm btn-outline-primary" type="submit">Promote to mod</button>
+                                                </form>
+                                            }
+                                            @if (member.CanDemote)
+                                            {
+                                                <form method="post" asp-action="UpdateMemberRole" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="newRole" value="@((int)CptcEvents.Models.RoleType.Member)" />
+                                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Demote</button>
+                                                </form>
+                                            }
+                                            @if (member.CanRemove)
+                                            {
+                                                <form method="post" asp-action="RemoveMember" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId" onsubmit="return confirm('Remove this member?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">No members found.</p>
+            }
+        </div>
+    </div>
+</div>
