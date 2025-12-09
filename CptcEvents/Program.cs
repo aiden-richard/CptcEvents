@@ -1,5 +1,6 @@
 using CptcEvents.Authorization.Handlers;
 using CptcEvents.Authorization.Requirements;
+using CptcEvents.Authorization;
 using CptcEvents.Data;
 using CptcEvents.Models;
 using CptcEvents.Services;
@@ -23,6 +24,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IInviteService, InviteService>();
+builder.Services.AddScoped<IGroupAuthorizationService, GroupAuthorizationService>();
 
 // Add authorization handlers
 builder.Services.AddScoped<IAuthorizationHandler, GroupMemberHandler>();
