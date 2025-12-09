@@ -5,6 +5,7 @@ using CptcEvents.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Utilities;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,83 +45,6 @@ namespace CptcEvents.Controllers
             IEnumerable<Group> groups = await _groupService.GetGroupsForUserAsync(userId);
 
             return View(groups);
-        }
-
-        // GET: Groups/5/Events
-        [HttpGet("Groups/{groupId}/Events")]
-        [ActionName("Events")]
-        [Authorize(Policy = "GroupMember")]
-        public async Task<IActionResult> Events(int groupId)
-        {
-            GroupAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
-            if (!memberCheck.Succeeded)
-            {
-                return memberCheck.ToActionResult(this);
-            }
-
-            Group? group = await _groupService.GetGroupByIdAsync(groupId);
-            if (group == null)
-            {
-                return NotFound();
-            }
-
-            string? userId = await _groupAuthorization.GetUserIdAsync(User);
-
-            bool isModerator =
-                (userId != null && await _groupService.IsUserModeratorAsync(groupId, userId))
-                || (userId != null && await _groupService.IsUserOwnerAsync(groupId, userId));
-
-            DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
-            List<Event> upcomingEvents = (await _eventService.GetEventsForGroupAsync(groupId))
-                .Where(e => e.DateOfEvent >= today)
-                .OrderBy(e => e.DateOfEvent)
-                .ThenBy(e => e.IsAllDay ? TimeOnly.MinValue : e.StartTime)
-                .Take(10)
-                .ToList();
-
-            var viewModel = new GroupEventsViewModel
-            {
-                Group = GroupMapper.ToSummary(group),
-                UserCanEditEvents = isModerator,
-                UpcomingEvents = upcomingEvents
-                    .Select(EventMapper.ToGroupEventListItem)
-                    .ToList(),
-                IsManageMode = false
-            };
-
-            return View(viewModel);
-        }
-
-        // GET: Groups/{groupId}/EditEvents
-        [HttpGet("Groups/{groupId}/EditEvents")]
-        [Authorize(Policy = "GroupModerator")]
-        public async Task<IActionResult> EditEvents(int groupId)
-        {
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
-            if (!moderatorCheck.Succeeded)
-            {
-                return moderatorCheck.ToActionResult(this);
-            }
-
-            Group? group = await _groupService.GetGroupByIdAsync(groupId);
-            if (group == null)
-            {
-                return NotFound();
-            }
-
-            IEnumerable<Event> events = await _eventService.GetEventsForGroupAsync(groupId);
-
-            var viewModel = new GroupEventsViewModel
-            {
-                Group = GroupMapper.ToSummary(group),
-                UserCanEditEvents = true,
-                Events = events
-                    .Select(EventMapper.ToGroupEventListItem)
-                    .ToList(),
-                IsManageMode = true
-            };
-
-            return View(viewModel);
         }
 
         // GET: Groups/Create
@@ -265,6 +189,17 @@ namespace CptcEvents.Controllers
             await _groupService.DeleteGroupAsync(groupId);
 
             return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Displays the group management dashboard.
+        /// </summary>
+        /// <param name="groupId">The ID of the group to manage.</param>
+        /// <returns>View with management options.</returns>
+        [HttpGet("Groups/Manage/{groupId}")]
+        public async Task<IActionResult> ManageGroup(int groupId)
+        {
+            return View();
         }
 
         #endregion
@@ -414,6 +349,85 @@ namespace CptcEvents.Controllers
             await _groupService.RemoveUserFromGroupAsync(groupId, userId);
 
             return RedirectToAction(nameof(Index));
+        }
+
+        #endregion
+
+        #region Event Operations
+
+        // GET: Groups/5/Events
+        [HttpGet("Groups/{groupId}/Events")]
+        [ActionName("Events")]
+        [Authorize(Policy = "GroupMember")]
+        public async Task<IActionResult> Events(int groupId)
+        {
+            GroupAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
+            if (!memberCheck.Succeeded)
+            {
+                return memberCheck.ToActionResult(this);
+            }
+
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+
+            bool isModerator =
+                (userId != null && await _groupService.IsUserModeratorAsync(groupId, userId))
+                || (userId != null && await _groupService.IsUserOwnerAsync(groupId, userId));
+
+            DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+            List<Event> upcomingEvents = (await _eventService.GetEventsForGroupAsync(groupId))
+                .Where(e => e.DateOfEvent >= today)
+                .OrderBy(e => e.DateOfEvent)
+                .ThenBy(e => e.IsAllDay ? TimeOnly.MinValue : e.StartTime)
+                .Take(10)
+                .ToList();
+
+            var viewModel = new GroupEventsViewModel
+            {
+                Group = GroupMapper.ToSummary(group),
+                UserIsModerator = isModerator,
+                UpcomingEvents = upcomingEvents
+                    .Select(EventMapper.ToGroupEventListItem)
+                    .ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        // GET: Groups/{groupId}/ManageEvents
+        [HttpGet("Groups/{groupId}/ManageEvents")]
+        [Authorize(Policy = "GroupModerator")]
+        public async Task<IActionResult> ManageEvents(int groupId)
+        {
+            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            if (!moderatorCheck.Succeeded)
+            {
+                return moderatorCheck.ToActionResult(this);
+            }
+
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            IEnumerable<Event> events = await _eventService.GetEventsForGroupAsync(groupId);
+
+            var viewModel = new GroupEventsViewModel
+            {
+                Group = GroupMapper.ToSummary(group),
+                UserIsModerator = true,
+                Events = events
+                    .Select(EventMapper.ToGroupEventListItem)
+                    .ToList()
+            };
+
+            return View(viewModel);
         }
 
         #endregion
