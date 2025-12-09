@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CptcEvents.Application.Mappers;
+using CptcEvents.Authorization;
 using CptcEvents.Models;
 using CptcEvents.Services;
-using Microsoft.AspNetCore.Identity;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CptcEvents.Controllers
 {
@@ -12,16 +16,20 @@ namespace CptcEvents.Controllers
     {
         private readonly IGroupService _groupService;
         private readonly IInviteService _inviteService;
+        private readonly IEventService _eventService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IGroupAuthorizationService _groupAuthorization;
 
-        public GroupsController(IGroupService groupService, IInviteService inviteService, UserManager<ApplicationUser> userManager)
+        public GroupsController(IGroupService groupService, IInviteService inviteService, IEventService eventService, IGroupAuthorizationService groupAuthorization, UserManager<ApplicationUser> userManager)
         {
             _groupService = groupService;
             _inviteService = inviteService;
+            _eventService = eventService;
+            _groupAuthorization = groupAuthorization;
             _userManager = userManager;
         }
 
-        #region Group CRUD Operations
+        #region Groups
 
         // GET: Groups or Groups/{groupId}
         [HttpGet("Groups/{groupId?}")]
@@ -38,6 +46,83 @@ namespace CptcEvents.Controllers
             return View(groups);
         }
 
+        // GET: Groups/5/Events
+        [HttpGet("Groups/{groupId}/Events")]
+        [ActionName("Events")]
+        [Authorize(Policy = "GroupMember")]
+        public async Task<IActionResult> Events(int groupId)
+        {
+            GroupAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
+            if (!memberCheck.Succeeded)
+            {
+                return memberCheck.ToActionResult(this);
+            }
+
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+
+            bool isModerator =
+                (userId != null && await _groupService.IsUserModeratorAsync(groupId, userId))
+                || (userId != null && await _groupService.IsUserOwnerAsync(groupId, userId));
+
+            DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+            List<Event> upcomingEvents = (await _eventService.GetEventsForGroupAsync(groupId))
+                .Where(e => e.DateOfEvent >= today)
+                .OrderBy(e => e.DateOfEvent)
+                .ThenBy(e => e.IsAllDay ? TimeOnly.MinValue : e.StartTime)
+                .Take(10)
+                .ToList();
+
+            var viewModel = new GroupEventsViewModel
+            {
+                Group = GroupMapper.ToSummary(group),
+                UserCanEditEvents = isModerator,
+                UpcomingEvents = upcomingEvents
+                    .Select(EventMapper.ToGroupEventListItem)
+                    .ToList(),
+                IsManageMode = false
+            };
+
+            return View(viewModel);
+        }
+
+        // GET: Groups/{groupId}/EditEvents
+        [HttpGet("Groups/{groupId}/EditEvents")]
+        [Authorize(Policy = "GroupModerator")]
+        public async Task<IActionResult> EditEvents(int groupId)
+        {
+            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            if (!moderatorCheck.Succeeded)
+            {
+                return moderatorCheck.ToActionResult(this);
+            }
+
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            IEnumerable<Event> events = await _eventService.GetEventsForGroupAsync(groupId);
+
+            var viewModel = new GroupEventsViewModel
+            {
+                Group = GroupMapper.ToSummary(group),
+                UserCanEditEvents = true,
+                Events = events
+                    .Select(EventMapper.ToGroupEventListItem)
+                    .ToList(),
+                IsManageMode = true
+            };
+
+            return View(viewModel);
+        }
+
         // GET: Groups/Create
         [HttpGet("Groups/Create")]
         public IActionResult Create()
@@ -48,7 +133,7 @@ namespace CptcEvents.Controllers
         // POST: Groups/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(GroupViewModel model)
+        public async Task<IActionResult> Create(GroupFormViewModel model)
         {
             string? userId = _userManager.GetUserId(User);
             if (userId == null)
@@ -94,7 +179,7 @@ namespace CptcEvents.Controllers
 
             bool isOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
 
-            var viewModel = new GroupEditViewModel
+            var viewModel = new GroupFormViewModel
             {
                 Id = group.Id,
                 Name = group.Name,
@@ -110,7 +195,7 @@ namespace CptcEvents.Controllers
         [HttpPost("Groups/Edit/{groupId}")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "GroupModerator")]
-        public async Task<IActionResult> Edit(int groupId, GroupEditViewModel model)
+        public async Task<IActionResult> Edit(int groupId, GroupFormViewModel model)
         {
             string? userId = _userManager.GetUserId(User);
             if (userId == null)
@@ -191,8 +276,14 @@ namespace CptcEvents.Controllers
         [Authorize(Policy = "GroupMember")]
         public async Task<IActionResult> Leave(int groupId)
         {
-            string? userId = _userManager.GetUserId(User);
-            if (userId == null)
+            GroupAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
+            if (!memberCheck.Succeeded)
+            {
+                return memberCheck.ToActionResult(this);
+            }
+
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+            if (string.IsNullOrEmpty(userId))
             {
                 return Challenge();
             }
@@ -203,15 +294,7 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            // Check if user is a member, need to be a member to leave
-            bool isMember = await _groupService.IsUserMemberAsync(groupId, userId);
-            if (isMember == false)
-            {
-                return Forbid();
-            }
-
-            // Check if user is the owner, owners cannot leave their own group
-            bool isOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
+            bool isOwner = userId != null && await _groupService.IsUserOwnerAsync(groupId, userId);
             ViewBag.IsOwner = isOwner;
 
             return View(group);
@@ -224,11 +307,13 @@ namespace CptcEvents.Controllers
         [Authorize(Policy = "GroupMember")]
         public async Task<IActionResult> LeaveConfirmed(int groupId)
         {
-            string? userId = _userManager.GetUserId(User);
-            if (userId == null)
+            GroupAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
+            if (!memberCheck.Succeeded)
             {
-                return Challenge();
+                return memberCheck.ToActionResult(this);
             }
+
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
 
             Group? group = await _groupService.GetGroupByIdAsync(groupId);
             if (group == null)
@@ -236,14 +321,11 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            // Check if user is a member, need to be a member to leave
-            bool isMember = await _groupService.IsUserMemberAsync(groupId, userId);
-            if (isMember == false)
+            if (string.IsNullOrEmpty(userId))
             {
-                return NotFound();
+                return Challenge();
             }
 
-            // Check if user is the owner, owners cannot leave their own group
             bool isOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
             if (isOwner)
             {
