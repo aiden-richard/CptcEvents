@@ -8,13 +8,13 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>My Upcoming Events</h1>
-        <a asp-action="Index" asp-controller="Groups" class="btn btn-primary"> My Groups</a>
+        <a asp-action="Index" asp-controller="Groups" class="btn btn-primary">My Groups</a>
     </div>
 
     @if (!Model.Any())
     {
         <div class="alert alert-info">
-            <p class="mb-0">You don't have any events yet. <a asp-action="Create">Create your first event</a> or join a group to see events.</p>
+            <p class="mb-0">You don't have any upcoming events.</p>
         </div>
     }
     else
