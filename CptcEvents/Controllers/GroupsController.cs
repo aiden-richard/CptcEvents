@@ -5,10 +5,6 @@ using CptcEvents.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Build.Utilities;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CptcEvents.Controllers
 {
