@@ -86,7 +86,7 @@ namespace CptcEvents.Controllers
 
         // GET: Groups/Edit/5
         [HttpGet("Groups/Edit/{groupId}")]
-        [Authorize(Policy = "GroupModerator")]
+        [Authorize(Policy = "GroupOwner")]
         public async Task<IActionResult> Edit(int groupId)
         {
             string? userId = _userManager.GetUserId(User);
@@ -118,7 +118,7 @@ namespace CptcEvents.Controllers
         // POST: Groups/Edit/5
         [HttpPost("Groups/Edit/{groupId}")]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "GroupModerator")]
+        [Authorize(Policy = "GroupOwner")]
         public async Task<IActionResult> Edit(int groupId, GroupFormViewModel model)
         {
             string? userId = _userManager.GetUserId(User);
@@ -157,7 +157,7 @@ namespace CptcEvents.Controllers
                 return View(model);
             }
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(ManageGroup), new { groupId = groupId });
         }
 
         // GET: Groups/Delete/5
@@ -197,9 +197,54 @@ namespace CptcEvents.Controllers
         /// <param name="groupId">The ID of the group to manage.</param>
         /// <returns>View with management options.</returns>
         [HttpGet("Groups/Manage/{groupId}")]
+        [Authorize(Policy = "GroupModerator")]
         public async Task<IActionResult> ManageGroup(int groupId)
         {
-            return View();
+            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            if (!moderatorCheck.Succeeded)
+            {
+                return moderatorCheck.ToActionResult(this);
+            }
+
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            bool isOwner = userId != null && await _groupService.IsUserOwnerAsync(groupId, userId);
+            bool moderatorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate;
+
+            List<Event> events = (await _eventService.GetEventsForGroupAsync(groupId)).ToList();
+            DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            List<GroupEventListItemViewModel> upcomingEvents = events
+                .Where(e => e.DateOfEvent >= today)
+                .OrderBy(e => e.DateOfEvent)
+                .ThenBy(e => e.IsAllDay ? TimeOnly.MinValue : e.StartTime)
+                .Take(5)
+                .Select(EventMapper.ToGroupEventListItem)
+                .ToList();
+
+            List<GroupInvite> invites = await _inviteService.GetInvitesForGroupAsync(groupId);
+
+            var viewModel = new ManageGroupViewModel
+            {
+                Group = GroupMapper.ToSummary(group),
+                Description = group.Description,
+                PrivacyLevel = group.PrivacyLevel,
+                UserIsOwner = isOwner,
+                UserIsModerator = true,
+                ModeratorsCanInvite = moderatorsCanInvite,
+                MemberCount = group.Members.Count,
+                ModeratorCount = group.Members.Count(m => m.Role == RoleType.Moderator || m.Role == RoleType.Owner),
+                InviteCount = invites.Count,
+                UpcomingEventCount = upcomingEvents.Count,
+                UpcomingEvents = upcomingEvents
+            };
+
+            return View(viewModel);
         }
 
         #endregion
@@ -351,6 +396,149 @@ namespace CptcEvents.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: Groups/{groupId}/Members
+        [HttpGet("Groups/{groupId}/Members")]
+        [Authorize(Policy = "GroupOwner")]
+        public async Task<IActionResult> ManageMembers(int groupId)
+        {
+            GroupAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
+            if (!ownerCheck.Succeeded)
+            {
+                return ownerCheck.ToActionResult(this);
+            }
+
+            string? currentUserId = await _groupAuthorization.GetUserIdAsync(User);
+            if (currentUserId == null)
+            {
+                return Challenge();
+            }
+
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            List<ManageMemberListItemViewModel> members = group.Members
+                .OrderByDescending(m => m.Role == RoleType.Owner)
+                .ThenByDescending(m => m.Role == RoleType.Moderator)
+                .ThenBy(m => m.User.UserName)
+                .Select(m => new ManageMemberListItemViewModel
+                {
+                    UserId = m.UserId,
+                    DisplayName = m.User.UserName ?? m.User.Email ?? m.UserId,
+                    UserName = m.User.UserName ?? m.User.Email ?? m.UserId,
+                    Role = m.Role,
+                    JoinedAt = m.JoinedAt,
+                    IsCurrentUser = m.UserId == currentUserId,
+                    CanPromote = m.Role == RoleType.Member,
+                    CanDemote = m.Role == RoleType.Moderator,
+                    CanRemove = m.Role != RoleType.Owner && m.UserId != currentUserId
+                })
+                .ToList();
+
+            var viewModel = new ManageMembersViewModel
+            {
+                Group = GroupMapper.ToSummary(group),
+                UserIsOwner = true,
+                Members = members
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: Groups/{groupId}/Members/{userId}/Role
+        [HttpPost("Groups/{groupId}/Members/{userId}/Role")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "GroupOwner")]
+        public async Task<IActionResult> UpdateMemberRole(int groupId, string userId, RoleType newRole)
+        {
+            GroupAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
+            if (!ownerCheck.Succeeded)
+            {
+                return ownerCheck.ToActionResult(this);
+            }
+
+            string? currentUserId = await _groupAuthorization.GetUserIdAsync(User);
+            if (currentUserId == null)
+            {
+                return Challenge();
+            }
+
+            if (userId == currentUserId)
+            {
+                TempData["Error"] = "You cannot change your own role.";
+                return RedirectToAction(nameof(ManageMembers), new { groupId });
+            }
+
+            if (newRole == RoleType.Owner)
+            {
+                TempData["Error"] = "Ownership transfers are not supported here.";
+                return RedirectToAction(nameof(ManageMembers), new { groupId });
+            }
+
+            GroupMember? updated = await _groupService.UpdateUserRoleAsync(groupId, userId, newRole);
+            if (updated == null)
+            {
+                TempData["Error"] = "Unable to change the member's role.";
+            }
+            else
+            {
+                TempData["Success"] = "Member role updated.";
+            }
+
+            return RedirectToAction(nameof(ManageMembers), new { groupId });
+        }
+
+        // POST: Groups/{groupId}/Members/{userId}/Remove
+        [HttpPost("Groups/{groupId}/Members/{userId}/Remove")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "GroupOwner")]
+        public async Task<IActionResult> RemoveMember(int groupId, string userId)
+        {
+            GroupAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
+            if (!ownerCheck.Succeeded)
+            {
+                return ownerCheck.ToActionResult(this);
+            }
+
+            string? currentUserId = await _groupAuthorization.GetUserIdAsync(User);
+            if (currentUserId == null)
+            {
+                return Challenge();
+            }
+
+            if (userId == currentUserId)
+            {
+                TempData["Error"] = "You cannot remove yourself from your own group.";
+                return RedirectToAction(nameof(ManageMembers), new { groupId });
+            }
+
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            GroupMember? member = group.Members.FirstOrDefault(m => m.UserId == userId);
+            if (member == null)
+            {
+                TempData["Error"] = "Member not found.";
+                return RedirectToAction(nameof(ManageMembers), new { groupId });
+            }
+
+            if (member.Role == RoleType.Owner)
+            {
+                TempData["Error"] = "Cannot remove the group owner.";
+                return RedirectToAction(nameof(ManageMembers), new { groupId });
+            }
+
+            await _groupService.RemoveUserFromGroupAsync(groupId, userId);
+            TempData["Success"] = "Member removed from the group.";
+
+            return RedirectToAction(nameof(ManageMembers), new { groupId });
+        }
+
         #endregion
 
         #region Event Operations
@@ -435,6 +623,53 @@ namespace CptcEvents.Controllers
         #region Invite Operations
 
         /// <summary>
+        /// Lists invites for a group so moderators can manage or revoke them.
+        /// GET /Groups/{groupId}/Invites
+        /// </summary>
+        [HttpGet("Groups/{groupId}/Invites")]
+        [Authorize(Policy = "GroupModerator")]
+        public async Task<IActionResult> ManageInvites(int groupId)
+        {
+            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            if (!moderatorCheck.Succeeded)
+            {
+                return moderatorCheck.ToActionResult(this);
+            }
+
+            string? currentUserId = await _groupAuthorization.GetUserIdAsync(User);
+            Group? group = await _groupService.GetGroupByIdAsync(groupId);
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            List<GroupInvite> invites = await _inviteService.GetInvitesForGroupAsync(groupId);
+
+            var viewModel = new ManageInvitesViewModel
+            {
+                Group = GroupMapper.ToSummary(group),
+                UserIsOwner = currentUserId != null && await _groupService.IsUserOwnerAsync(groupId, currentUserId),
+                ModeratorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate,
+                Invites = invites
+                    .Select(i => new InviteListItemViewModel
+                    {
+                        Id = i.Id,
+                        InviteCode = i.InviteCode,
+                        CreatedBy = i.CreatedBy?.UserName ?? i.CreatedBy?.Email ?? i.CreatedById,
+                        InvitedUser = i.InvitedUser != null ? (i.InvitedUser.UserName ?? i.InvitedUser.Email ?? i.InvitedUser.Id) : null,
+                        CreatedAt = i.CreatedAt,
+                        ExpiresAt = i.ExpiresAt,
+                        OneTimeUse = i.OneTimeUse,
+                        TimesUsed = i.TimesUsed,
+                        IsExpired = i.IsExpired
+                    })
+                    .ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        /// <summary>
         /// Displays the form for creating a new group invite.
         /// GET /Groups/{groupId}/Invites/Create
         /// </summary>
@@ -504,7 +739,7 @@ namespace CptcEvents.Controllers
 
             // Create the invite using validated data
             string inviteCode = await _inviteService.GenerateUniqueInviteCodeAsync(8);
-            DateTime? expiresAt = validation.ValidatedExpiresAt;
+            DateTime? expiresAtUtc = validation.ValidatedExpiresAt;
 
             GroupInvite newInvite = new GroupInvite
             {
@@ -513,31 +748,34 @@ namespace CptcEvents.Controllers
                 InvitedUserId = validation.InvitedUserId,
                 InviteCode = inviteCode,
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = expiresAt,
+                ExpiresAt = expiresAtUtc.HasValue ? DateTime.SpecifyKind(expiresAtUtc.Value, DateTimeKind.Utc) : null,
                 OneTimeUse = invite.OneTimeUse,
                 TimesUsed = 0
             };
 
             newInvite = await _inviteService.CreateInviteAsync(newInvite);
 
-            return RedirectToAction(nameof(InviteDetails), new { groupId = newInvite.GroupId, inviteId = newInvite.Id });
+            return RedirectToAction(nameof(ManageInvites), new { groupId = newInvite.GroupId });
         }
 
         /// <summary>
-        /// Displays detailed information about a specific invite.
-        /// GET /Groups/{groupId}/Invites/{inviteId}
+        /// Edit an existing invite.
+        /// GET /Groups/{groupId}/Invites/{inviteId}/Edit
         /// </summary>
-        /// <param name="groupId">The group ID the invite belongs to.</param>
-        /// <param name="inviteId">The invite ID to display.</param>
-        /// <returns>View with invite details, or NotFound if invite doesn't exist.</returns>
-        [HttpGet("Groups/{groupId}/Invites/{inviteId}")]
+        [HttpGet("Groups/{groupId}/Invites/{inviteId}/Edit")]
         [Authorize(Policy = "GroupModerator")]
-        public async Task<IActionResult> InviteDetails(int groupId, int inviteId)
+        public async Task<IActionResult> EditInvite(int groupId, int inviteId)
         {
-            string? userId = _userManager.GetUserId(User);
-            if (userId == null)
+            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            if (!moderatorCheck.Succeeded)
             {
-                return Forbid();
+                return moderatorCheck.ToActionResult(this);
+            }
+
+            string? currentUserId = await _groupAuthorization.GetUserIdAsync(User);
+            if (currentUserId == null)
+            {
+                return Challenge();
             }
 
             GroupInvite? invite = await _inviteService.GetInviteAsync(inviteId);
@@ -546,13 +784,120 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            // If the invite is user-specific and the current user is the invited user, redirect to redeem page
-            if (invite.InvitedUserId != null && invite.InvitedUserId == userId)
+            if (invite.Group.PrivacyLevel == PrivacyLevel.OwnerInvitePrivate && invite.Group.OwnerId != currentUserId)
             {
-                return RedirectToAction(nameof(InvitesController.Redeem), "Invites", new { code = invite.InviteCode });
+                return Forbid();
             }
 
-            return View(invite);
+            var viewModel = new GroupInviteEditViewModel
+            {
+                Id = invite.Id,
+                GroupId = invite.GroupId,
+                InviteCode = invite.InviteCode,
+                OneTimeUse = invite.OneTimeUse,
+                Expires = invite.ExpiresAt.HasValue,
+                ExpiresAt = invite.ExpiresAt?.ToLocalTime(),
+                InvitedUserDisplay = invite.InvitedUser != null ? (invite.InvitedUser.UserName ?? invite.InvitedUser.Email ?? invite.InvitedUser.Id) : null
+            };
+
+            return View(viewModel);
+        }
+
+        /// <summary>
+        /// Saves changes to an invite.
+        /// POST /Groups/{groupId}/Invites/{inviteId}/Edit
+        /// </summary>
+        [HttpPost("Groups/{groupId}/Invites/{inviteId}/Edit")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "GroupModerator")]
+        public async Task<IActionResult> EditInvite(int groupId, int inviteId, GroupInviteEditViewModel model)
+        {
+            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            if (!moderatorCheck.Succeeded)
+            {
+                return moderatorCheck.ToActionResult(this);
+            }
+
+            string? currentUserId = await _groupAuthorization.GetUserIdAsync(User);
+            if (currentUserId == null)
+            {
+                return Challenge();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            GroupInvite? invite = await _inviteService.GetInviteAsync(inviteId);
+            if (invite == null || invite.GroupId != groupId)
+            {
+                return NotFound();
+            }
+
+            InviteValidationResult validation = await _inviteService.ValidateUpdateInviteAsync(currentUserId, invite, model);
+            if (validation.NotFound)
+            {
+                return NotFound();
+            }
+            if (validation.Unauthorized)
+            {
+                return Forbid();
+            }
+            if (!validation.IsValid)
+            {
+                foreach (KeyValuePair<string, string> kv in validation.FieldErrors)
+                {
+                    ModelState.AddModelError(kv.Key, kv.Value);
+                }
+                return View(model);
+            }
+
+            invite.ExpiresAt = validation.ValidatedExpiresAt.HasValue ? DateTime.SpecifyKind(validation.ValidatedExpiresAt.Value, DateTimeKind.Utc) : null;
+            invite.OneTimeUse = model.OneTimeUse;
+
+            await _inviteService.UpdateInviteAsync(invite);
+            TempData["Success"] = "Invite updated.";
+
+            return RedirectToAction(nameof(ManageInvites), new { groupId });
+        }
+
+        /// <summary>
+        /// Deletes an invite to prevent further use.
+        /// POST /Groups/{groupId}/Invites/{inviteId}/Delete
+        /// </summary>
+        [HttpPost("Groups/{groupId}/Invites/{inviteId}/Delete")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "GroupModerator")]
+        public async Task<IActionResult> DeleteInvite(int groupId, int inviteId)
+        {
+            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            if (!moderatorCheck.Succeeded)
+            {
+                return moderatorCheck.ToActionResult(this);
+            }
+
+            string? currentUserId = await _groupAuthorization.GetUserIdAsync(User);
+            if (currentUserId == null)
+            {
+                return Challenge();
+            }
+
+            GroupInvite? invite = await _inviteService.GetInviteAsync(inviteId);
+            if (invite == null || invite.GroupId != groupId)
+            {
+                return NotFound();
+            }
+
+            if (invite.Group.PrivacyLevel == PrivacyLevel.OwnerInvitePrivate && invite.Group.OwnerId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            await _inviteService.DeleteInviteAsync(inviteId);
+            TempData["Success"] = "Invite deleted.";
+
+            return RedirectToAction(nameof(ManageInvites), new { groupId });
         }
 
         #endregion

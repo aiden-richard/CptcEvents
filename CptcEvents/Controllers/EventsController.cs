@@ -49,37 +49,6 @@ namespace CptcEvents.Controllers
             return View(viewModel);
         }
 
-        // GET: Events/Details/5
-        [HttpGet("Events/Details/{eventId}")]
-        public async Task<IActionResult> Details(int eventId)
-        {
-            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
-            if (eventItem == null)
-            {
-                return NotFound();
-            }
-
-            string? userId = await _groupAuthorization.GetUserIdAsync(User);
-
-            // If user isn't authenticated, only allow viewing public events
-            if (userId == null && !eventItem.IsPublic)
-            {
-                return Challenge();
-            }
-
-            // If authenticated, check membership for private events
-            if (userId != null && !eventItem.IsPublic)
-            {
-                GroupAuthorizationResult membershipCheck = await _groupAuthorization.EnsureMemberAsync(eventItem.GroupId, User);
-                if (!membershipCheck.Succeeded)
-                {
-                    return membershipCheck.ToActionResult(this);
-                }
-            }
-
-            return View(EventMapper.ToDetails(eventItem));
-        }
-
         // GET: Events/Create
         [HttpGet("Events/Create")]
         public async Task<IActionResult> Create()
