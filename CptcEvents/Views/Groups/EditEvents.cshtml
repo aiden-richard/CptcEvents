@@ -1,0 +1,63 @@
+@using System.Linq
+@model CptcEvents.Models.GroupEventsViewModel
+@{
+    ViewData["Title"] = "Manage Events";
+}
+
+@* Management table for editing or deleting events within a group *@
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">Manage Events</h2>
+            <p class="text-muted mb-0">Group: @Model.Group.Name</p>
+        </div>
+        <div class="btn-group">
+            <a asp-action="Events" asp-route-groupId="@Model.Group.Id" class="btn btn-outline-secondary">Back to Calendar</a>
+            <a asp-controller="Events" asp-action="Create" asp-route-groupId="@Model.Group.Id" class="btn btn-primary">Create Event</a>
+        </div>
+    </div>
+
+    @if (Model.Events.Any())
+    {
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Visibility</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var evt in Model.Events.OrderByDescending(e => e.DateOfEvent).ThenBy(e => e.StartTime))
+            {
+                <tr>
+                    <td>@evt.Title</td>
+                    <td>@evt.DateOfEvent.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (evt.IsAllDay)
+                        {
+                            <span>All day</span>
+                        }
+                        else
+                        {
+                            <span>@evt.StartTime.ToString("hh\\:mm") - @evt.EndTime.ToString("hh\\:mm")</span>
+                        }
+                    </td>
+                    <td>@(evt.IsPublic ? "Public" : "Private")</td>
+                    <td class="text-end">
+                        <a asp-controller="Events" asp-action="Edit" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                        <a asp-controller="Events" asp-action="Delete" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">No events yet for this group. Create the first one to get started.</div>
+    }
+</div>
