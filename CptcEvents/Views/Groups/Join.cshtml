@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Join Group";
     bool canJoin = Model != null && Model.PrivacyLevel == PrivacyLevel.Public;
-    bool noServerSpecified = Model == null;
+    bool noGroupSpecified = Model == null;
 }
 
 <div class="container mt-4">
@@ -45,7 +45,7 @@
                             <button type="submit" class="btn btn-primary">Join Group</button>
                         </form>
                     }
-                    else if (noServerSpecified)
+                    else if (noGroupSpecified)
                     {
                         <form asp-action="RedeemByQuery" asp-controller="Invites" method="get" class="mt-3">
                             <div class="mb-3">
