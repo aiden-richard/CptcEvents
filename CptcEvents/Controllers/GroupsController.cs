@@ -849,7 +849,7 @@ namespace CptcEvents.Controllers
                 return View(model);
             }
 
-            invite.ExpiresAt = validation.ValidatedExpiresAt.HasValue ? DateTime.SpecifyKind(validation.ValidatedExpiresAt.Value, DateTimeKind.Utc) : null;
+            invite.ExpiresAt = validation.ValidatedExpiresAt;
             invite.OneTimeUse = model.OneTimeUse;
 
             await _inviteService.UpdateInviteAsync(invite);
