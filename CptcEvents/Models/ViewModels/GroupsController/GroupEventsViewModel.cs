@@ -15,7 +15,17 @@ public class GroupEventsViewModel
     /// <summary>
     /// Indicates whether the current user can edit events in the group.
     /// </summary>
-    public bool UserCanEditEvents { get; set; }
+    public bool UserIsModerator { get; set; }
+
+    /// <summary>
+    /// Indicates whether the current user is the owner of the group.
+    /// </summary>
+    public bool UserIsOwner { get; set; }
+
+    /// <summary>
+    /// Indicates whether moderators are allowed to create invites for the group.
+    /// </summary>
+    public bool ModeratorsCanInvite { get; set; }
 
     /// <summary>
     /// Next upcoming events for the group (future only, limited) when showing the overview.
@@ -26,9 +36,4 @@ public class GroupEventsViewModel
     /// Full event list used in manage mode.
     /// </summary>
     public List<GroupEventListItemViewModel> Events { get; set; } = new();
-
-    /// <summary>
-    /// Indicates whether the page is in manage mode (EditEvents) or overview mode (Events).
-    /// </summary>
-    public bool IsManageMode { get; set; }
 }
