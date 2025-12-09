@@ -1,12 +1,14 @@
-﻿@model IEnumerable<CptcEvents.Models.Event>
+﻿@model IEnumerable<CptcEvents.Models.EventDetailsViewModel>
 @{
     ViewData["Title"] = "My Events";
 }
 
+@*This page displays a list of upcoming events for the current user. Events are pulled from the groups the user is a member of.*@
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>My Events</h1>
-        <a asp-action="Create" class="btn btn-primary">Create New Event</a>
+        <h1>My Upcoming Events</h1>
+        <a asp-action="Index" asp-controller="Groups" class="btn btn-primary"> My Groups</a>
     </div>
 
     @if (!Model.Any())
@@ -17,53 +19,40 @@
     }
     else
     {
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Group</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Public</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (Event eventItem in Model)
-                {
-                    <tr>
-                        <td>@eventItem.Title</td>
-                        <td>@eventItem.Group?.Name</td>
-                        <td>@eventItem.DateOfEvent.ToString("MMM d, yyyy")</td>
-                        <td>
-                            @if (eventItem.IsAllDay)
-                            {
-                                <span class="badge bg-secondary">All Day</span>
-                            }
-                            else
-                            {
-                                @eventItem.StartTime.ToString("h:mm tt") <text>-</text> @eventItem.EndTime.ToString("h:mm tt")
-                            }
-                        </td>
-                        <td>
-                            @if (eventItem.IsPublic)
-                            {
-                                <span class="badge bg-success">Public</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Private</span>
-                            }
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a asp-action="Details" asp-route-eventId="@eventItem.Id" class="btn btn-outline-primary">Details</a>
-                                <a asp-action="Edit" asp-route-eventId="@eventItem.Id" class="btn btn-outline-secondary">Edit</a>
+        @* Horizontal cards that stretch the container width *@
+        <div id="eventsList" class="d-flex flex-column gap-3">
+            @foreach (EventDetailsViewModel e in Model)
+            {
+                <div class="card shadow-sm w-100">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-md-row align-items-start gap-3">
+                            <div class="flex-grow-1">
+                                <h5 class="card-title mb-1">@e.Title</h5>
+                                @if (!string.IsNullOrWhiteSpace(e.Description))
+                                {
+                                    <p class="card-text text-muted mb-1">@e.Description</p>
+                                }
                             </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                            <div class="d-flex flex-column align-items-md-end text-md-end h-100">
+                                <div class="fw-semibold">@e.DateOfEvent.ToString("MMM d, yyyy")</div>
+                                @if (e.IsAllDay)
+                                {
+                                    <div class="text-muted">All day</div>
+                                }
+                                else
+                                {
+                                    <div class="text-muted">@e.StartTime.ToString("h:mm tt") - @e.EndTime.ToString("h:mm tt")</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(e.Url))
+                                {
+                                    <div><a href="@e.Url" class="small">Details</a></div>
+                                }
+                                <p class="text-muted small mt-3 mb-0">Group: @e.GroupName</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>
