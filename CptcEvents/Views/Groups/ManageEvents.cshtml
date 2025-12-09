@@ -7,14 +7,14 @@
 @* Management table for editing or deleting events within a group *@
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
         <div>
             <h2 class="mb-1">Manage Events</h2>
             <p class="text-muted mb-0">Group: @Model.Group.Name</p>
         </div>
-        <div class="btn-group">
-            <a asp-action="Events" asp-route-groupId="@Model.Group.Id" class="btn btn-outline-secondary">Back to Calendar</a>
-            <a asp-controller="Events" asp-action="Create" asp-route-groupId="@Model.Group.Id" class="btn btn-primary">Create Event</a>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="Events" asp-route-groupId="@Model.Group.Id" class="btn btn-outline-secondary">Back to calendar</a>
+            <a asp-controller="Events" asp-action="Create" asp-route-groupId="@Model.Group.Id" class="btn btn-primary">Create event</a>
         </div>
     </div>
 
