@@ -39,6 +39,7 @@ namespace CptcEvents.Services
         {
             return await _context.Groups
                 .Include(g => g.Members)
+                .ThenInclude(m => m.User)
                 .FirstOrDefaultAsync(g => g.Id == id);
         }
 
