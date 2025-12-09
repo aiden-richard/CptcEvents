@@ -3,14 +3,14 @@ using System.ComponentModel.DataAnnotations;
 namespace CptcEvents.Models;
 
 /// <summary>
-/// View model for editing an existing group.
+/// Form model for creating or editing a group.
 /// </summary>
-public class GroupEditViewModel
+public class GroupFormViewModel
 {
     /// <summary>
-    /// The ID of the group being edited.
+    /// Group ID when editing; null when creating.
     /// </summary>
-    public int Id { get; set; }
+    public int? Id { get; set; }
 
     /// <summary>
     /// The display name of the group.
@@ -23,17 +23,16 @@ public class GroupEditViewModel
     /// Optional description of the group.
     /// </summary>
     [MaxLength(1000)]
-    public string? Description { get; set; }
+    public string? Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Tracks the privacy level of the group.
-    /// Only owners can change this.
+    /// Privacy level for the group.
     /// </summary>
     [Required]
     public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.ModeratorInvitePrivate;
 
     /// <summary>
-    /// Indicates whether the current user is the owner (used for UI display).
+    /// Indicates whether the current user is the owner (UI gating only).
     /// </summary>
     public bool IsOwner { get; set; }
 }

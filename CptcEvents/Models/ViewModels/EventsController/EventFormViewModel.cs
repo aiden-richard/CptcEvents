@@ -4,14 +4,14 @@ using System.ComponentModel.DataAnnotations;
 namespace CptcEvents.Models;
 
 /// <summary>
-/// View model for editing an existing event.
+/// Form model for creating or editing events.
 /// </summary>
-public class EventEditViewModel : IValidatableObject
+public class EventFormViewModel : IValidatableObject
 {
     /// <summary>
-    /// The ID of the event being edited.
+    /// Event ID when editing; null for new events.
     /// </summary>
-    public int Id { get; set; }
+    public int? Id { get; set; }
 
     /// <summary>
     /// The title of the event.
@@ -27,26 +27,26 @@ public class EventEditViewModel : IValidatableObject
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// The group this event belongs to (read-only in edit, for display purposes).
+    /// The group this event belongs to.
     /// </summary>
     [Required]
     [Display(Name = "Group")]
     public int GroupId { get; set; }
 
     /// <summary>
-    /// The name of the group (for display purposes).
+    /// The name of the group (for display on edit).
     /// </summary>
     public string? GroupName { get; set; }
 
     /// <summary>
     /// Whether the event is publicly visible.
     /// </summary>
-    public bool IsPublic { get; set; } = false;
+    public bool IsPublic { get; set; }
 
     /// <summary>
     /// Whether the event is an all-day event.
     /// </summary>
-    public bool IsAllDay { get; set; } = false;
+    public bool IsAllDay { get; set; }
 
     /// <summary>
     /// The date of the event.
@@ -91,7 +91,5 @@ public class EventEditViewModel : IValidatableObject
                 "End time must be later than start time for timed events.",
                 new[] { nameof(EndTime), nameof(StartTime) });
         }
-
-        yield break;
     }
 }
