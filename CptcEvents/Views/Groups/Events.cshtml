@@ -1,0 +1,86 @@
+@model CptcEvents.Models.GroupEventsViewModel
+
+@* Group events page with calendar and upcoming event cards *@
+
+<div class="page-shell">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <p class="text-muted small mb-1">Group events</p>
+            <h2 class="mb-0">@Model.Group.Name</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" href="@Url.Action("Index", "Groups")">Back to Groups</a>
+            @if (Model.UserCanEditEvents)
+            {
+                <a class="btn btn-primary" href="@Url.Action("EditEvents", "Groups", new { groupId = Model.Group.Id })">Edit Events</a>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow-soft calendar-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h5 class="mb-1">Calendar</h5>
+                    <p class="text-muted small mb-0">View all scheduled events for this group.</p>
+                </div>
+            </div>
+            @await Component.InvokeAsync("Calendar", new { 
+                eventsUrl = Url.Action("GetGroupEvents", "Events", new { groupId = Model.Group.Id }), 
+                elementId = "group-calendar-" + Model.Group.Id,
+                initialView = "dayGridMonth"
+            })
+        </div>
+    </div>
+
+    <div class="card shadow-soft">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h3 class="mb-0">Upcoming Events</h3>
+            </div>
+            @if (Model.UpcomingEvents.Any())
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var evt in Model.UpcomingEvents)
+                    {
+                        var timeLabel = evt.IsAllDay
+                            ? "All day"
+                            : $"{evt.StartTime:hh\\:mm tt} - {evt.EndTime:hh\\:mm tt}";
+
+                        <div class="card shadow-soft w-100">
+                            <div class="card-body">
+                                <div class="d-flex flex-column flex-md-row align-items-start gap-3">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-start gap-2 mb-1">
+                                            <h5 class="card-title mb-0">@evt.Title</h5>
+                                            @if (!evt.IsPublic)
+                                            {
+                                                <span class="badge rounded-pill text-bg-secondary">Private</span>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(evt.Description))
+                                        {
+                                            <p class="card-text text-muted mb-1">@evt.Description</p>
+                                        }
+                                    </div>
+                                    <div class="d-flex flex-column align-items-md-end text-md-end h-100">
+                                        <div class="fw-semibold">@evt.DateOfEvent.ToString("MMM d, yyyy")</div>
+                                        <div class="text-muted">@timeLabel</div>
+                                        @if (!string.IsNullOrWhiteSpace(evt.Url))
+                                        {
+                                            <div class="mt-1"><a class="small" href="@evt.Url" target="_blank" rel="noopener noreferrer">Details</a></div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">No upcoming events.</p>
+            }
+        </div>
+    </div>
+</div>
