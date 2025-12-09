@@ -117,7 +117,7 @@ namespace CptcEvents.Controllers
 
             Event created = await _eventsService.CreateEventAsync(newEvent);
 
-            return RedirectToAction(nameof(GroupsController.EditEvents), "Groups", new { groupId = created.GroupId });
+            return RedirectToAction(nameof(GroupsController.ManageEvents), "Groups", new { groupId = created.GroupId });
         }
 
         // GET: Events/Edit/5
@@ -196,7 +196,7 @@ namespace CptcEvents.Controllers
                 return View(model);
             }
 
-            return RedirectToAction(nameof(GroupsController.EditEvents), "Groups", new { groupId = result.GroupId });
+            return RedirectToAction(nameof(GroupsController.ManageEvents), "Groups", new { groupId = result.GroupId });
         }
 
         // GET: Events/Delete/5
@@ -237,7 +237,7 @@ namespace CptcEvents.Controllers
 
             await _eventsService.DeleteEventAsync(eventId);
 
-            return RedirectToAction(nameof(GroupsController.EditEvents), "Groups", new { groupId = eventItem.GroupId });
+            return RedirectToAction(nameof(GroupsController.ManageEvents), "Groups", new { groupId = eventItem.GroupId });
         }
 
         #endregion
