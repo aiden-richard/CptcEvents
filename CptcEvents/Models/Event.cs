@@ -28,7 +28,7 @@ public class Event : IValidatableObject
     /// Optional description providing details about the event.
     /// </summary>
     [StringLength(1000)]
-    public string? Description { get; set; } = null;
+    public string? Description { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a value indicating whether this event is marked as public.

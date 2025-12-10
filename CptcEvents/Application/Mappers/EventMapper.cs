@@ -23,6 +23,8 @@ public static class EventMapper
         EndTime = e.EndTime,
         IsAllDay = e.IsAllDay,
         IsPublic = e.IsPublic,
+        IsApprovedPublic = e.IsApprovedPublic,
+        IsDeniedPublic = e.IsDeniedPublic,
         Url = e.Url
     };
 
@@ -41,7 +43,6 @@ public static class EventMapper
         IsPublic = e.IsPublic,
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
-        Description = e.Description,
         Url = e.Url,
         CreatedByUserId = e.CreatedByUserId
     };
