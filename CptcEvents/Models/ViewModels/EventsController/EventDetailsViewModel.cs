@@ -32,4 +32,6 @@ public class EventDetailsViewModel
     public bool IsDeniedPublic { get; init; }
 
     public string? Url { get; init; }
+
+    public bool IsCurrentUserMember { get; init; }
 }
