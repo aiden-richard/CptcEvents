@@ -36,11 +36,18 @@
                     <small class="text-muted">Group cannot be changed after event creation.</small>
                 </div>
 
-                <div class="form-check mb-3">
-                    <input asp-for="IsPublic" class="form-check-input" />
-                    <label asp-for="IsPublic" class="form-check-label">Public Event</label>
-                    <span asp-validation-for="IsPublic" class="text-danger"></span>
-                </div>
+                @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                {
+                    <div class="form-check mb-3">
+                            <input asp-for="IsPublic" class="form-check-input" />
+                            <label asp-for="IsPublic" class="form-check-label">Show on Homepage</label>
+                            <span asp-validation-for="IsPublic" class="text-danger"></span>
+                    </div>
+                }
+                else
+                {
+                    <input asp-for="IsPublic" type="hidden" />
+                }
 
                 <div class="form-check mb-3">
                     <input asp-for="IsAllDay" class="form-check-input" id="IsAllDay" />

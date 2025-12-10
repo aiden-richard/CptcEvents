@@ -51,7 +51,7 @@ namespace CptcEvents.Controllers
 
         // GET: Events/Create
         [HttpGet("Events/Create")]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create([FromQuery] int? groupId)
         {
             // Ensure user is authenticated
             string? userId = await _groupAuthorization.GetUserIdAsync(User);
@@ -61,7 +61,24 @@ namespace CptcEvents.Controllers
             }
 
             // Load groups for the current user
-            await PopulateGroupsSelectListAsync();
+            await PopulateGroupsSelectListAsync(groupId);
+
+            // Check if user has any groups where they can create events
+            var selectList = ViewData["Groups"] as SelectList;
+            if (selectList == null || selectList.Count() == 0)
+            {
+                TempData["Error"] = "You must be a moderator in at least one group to create events. Please create or join a group first.";
+                return RedirectToAction(nameof(GroupsController.Create), "Groups");
+            }
+
+            if (groupId.HasValue)
+            {
+                GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId.Value, User);
+                if (!moderatorCheck.Succeeded)
+                {
+                    return NotFound();
+                }
+            }
             return View();
         }
 
@@ -74,6 +91,14 @@ namespace CptcEvents.Controllers
             if (!moderatorCheck.Succeeded)
             {
                 return moderatorCheck.ToActionResult(this);
+            }
+
+            // Only Staff and Admin roles can make events public
+            if (model.IsPublic && !User.IsInRole("Staff") && !User.IsInRole("Admin"))
+            {
+                ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
+                await PopulateGroupsSelectListAsync();
+                return View(model);
             }
 
             if (!ModelState.IsValid)
@@ -147,6 +172,15 @@ namespace CptcEvents.Controllers
                 return moderatorCheck.ToActionResult(this);
             }
 
+            // Only Staff and Admin roles can make events public
+            if (model.IsPublic && !User.IsInRole("Staff") && !User.IsInRole("Admin"))
+            {
+                ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
+                model.IsModerator = true;
+                model.GroupName = existingEvent.Group?.Name;
+                return View(model);
+            }
+
             if (!ModelState.IsValid)
             {
                 model.IsModerator = true;
@@ -214,7 +248,7 @@ namespace CptcEvents.Controllers
         #region Helper Methods
 
         // Helper that populates ViewData["Groups"] with groups available to the current user.
-        private async Task PopulateGroupsSelectListAsync()
+        private async Task PopulateGroupsSelectListAsync(int? selectedGroupId = null)
         {
             var groups = new List<Group>();
             if (User?.Identity?.IsAuthenticated == true)
@@ -235,7 +269,7 @@ namespace CptcEvents.Controllers
                 }
             }
 
-            ViewData["Groups"] = new SelectList(groups, "Id", "Name");
+            ViewData["Groups"] = new SelectList(groups, "Id", "Name", selectedGroupId);
         }
 
         #endregion
@@ -285,8 +319,21 @@ namespace CptcEvents.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetEvents()
         {
-            // Get events from the database
-            IEnumerable<Event> events = await _eventsService.GetPublicEventsAsync();
+            var user = await _userManager.GetUserAsync(User);
+            IEnumerable<Event> events;
+
+            if (user != null)
+            {
+                // Logged-in users see public events + events from their groups
+                var publicEvents = await _eventsService.GetPublicEventsAsync();
+                var userGroupEvents = await _eventsService.GetEventsForUserAsync(user.Id);
+                events = publicEvents.Union(userGroupEvents).Distinct();
+            }
+            else
+            {
+                // Anonymous users only see public events
+                events = await _eventsService.GetPublicEventsAsync();
+            }
 
             var fullCalendarEvents = events
                 .Select(EventMapper.ToFullCalendarEvent)
