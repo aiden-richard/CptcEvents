@@ -68,6 +68,13 @@ public class Group
     /// </summary>
     [Required]
     public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.ModeratorInvitePrivate;
+
+    /// <summary>
+    /// Hex color code for the group used in calendar displays.
+    /// Defaults to a generated color based on group ID.
+    /// </summary>
+    [StringLength(7)]
+    public string? Color { get; set; }
     
     /// <summary>
     /// Collection of users who are members of the group.
