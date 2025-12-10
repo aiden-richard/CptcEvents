@@ -33,8 +33,15 @@ public interface IEventService
     /// Retrieves all events visible to a specific user based on their group memberships.
     /// </summary>
     /// <param name="userId">The ID of the user to retrieve events for.</param>
-    /// <returns>A collection of events from groups where the user is a member, ordered by date (descending) and start time.</returns>
+    /// <returns>A collection of events from groups where the user is a member, ordered by date (ascending) and start time.</returns>
     Task<IEnumerable<Event>> GetEventsForUserAsync(string userId);
+
+    /// <summary>
+    /// Retrieves all events upcoming visible to a specific user based on their group memberships.
+    /// </summary>
+    /// <param name="userId">The ID of the user to retrieve events for.</param>
+    /// <returns>A collection of upcoming events from groups where the user is a member, ordered by date (ascending) and start time.</returns>
+    Task<IEnumerable<Event>> GetActiveEventsForUserAsync(string userId);
 
     /// <summary>
     /// Retrieves a single event by its unique identifier.
@@ -73,15 +80,6 @@ public interface IEventService
     /// <param name="end">The end date of the range (inclusive).</param>
     /// <returns>A collection of events occurring within the specified date range.</returns>
     Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end);
-
-    /// <summary>
-    /// Adds a new event to the database.
-    /// </summary>
-    /// <param name="newEvent">The event entity to add.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    /// <remarks>Legacy method - consider using <see cref="CreateEventAsync"/> instead.</remarks>
-    [Obsolete("Use CreateEventAsync instead for consistency and to receive the created event with navigation properties.")]
-    Task AddEventAsync(Event newEvent);
 }
 
 /// <summary>
@@ -135,7 +133,24 @@ public class EventService : IEventService
         return await _context.Events
             .Include(e => e.Group)
             .Where(e => _context.GroupMemberships.Any(m => m.GroupId == e.GroupId && m.UserId == userId))
-            .OrderByDescending(e => e.DateOfEvent)
+            .OrderBy(e => e.DateOfEvent)
+            .ThenBy(e => e.StartTime)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<Event>> GetActiveEventsForUserAsync(string userId)
+    {
+        if (string.IsNullOrEmpty(userId)) return Enumerable.Empty<Event>();
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Get upcoming events from groups where the user is a member
+        return await _context.Events
+            .Include(e => e.Group)
+            .Where(e => e.DateOfEvent >= today &&
+                        _context.GroupMemberships.Any(m => m.GroupId == e.GroupId && m.UserId == userId))
+            .OrderBy(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
             .ToListAsync();
     }
@@ -144,6 +159,7 @@ public class EventService : IEventService
     public async Task<Event?> GetEventByIdAsync(int id)
     {
         return await _context.Events
+            .Include(e => e.Group)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
@@ -200,11 +216,5 @@ public class EventService : IEventService
         return await _context.Events
             .Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end)
             .ToListAsync();
-    }
-
-    /// <inheritdoc/>
-    public async Task AddEventAsync(Event newEvent)
-    {
-        await CreateEventAsync(newEvent);
     }
 }

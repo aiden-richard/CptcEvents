@@ -1,0 +1,70 @@
+@model CptcEvents.Models.Group?
+@using CptcEvents.Models
+@{
+    ViewData["Title"] = "Join Group";
+    bool canJoin = Model != null && Model.PrivacyLevel == PrivacyLevel.Public;
+    bool noGroupSpecified = Model == null;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Join Group</h4>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Back</a>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
+                    @if (TempData["Info"] != null)
+                    {
+                        <div class="alert alert-info">@TempData["Info"]</div>
+                    }
+
+                    @if (canJoin)
+                    {
+                        <h5 class="card-title mb-2">@Model?.Name</h5>
+                        @if (!string.IsNullOrWhiteSpace(Model?.Description))
+                        {
+                            <p class="text-muted mb-3">@Model?.Description</p>
+                        }
+
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Privacy</dt>
+                            <dd class="col-sm-7">@Model?.PrivacyLevel</dd>
+                            <dt class="col-sm-5">Members</dt>
+                            <dd class="col-sm-7">@Model?.MemberCount</dd>
+                        </dl>
+                        
+                        <form asp-action="Join" asp-route-groupId="@Model?.Id" method="post" class="mt-3">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                            <button type="submit" class="btn btn-primary">Join Group</button>
+                        </form>
+                    }
+                    else if (noGroupSpecified)
+                    {
+                        <form asp-action="RedeemByQuery" asp-controller="Invites" method="get" class="mt-3">
+                            <div class="mb-3">
+                                <label for="inviteCode" class="form-label">Enter Invite Code</label>
+                                <input type="text" class="form-control" id="inviteCode" name="code" placeholder="Invite Code" required />
+                            </div>
+                            <button type="submit" class="btn btn-primary">Redeem Invite</button>
+                        </form>
+                    }
+                    else 
+                    {
+                        <div class="text-danger mb-4">
+                            <i class="bi bi-x-circle-fill" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="card-title mb-3">Unable to join this group</h3>
+                        <p class="text-muted">Please join via an invite link.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

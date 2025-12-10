@@ -28,6 +28,22 @@ namespace CptcEvents.Controllers
         }
 
         /// <summary>
+        /// Handles invite redemption when the code is provided as a query string.
+        /// Redirects to the route variant or back to Join when missing.
+        /// </summary>
+        /// <param name="inviteCode">Invite code supplied via query string.</param>
+        [HttpGet("/Invites/Redeem")]
+        public IActionResult RedeemByQuery([FromQuery(Name = "code")] string? inviteCode)
+        {
+            if (string.IsNullOrWhiteSpace(inviteCode))
+            {
+                return RedirectToAction(nameof(GroupsController.Join), "Groups");
+            }
+
+            return RedirectToAction(nameof(Redeem), new { code = inviteCode });
+        }
+
+        /// <summary>
         /// Displays the invite redemption page where users can join a group.
         /// GET /Invites/Redeem/{code}
         /// </summary>
@@ -97,12 +113,12 @@ namespace CptcEvents.Controllers
             if (member == null)
             {
                 ModelState.AddModelError(string.Empty, "Could not redeem the invite. You may already be a member or the invite is no longer valid.");
-            // Re-fetch to ensure view has current state
-            invite = await _inviteService.GetInviteByCodeAsync(code);
-            return View(invite);
-        }
+                // Re-fetch to ensure view has current state
+                invite = await _inviteService.GetInviteByCodeAsync(code);
+                return View(invite);
+            }
 
-        return RedirectToAction(nameof(GroupsController.Index), "Groups");
-    }
+            return RedirectToAction(nameof(GroupsController.Index), "Groups");
+        }
     }
 }

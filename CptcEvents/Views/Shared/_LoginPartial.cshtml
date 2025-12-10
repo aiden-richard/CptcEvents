@@ -4,6 +4,8 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
+@* Navbar auth links: greets signed-in users and shows login/register *@
+
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {

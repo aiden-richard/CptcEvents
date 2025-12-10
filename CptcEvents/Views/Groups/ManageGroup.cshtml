@@ -1,0 +1,130 @@
+@using System.Linq
+@model CptcEvents.Models.ManageGroupViewModel
+
+@{
+	ViewData["Title"] = $"Manage {Model.Group.Name}";
+	string privacyLabel = Model.PrivacyLevel switch
+	{
+		CptcEvents.Models.PrivacyLevel.Public => "Public",
+		CptcEvents.Models.PrivacyLevel.ModeratorInvitePrivate => "Moderator invites",
+		_ => "Owner invites"
+	};
+}
+
+<div class="page-shell">
+	<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+		<div>
+			<p class="text-muted small mb-1">Group management</p>
+			<h2 class="mb-0">@Model.Group.Name</h2>
+			@if (!string.IsNullOrWhiteSpace(Model.Description))
+			{
+				<p class="text-muted mb-0">@Model.Description</p>
+			}
+		</div>
+		<div class="d-flex flex-wrap gap-2">
+			<a class="btn btn-outline-secondary" href="@Url.Action("Events", "Groups", new { groupId = Model.Group.Id })">Back to calendar</a>
+            @if (Model.UserIsOwner)
+            {
+			    <a class="btn btn-primary" href="@Url.Action("Edit", "Groups", new { groupId = Model.Group.Id })">Edit group details</a>
+            }
+		</div>
+	</div>
+
+	<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+		<span class="badge rounded-pill text-bg-light">Privacy: @privacyLabel</span>
+		<span class="badge rounded-pill text-bg-light">Members: @Model.MemberCount</span>
+		<span class="badge rounded-pill text-bg-light">Moderators: @Model.ModeratorCount</span>
+		<span class="badge rounded-pill text-bg-light">Invites: @Model.InviteCount</span>
+	</div>
+
+	<div class="row g-3">
+		<div class="col-12 col-lg-6">
+			<div class="card shadow-sm h-100">
+				<div class="card-body d-flex flex-column gap-3">
+					<div class="d-flex justify-content-between align-items-start gap-2">
+						<div>
+							<p class="text-muted small mb-1">Events</p>
+							<h4 class="mb-0">Plan and edit events</h4>
+						</div>
+						<span class="badge text-bg-secondary">@Model.UpcomingEventCount upcoming</span>
+					</div>
+					@if (Model.UpcomingEvents.Any())
+					{
+						<ul class="list-unstyled mb-0 small text-muted">
+							@foreach (var evt in Model.UpcomingEvents)
+							{
+								var label = evt.IsAllDay ? "All day" : $"{evt.StartTime:hh\\:mm tt} - {evt.EndTime:hh\\:mm tt}";
+								<li class="d-flex justify-content-between">
+									<span>@evt.Title</span>
+									<span>@evt.DateOfEvent.ToString("MMM d") (@label)</span>
+								</li>
+							}
+						</ul>
+					}
+					else
+					{
+						<p class="text-muted mb-0">No upcoming events yet.</p>
+					}
+					<div class="d-flex flex-wrap gap-2 mt-auto">
+						<a class="btn btn-primary" href="@Url.Action("ManageEvents", "Groups", new { groupId = Model.Group.Id })">Manage events</a>
+						<a class="btn btn-outline-primary" href="@Url.Action("Create", "Events", new { groupId = Model.Group.Id })">Create event</a>
+						<a class="btn btn-outline-secondary" href="@Url.Action("Events", "Groups", new { groupId = Model.Group.Id })">View calendar</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-12 col-lg-6">
+			<div class="card shadow-sm h-100">
+				<div class="card-body d-flex flex-column gap-3">
+					<div class="d-flex justify-content-between align-items-start gap-2">
+						<div>
+							<p class="text-muted small mb-1">Invites</p>
+							<h4 class="mb-0">Share access</h4>
+						</div>
+						<span class="badge @(Model.ModeratorsCanInvite ? "text-bg-success" : "text-bg-secondary")">@privacyLabel</span>
+					</div>
+					<p class="text-muted mb-2">
+						@if (Model.ModeratorsCanInvite)
+						{
+							@:Moderators can create invite links for this group.
+						}
+						else
+						{
+							@:Only the group owner can create invites.
+						}
+					</p>
+					@if (Model.UserIsOwner)
+					{
+						<div class="d-flex flex-wrap gap-2 mt-auto">
+							<a class="btn btn-primary" href="@Url.Action("ManageInvites", "Groups", new { groupId = Model.Group.Id })">Manage invites</a>
+							<a class="btn btn-outline-primary" href="@Url.Action("CreateInvite", "Groups", new { groupId = Model.Group.Id })">Create invite</a>
+						</div>
+					}
+					else
+					{
+						<p class="text-muted mb-0">You cannot create invites for this group.</p>
+					}
+				</div>
+			</div>
+		</div>
+
+        @if (Model.UserIsOwner)
+        {
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+                        <div>
+                            <p class="text-muted small mb-1">Members & moderators</p>
+                            <h4 class="mb-0">Control who can help manage</h4>
+                            <p class="text-muted mb-0">Owners can promote members to moderators or remove members from the group.</p>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-primary" href="@Url.Action("ManageMembers", "Groups", new { groupId = Model.Group.Id })">Manage members</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+	</div>
+</div>

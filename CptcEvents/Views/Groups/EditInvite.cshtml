@@ -1,0 +1,89 @@
+@model CptcEvents.Models.GroupInviteEditViewModel
+@{
+    ViewData["Title"] = "Edit Invite";
+}
+
+<div class="page-shell">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <p class="text-muted small mb-1">Invite</p>
+            <h2 class="mb-1">Edit invite</h2>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="fw-semibold">Code: @Model.InviteCode</span>
+                |
+                @if (!string.IsNullOrWhiteSpace(Model.InvitedUserDisplay))
+                {
+                    <span class="fw-semibold">Invited User: @Model.InvitedUserDisplay</span>
+                }
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="@Url.Action("ManageInvites", "Groups", new { groupId = Model.GroupId })">Back to invites</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="EditInvite" asp-controller="Groups" method="post" asp-route-groupId="@Model.GroupId" asp-route-inviteId="@Model.Id">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="GroupId" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="Expires" id="expiresToggle" />
+                            <label class="form-check-label" asp-for="Expires"></label>
+                        </div>
+                        <small class="text-muted">Use a local date/time; it will be stored in UTC.</small>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" asp-for="ExpiresAt"></label>
+                        <input class="form-control" type="datetime-local" asp-for="ExpiresAt" id="expiresAtInput" />
+                        <span class="text-danger" asp-validation-for="ExpiresAt"></span>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="OneTimeUse" id="oneTimeUse" />
+                            <label class="form-check-label" asp-for="OneTimeUse"></label>
+                        </div>
+                        <small class="text-muted">One-time invites expire after first use.</small>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <a class="btn btn-outline-secondary" href="@Url.Action("ManageInvites", "Groups", new { groupId = Model.GroupId })">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const toggle = document.getElementById('expiresToggle');
+            const input = document.getElementById('expiresAtInput');
+            const syncDisabled = () => {
+                const enabled = toggle.checked;
+                input.toggleAttribute('disabled', !enabled);
+            };
+            toggle.addEventListener('change', syncDisabled);
+            syncDisabled();
+
+            const oneTime = document.getElementById('oneTimeUse');
+            const hasInvitedUser = '@(!string.IsNullOrWhiteSpace(Model.InvitedUserDisplay))' === 'True';
+            if (hasInvitedUser) {
+                oneTime.checked = true;
+                oneTime.addEventListener('change', function () {
+                    this.checked = true; // lock to one-time use for user-specific invites
+                });
+            }
+        })();
+    </script>
+}

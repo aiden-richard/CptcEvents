@@ -4,6 +4,8 @@
     ViewData["Title"] = "Delete Group";
 }
 
+@* Confirmation screen to permanently remove a group and its data *@
+
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-6">
@@ -30,7 +32,7 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-between">
-                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    <a asp-action="ManageGroup" asp-route-groupId="@Model.Id" class="btn btn-secondary">Cancel</a>
                     <form asp-action="Delete" asp-route-groupId="@Model.Id" method="post">
                         <button type="submit" class="btn btn-danger">Delete Group</button>
                     </form>
