@@ -8,6 +8,20 @@ namespace CptcEvents.Services;
 public interface IInstructorCodeService
 {
     /// <summary>
+    /// Checks if an instructor code is currently in use.
+    /// </summary>
+    /// <param name="code">The instructor code to check.</param>
+    /// <returns>True if the code is in use, otherwise false.</returns>
+    Task<bool> InstructorCodeInUseAsync(string code);
+
+    /// <summary>
+    /// Generates a unique instructor code of specified length. An instructor code contains alphanumeric characters.
+    /// </summary>
+    /// <param name="length">The length of the code to generate.</param>
+    /// <returns>A unique instructor code.</returns>
+    Task<string> GenerateUniqueInstructorCodeAsync(int length);
+
+    /// <summary>
     /// Validates if the provided instructor code is valid and active.
     /// </summary>
     /// <param name="code">The instructor code to validate.</param>

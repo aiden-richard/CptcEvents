@@ -68,7 +68,7 @@ namespace CptcEvents.Controllers
             }
 
             // Generate a random code
-            var code = GenerateRandomCode();
+            var code = await _instructorCodeService.GenerateUniqueInstructorCodeAsync(8);
 
             DateTime? expiresAt = model.Expires ? model.ExpiresAt?.ToUniversalTime() : null;
 
@@ -99,13 +99,6 @@ namespace CptcEvents.Controllers
                 TempData["Error"] = "Instructor code not found.";
             }
             return RedirectToAction(nameof(ManageInstructorCodes));
-        }
-
-        private string GenerateRandomCode()
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
         /// <summary>

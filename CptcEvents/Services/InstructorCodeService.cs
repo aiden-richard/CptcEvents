@@ -22,6 +22,36 @@ public class InstructorCodeService : IInstructorCodeService
         _context = context;
     }
 
+    public async Task<bool> InstructorCodeInUseAsync(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return false;
+		string normalized = code.Trim().ToUpper();
+		return await _context.InstructorCodes.AnyAsync(i => i.Code.ToUpper() == normalized);
+    }
+
+    public async Task<string> GenerateUniqueInstructorCodeAsync(int length)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		const int maxRetries = 10;
+		for (int attempt = 0; attempt < maxRetries; attempt++)
+		{
+			char[] result = new char[length];
+			for (int i = 0; i < length; i++)
+			{
+				int idx = System.Security.Cryptography.RandomNumberGenerator.GetInt32(chars.Length);
+				result[i] = chars[idx];
+			}
+
+			string code = new string(result);
+			if (!await InstructorCodeInUseAsync(code))
+			{
+				return code;
+			}
+			// else, try again
+		}
+		throw new System.Exception($"Failed to generate a unique invite code after {maxRetries} retries.");
+    }
+
     /// <inheritdoc/>
     public async Task<bool> ValidateCodeAsync(string code, string email)
     {
