@@ -38,6 +38,7 @@ public class Group
     /// The display name of the group.
     /// </summary>
     [Required]
+    [StringLength(100)]
     public required string Name { get; set; }
 
     /// <summary>
