@@ -45,6 +45,16 @@
                     <span asp-validation-for="PrivacyLevel" class="text-danger"></span>
                 </div>
 
+                <div class="mb-3">
+                    <label asp-for="Color" class="form-label">Group Color</label>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input asp-for="Color" type="color" class="form-control form-control-color" id="colorPicker" style="width: 60px; height: 40px;" />
+                        <input asp-for="Color" type="text" class="form-control" id="colorText" placeholder="#0d6efd" />
+                    </div>
+                    <small class="text-muted">Choose a color for this group's events on the calendar</small>
+                    <span asp-validation-for="Color" class="text-danger d-block"></span>
+                </div>
+
                 <div class="d-flex justify-content-between mt-4">
                     <a asp-action="ManageGroup" asp-route-groupId="@Model.Id" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -65,4 +75,30 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorPicker = document.getElementById('colorPicker');
+            const colorText = document.getElementById('colorText');
+            
+            // Only set random color if no color is currently set
+            if (!colorPicker.value || colorPicker.value === '') {
+                const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+                colorPicker.value = randomColor;
+                colorText.value = randomColor;
+            }
+            
+            // Sync color picker and text input
+            colorPicker.addEventListener('change', function() {
+                colorText.value = this.value;
+            });
+            
+            colorText.addEventListener('change', function() {
+                if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+                    colorPicker.value = this.value;
+                }
+            });
+        });
+    </script>
 }
+

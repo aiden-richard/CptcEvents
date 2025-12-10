@@ -46,10 +46,17 @@
                             <span>@evt.StartTime.ToString("hh\\:mm") - @evt.EndTime.ToString("hh\\:mm")</span>
                         }
                     </td>
-                    <td>@(evt.IsPublic ? "Public" : "Private")</td>
+                    <td>@(!evt.IsPublic ? "Group only" : evt.IsDeniedPublic ? "Public (denied)" : evt.IsApprovedPublic ? "Public" : "Public (pending)")</td>
                     <td class="text-end">
-                        <a asp-controller="Events" asp-action="Edit" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                        <a asp-controller="Events" asp-action="Delete" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                        @if (Model.UserIsOwner || evt.CreatedByUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                        {
+                            <a asp-controller="Events" asp-action="Edit" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                            <a asp-controller="Events" asp-action="Delete" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">Higher permissions required</span>
+                        }
                     </td>
                 </tr>
             }
