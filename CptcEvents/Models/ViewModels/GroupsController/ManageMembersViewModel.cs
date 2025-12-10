@@ -10,7 +10,7 @@ public class ManageMembersViewModel
 {
     public required GroupSummaryViewModel Group { get; set; }
 
-    public bool UserIsOwner { get; set; }
+    public bool ModeratorsCanInvite { get; set; }
 
     public List<ManageMemberListItemViewModel> Members { get; set; } = new();
 }

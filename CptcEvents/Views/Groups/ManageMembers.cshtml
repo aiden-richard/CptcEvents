@@ -47,31 +47,29 @@
                                     </td>
                                     <td>@member.JoinedAt.ToString("yyyy-MM-dd")</td>
                                     <td class="text-end">
-                                        <div class="btn-group" role="group">
-                                            @if (member.CanPromote)
-                                            {
-                                                <form method="post" asp-action="UpdateMemberRole" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="newRole" value="@((int)CptcEvents.Models.RoleType.Moderator)" />
-                                                    <button class="btn btn-sm btn-outline-primary" type="submit">Promote to mod</button>
-                                                </form>
-                                            }
-                                            @if (member.CanDemote)
-                                            {
-                                                <form method="post" asp-action="UpdateMemberRole" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="newRole" value="@((int)CptcEvents.Models.RoleType.Member)" />
-                                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Demote</button>
-                                                </form>
-                                            }
-                                            @if (member.CanRemove)
-                                            {
-                                                <form method="post" asp-action="RemoveMember" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId" onsubmit="return confirm('Remove this member?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
-                                                </form>
-                                            }
-                                        </div>
+                                        @if (member.CanPromote)
+                                        {
+                                            <form method="post" class="d-inline me-1" asp-action="UpdateMemberRole" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="newRole" value="@((int)CptcEvents.Models.RoleType.Moderator)" />
+                                                <button class="btn btn-sm btn-outline-primary" type="submit">Promote to mod</button>
+                                            </form>
+                                        }
+                                        @if (member.CanDemote)
+                                        {
+                                            <form method="post" class="d-inline me-1" asp-action="UpdateMemberRole" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="newRole" value="@((int)CptcEvents.Models.RoleType.Member)" />
+                                                <button class="btn btn-sm btn-outline-secondary" type="submit">Demote</button>
+                                            </form>
+                                        }
+                                        @if (member.CanRemove)
+                                        {
+                                            <form method="post" class="d-inline" asp-action="RemoveMember" asp-route-groupId="@Model.Group.Id" asp-route-userId="@member.UserId" onsubmit="return confirm('Remove this member?');">
+                                                @Html.AntiForgeryToken()
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                                            </form>
+                                        }
                                     </td>
                                 </tr>
                             }
