@@ -133,7 +133,7 @@ public class InstructorCodeService : IInstructorCodeService
             baseUrl = "https://localhost:7134"; // Fallback for development
         }
 
-        string registrationUrl = $"{baseUrl}/Identity/Account/Register?instructorCode={Uri.EscapeDataString(instructorCode.Code)}";
+        string registrationUrl = $"{baseUrl}/Register?instructorCode={Uri.EscapeDataString(instructorCode.Code)}";
         
         string expiryInfo = instructorCode.ExpiresAt.HasValue 
             ? $"<p><strong>Expiration:</strong> {instructorCode.ExpiresAt.Value.ToLocalTime():MMMM dd, yyyy h:mm tt}</p>"
