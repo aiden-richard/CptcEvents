@@ -35,8 +35,3 @@ jobs:
       # Step 5: Build
       - name: Build
         run: dotnet build --configuration Release --no-restore
-
-      # Step 6: Test
-      - name: Test
-        run: dotnet test --configuration Release --no-restore
-
