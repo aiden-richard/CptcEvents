@@ -347,7 +347,7 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            bool isOwner = userId != null && await _groupService.IsUserOwnerAsync(groupId, userId);
+            bool isOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
             ViewBag.IsOwner = isOwner;
 
             return View(group);
@@ -436,7 +436,7 @@ namespace CptcEvents.Controllers
             var viewModel = new ManageMembersViewModel
             {
                 Group = GroupMapper.ToSummary(group),
-                UserIsOwner = true,
+                ModeratorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate,
                 Members = members
             };
 
