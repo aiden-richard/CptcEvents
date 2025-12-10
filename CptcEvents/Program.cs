@@ -112,14 +112,19 @@ async Task CreateRolesAsync(WebApplication app)
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
     // Ensure database is created and migrations are applied
     await context.Database.EnsureCreatedAsync();
 
-    // The admin user, roles, groups, and events are now seeded via EF Core seed data
-    // We just need to verify everything is in place
+    // Get admin user configuration from appsettings
+    var adminEmail = configuration.GetValue<string>("AdminUser:Email") ?? "admin@cptc.edu";
+    var adminUsername = configuration.GetValue<string>("AdminUser:UserName") ?? adminEmail;
+    var adminPassword = configuration.GetValue<string>("AdminUser:Password") ?? "Admin123!";
+    var adminFirstName = configuration.GetValue<string>("AdminUser:FirstName") ?? "Admin";
+    var adminLastName = configuration.GetValue<string>("AdminUser:LastName") ?? "User";
 
-    string adminEmail = "admin@cptc.edu";
+    // Find or create the admin user
     ApplicationUser? adminUser = await userManager.FindByEmailAsync(adminEmail);
     
     if (adminUser == null)
@@ -128,6 +133,38 @@ async Task CreateRolesAsync(WebApplication app)
         var logger = app.Services.GetService<ILogger<Program>>();
         logger?.LogError("Seeded admin user not found in database. Database seeding may have failed.");
         return;
+    }
+
+    // Update admin user properties if they've changed in configuration
+    bool userNeedsUpdate = false;
+    if (adminUser.FirstName != adminFirstName)
+    {
+        adminUser.FirstName = adminFirstName;
+        userNeedsUpdate = true;
+    }
+    if (adminUser.LastName != adminLastName)
+    {
+        adminUser.LastName = adminLastName;
+        userNeedsUpdate = true;
+    }
+    if (adminUser.UserName != adminUsername)
+    {
+        adminUser.UserName = adminUsername;
+        adminUser.NormalizedUserName = adminUsername.ToUpper();
+        userNeedsUpdate = true;
+    }
+
+    // Update the password if it doesn't match
+    var passwordVerificationResult = userManager.PasswordHasher.VerifyHashedPassword(adminUser, adminUser.PasswordHash!, adminPassword);
+    if (passwordVerificationResult == PasswordVerificationResult.Failed)
+    {
+        adminUser.PasswordHash = userManager.PasswordHasher.HashPassword(adminUser, adminPassword);
+        userNeedsUpdate = true;
+    }
+
+    if (userNeedsUpdate)
+    {
+        await userManager.UpdateAsync(adminUser);
     }
 
     // Verify the admin user has the Admin role
