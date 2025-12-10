@@ -56,6 +56,13 @@ public class GroupOwnerHandler : AuthorizationHandler<GroupOwnerRequirement>
             return;
         }
 
+        // Admins have owner privileges in all groups
+        if (context.User.IsInRole("Admin"))
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
         // Check for owner status once we have groupId and userId
         bool isOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
         if (isOwner)

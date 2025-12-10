@@ -8,6 +8,29 @@
      data-initial-view="@Model.InitialView">
 </div>
 
+<!-- Event Details Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="eventModalLabel">Event Details</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="eventModalBody">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="eventModalViewGroup" class="btn btn-primary" href="#" style="display: none;">View Group</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     (function () {
         var CDN_SRC = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js';
@@ -94,13 +117,12 @@
                             fetchEvents(eventsUrl, successCallback, failureCallback);
                         },
                         eventClick: function(info) {
-                            var groupId = info.event.groupId || (info.event.extendedProps && info.event.extendedProps.groupId);
-                            if (!groupId) {
-                                console.warn('GroupId not found in event:', info.event);
+                            var eventId = info.event.id;
+                            if (!eventId) {
+                                console.warn('Event ID not found in event:', info.event);
                                 return;
                             }
-                            var url = '/Groups/' + groupId + '/Events';
-                            window.location.href = url;
+                            openEventModal(eventId);
                         },
                         eventMouseEnter: function(info) {
                             // Add visual effect on hover - increase opacity/brightness
@@ -152,6 +174,97 @@
             // Kick off calendar setup using the element's data attributes.
             initFromElement(el);
         })();
+
+        // Function to open event modal and fetch details
+        function openEventModal(eventId) {
+            var modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            var modalBody = document.getElementById('eventModalBody');
+            var modalTitle = document.getElementById('eventModalLabel');
+            var viewGroupBtn = document.getElementById('eventModalViewGroup');
+
+            // Reset modal content
+            modalTitle.textContent = 'Event Details';
+            modalBody.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            viewGroupBtn.style.display = 'none';
+
+            // Show modal
+            modal.show();
+
+            // Fetch event details
+            fetch('/Events/Details/' + eventId)
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch event details');
+                    }
+                    return response.json();
+                })
+                .then(function (event) {
+                    // Update modal title
+                    modalTitle.textContent = event.title || 'Event Details';
+
+                    // Format date and time
+                    var eventDate = new Date(event.dateOfEvent + 'T00:00:00');
+                    var dateString = eventDate.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    var timeString = '';
+                    if (!event.isAllDay && event.startTime && event.endTime) {
+                        var startTime = new Date('2000-01-01T' + event.startTime + ':00');
+                        var endTime = new Date('2000-01-01T' + event.endTime + ':00');
+                        timeString = startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + 
+                                   ' - ' + endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                    } else {
+                        timeString = 'All Day';
+                    }
+
+                    // Build modal content
+                    var modalContent = '<div class="row g-3">';
+                    
+                    if (event.groupName) {
+                        modalContent += '<div class="col-12"><div class="d-flex align-items-center gap-2"><strong>Group:</strong> <span class="badge bg-primary">' + escapeHtml(event.groupName) + '</span></div></div>';
+                    }
+                    
+                    modalContent += '<div class="col-12"><div><strong>Date:</strong> ' + dateString + '</div></div>';
+                    modalContent += '<div class="col-12"><div><strong>Time:</strong> ' + timeString + '</div></div>';
+                    
+                    if (event.description && event.description.trim()) {
+                        modalContent += '<div class="col-12"><div><strong>Description:</strong></div><div class="mt-1">' + escapeHtml(event.description).replace(/\n/g, '<br>') + '</div></div>';
+                    }
+                    
+                    if (event.url && event.url.trim()) {
+                        modalContent += '<div class="col-12"><div><strong>URL:</strong> <a href="' + escapeHtml(event.url) + '" target="_blank" rel="noopener">' + escapeHtml(event.url) + '</a></div></div>';
+                    }
+                    
+                    if (!event.isPublic) {
+                        modalContent += '<div class="col-12"><span class="badge bg-secondary">Private Event</span></div>';
+                    }
+                    
+                    modalContent += '</div>';
+
+                    modalBody.innerHTML = modalContent;
+
+                    // Setup View Group button - only show if user is a member of the group
+                    if (event.groupId && event.isCurrentUserMember) {
+                        viewGroupBtn.href = '/Groups/' + event.groupId + '/Events';
+                        viewGroupBtn.style.display = 'inline-block';
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error fetching event details:', error);
+                    modalBody.innerHTML = '<div class="alert alert-danger" role="alert">Failed to load event details. Please try again.</div>';
+                });
+        }
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
 </script>
 

@@ -24,7 +24,7 @@ public class EventFormViewModel : IValidatableObject
     /// Optional description of the event.
     /// </summary>
     [StringLength(1000)]
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; } = null;
 
     /// <summary>
     /// The group this event belongs to.
@@ -80,7 +80,7 @@ public class EventFormViewModel : IValidatableObject
     /// <summary>
     /// Optional URL for the event.
     /// </summary>
-    [StringLength(2083)]
+    [StringLength(100)]
     [DataType(DataType.Url)]
     [Url]
     public string? Url { get; set; }

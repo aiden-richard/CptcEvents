@@ -86,6 +86,7 @@ namespace CptcEvents.Areas.Identity.Pages.Account
 
             [Required]
             [Display(Name = "Username")]
+            [StringLength(50)]
             public string Username { get; set; }
 
             /// <summary>
@@ -105,8 +106,8 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             public string LastName { get; set; }
 
             /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
+            /// This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+            /// directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
@@ -115,8 +116,8 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             public string Password { get; set; }
 
             /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
+            /// This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+            /// directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
@@ -127,6 +128,7 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             /// Gets or sets the instructor code.
             /// </summary>
             [Display(Name = "Instructor Code")]
+            [StringLength(8, MinimumLength = 8, ErrorMessage = "The instructor code must be exactly 8 characters long.")]
             public string InstructorCode { get; set; }
         }
 
@@ -144,6 +146,13 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
+                bool isValidInstructorCode = await _instructorCodeService.ValidateCodeAsync(Input.InstructorCode, Input.Email);
+                if (!isValidInstructorCode && !string.IsNullOrWhiteSpace(Input.InstructorCode))
+                {
+                    ModelState.AddModelError("Input.InstructorCode", "Invalid instructor code.");
+                    return Page();
+                }
+
                 var user = CreateUser();
 
                 // Set additional properties
@@ -156,19 +165,10 @@ namespace CptcEvents.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    // Assign default role
-                    bool isValidInstructorCode = false;
-                    if (!string.IsNullOrWhiteSpace(Input.InstructorCode))
-                    {
-                        isValidInstructorCode = await _instructorCodeService.ValidateCodeAsync(Input.InstructorCode, Input.Email);
-                        if (!isValidInstructorCode)
-                        {
-                            ModelState.AddModelError("Input.InstructorCode", "Invalid instructor code.");
-                            return Page();
-                        }
-                    }
                     string role = isValidInstructorCode && !string.IsNullOrWhiteSpace(Input.InstructorCode) ? "Staff" : "Student";
                     await _userManager.AddToRoleAsync(user, role);
+
+                    await _instructorCodeService.MarkCodeAsUsedAsync(Input.InstructorCode, user.Id);
 
                     _logger.LogInformation("User created a new account with password.");
 

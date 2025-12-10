@@ -37,6 +37,7 @@ namespace CptcEvents.Controllers
         [HttpGet("Groups/{groupId?}")]
         /// <summary>
         /// Displays groups for the authenticated user or redirects to a specific group's events.
+        /// Admins see all groups, regular users see only groups they're members of.
         /// GET /Groups or /Groups/{groupId}
         /// </summary>
         /// <param name="groupId">Optional group ID. If provided, verifies membership and redirects to that group's events.</param>
@@ -49,6 +50,8 @@ namespace CptcEvents.Controllers
                 return Challenge();
             }
 
+            bool isAdmin = User.IsInRole("Admin");
+
             if (groupId != null)
             {
                 Group? group = await _groupService.GetGroupByIdAsync(groupId.Value);
@@ -57,8 +60,9 @@ namespace CptcEvents.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
+                // Admins can access any group, regular users need membership
                 bool isMember = await _groupService.IsUserMemberAsync(groupId.Value, userId);
-                if (!isMember)
+                if (!isAdmin && !isMember)
                 {
                     return RedirectToAction(nameof(Index));
                 }
@@ -66,7 +70,7 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Events), new { groupId = groupId.Value });
             }
 
-            IEnumerable<Group> groups = await _groupService.GetGroupsForUserAsync(userId);
+            IEnumerable<Group> groups = await _groupService.GetGroupsForUserAsync(userId, isAdmin);
 
             return View(groups);
         }
@@ -143,7 +147,8 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            bool isOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, userId);
 
             var viewModel = new GroupFormViewModel
             {
@@ -184,7 +189,8 @@ namespace CptcEvents.Controllers
 
             if (!ModelState.IsValid)
             {
-                model.IsOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
+                bool isAdmin = User.IsInRole("Admin");
+                model.IsOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, userId);
                 return View(model);
             }
 
@@ -204,7 +210,8 @@ namespace CptcEvents.Controllers
             if (result == null)
             {
                 ModelState.AddModelError(string.Empty, "Failed to update group. You may not have permission to make these changes.");
-                model.IsOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
+                bool isAdmin = User.IsInRole("Admin");
+                model.IsOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, userId);
                 return View(model);
             }
 
@@ -276,7 +283,8 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            bool isOwner = userId != null && await _groupService.IsUserOwnerAsync(groupId, userId);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOwner = isAdmin || (userId != null && await _groupService.IsUserOwnerAsync(groupId, userId));
             bool moderatorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate;
 
             List<Event> events = (await _eventService.GetEventsForGroupAsync(groupId)).ToList();
@@ -432,7 +440,8 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            bool isOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, userId);
             ViewBag.IsOwner = isOwner;
 
             return View(group);
@@ -677,8 +686,10 @@ namespace CptcEvents.Controllers
 
             string? userId = await _groupAuthorization.GetUserIdAsync(User);
 
+            bool isAdmin = User.IsInRole("Admin");
             bool isModerator =
-                (userId != null && await _groupService.IsUserModeratorAsync(groupId, userId))
+                isAdmin
+                || (userId != null && await _groupService.IsUserModeratorAsync(groupId, userId))
                 || (userId != null && await _groupService.IsUserOwnerAsync(groupId, userId));
 
             DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -731,11 +742,14 @@ namespace CptcEvents.Controllers
                 return Challenge();
             }
 
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, user);
+
             var viewModel = new GroupEventsViewModel
             {
                 Group = GroupMapper.ToSummary(group),
                 UserIsModerator = true,
-                UserIsOwner = await _groupService.IsUserOwnerAsync(groupId, user),
+                UserIsOwner = isOwner,
                 Events = events
                     .Select(EventMapper.ToGroupEventListItem)
                     .ToList()
@@ -773,10 +787,13 @@ namespace CptcEvents.Controllers
 
             List<GroupInvite> invites = await _inviteService.GetInvitesForGroupAsync(groupId);
 
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOwner = isAdmin || (currentUserId != null && await _groupService.IsUserOwnerAsync(groupId, currentUserId));
+
             var viewModel = new ManageInvitesViewModel
             {
                 Group = GroupMapper.ToSummary(group),
-                UserIsOwner = currentUserId != null && await _groupService.IsUserOwnerAsync(groupId, currentUserId),
+                UserIsOwner = isOwner,
                 ModeratorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate,
                 Invites = invites
                     .Select(i => new InviteListItemViewModel

@@ -57,14 +57,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var code in Model)
+                            @foreach (var code in Model.OrderByDescending(c => c.CreatedAt))
                             {
-                                var status = code.IsActive ? (code.ExpiresAt.HasValue && code.ExpiresAt < DateTime.UtcNow ? "Expired" : "Active") : "Inactive";
+                                var status = code.UsedAt.HasValue ? "Used" : code.IsActive ? (code.ExpiresAt.HasValue && code.ExpiresAt < DateTime.UtcNow ? "Expired" : "Active") : "Inactive";
                                 <tr>
                                     <td class="fw-semibold">@code.Code</td>
                                     <td>@(code.Email ?? "—")</td>
                                     <td>
-                                        <span class="badge @(status == "Active" ? "text-bg-success" : status == "Expired" ? "text-bg-secondary" : "text-bg-warning")">@status</span>
+                                        <span class="badge @(status == "Active" ? "text-bg-success" : status == "Used" ? "text-bg-primary" : status == "Expired" ? "text-bg-secondary" : "text-bg-warning")">@status</span>
                                     </td>
                                     <td>@(code.CreatedBy ?? "—")</td>
                                     <td>@code.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>

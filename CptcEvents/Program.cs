@@ -13,7 +13,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    options.UseSqlite(connectionString);
+    // Suppress the PendingModelChangesWarning to allow migrations with non-deterministic seed data
+    options.ConfigureWarnings(w => 
+        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -106,35 +111,36 @@ async Task CreateRolesAsync(WebApplication app)
     using var scope = app.Services.CreateScope();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var roles = new[] { "Student", "Staff", "Admin" };
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    foreach (var role in roles)
+    // Ensure database is created and migrations are applied
+    await context.Database.EnsureCreatedAsync();
+
+    // The admin user, roles, groups, and events are now seeded via EF Core seed data
+    // We just need to verify everything is in place
+
+    string adminEmail = "admin@cptc.edu";
+    ApplicationUser? adminUser = await userManager.FindByEmailAsync(adminEmail);
+    
+    if (adminUser == null)
     {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
+        // If the seeded admin user doesn't exist, log an error
+        var logger = app.Services.GetService<ILogger<Program>>();
+        logger?.LogError("Seeded admin user not found in database. Database seeding may have failed.");
+        return;
     }
 
-    // Seed admin user
-    string adminEmail = "admin@cptc.edu";
-    string adminPassword = "Admin123!";
-
-    if (await userManager.FindByEmailAsync(adminEmail) == null)
+    // Verify the admin user has the Admin role
+    if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
     {
-        var adminUser = new ApplicationUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            EmailConfirmed = true,
-            FirstName = "Admin",
-            LastName = "User"
-        };
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
 
-        var result = await userManager.CreateAsync(adminUser, adminPassword);
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
+    // Verify the default group exists
+    var cptcDatesGroup = await context.Groups.FirstOrDefaultAsync(g => g.Name == "Cptc Dates");
+    if (cptcDatesGroup == null)
+    {
+        var logger = app.Services.GetService<ILogger<Program>>();
+        logger?.LogError("Default 'Cptc Dates' group not found in database. Database seeding may have failed.");
     }
 }

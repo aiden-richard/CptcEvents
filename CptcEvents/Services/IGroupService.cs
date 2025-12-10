@@ -25,6 +25,21 @@ public interface IGroupService
     Task<IEnumerable<Group>> GetGroupsForUserAsync(string userId);
 
     /// <summary>
+    /// Retrieves all groups in the system.
+    /// </summary>
+    /// <returns>A collection of all groups.</returns>
+    Task<IEnumerable<Group>> GetAllGroupsAsync();
+
+    /// <summary>
+    /// Retrieves groups visible to a user, considering admin privileges.
+    /// Admins can see all groups regardless of membership.
+    /// </summary>
+    /// <param name="userId">The ID of the user to retrieve groups for.</param>
+    /// <param name="isAdmin">Whether the user has admin privileges.</param>
+    /// <returns>A collection of groups. All groups for admins, or user's groups for non-admins.</returns>
+    Task<IEnumerable<Group>> GetGroupsForUserAsync(string userId, bool isAdmin);
+
+    /// <summary>
     /// Determines whether a user is the owner of a specific group.
     /// </summary>
     /// <param name="groupId">The ID of the group.</param>
@@ -306,5 +321,31 @@ public class GroupService : IGroupService
 
         _context.GroupMemberships.Remove(membership);
         await _context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<Group>> GetAllGroupsAsync()
+    {
+        return await _context.Groups
+            .Include(g => g.Members)
+            .ThenInclude(m => m.User)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<Group>> GetGroupsForUserAsync(string userId, bool isAdmin)
+    {
+        if (string.IsNullOrEmpty(userId)) return Enumerable.Empty<Group>();
+
+        if (isAdmin)
+        {
+            // Admins can see all groups
+            return await GetAllGroupsAsync();
+        }
+        else
+        {
+            // Regular users see only groups they're members of
+            return await GetGroupsForUserAsync(userId);
+        }
     }
 }

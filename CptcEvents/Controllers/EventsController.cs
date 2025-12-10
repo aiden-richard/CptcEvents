@@ -36,6 +36,7 @@ namespace CptcEvents.Controllers
 
         /// <summary>
         /// Displays a list of upcoming events for the authenticated user.
+        /// Admins see all events, regular users see only events from their groups.
         /// GET /Events or /Events?eventId={eventId}
         /// </summary>
         /// <param name="eventId">Optional event ID parameter (not currently used).</param>
@@ -48,7 +49,8 @@ namespace CptcEvents.Controllers
                 return Challenge();
             }
 
-            IEnumerable<Event> events = await _eventsService.GetActiveEventsForUserAsync(userId);
+            bool isAdmin = User.IsInRole("Admin");
+            IEnumerable<Event> events = await _eventsService.GetActiveEventsForUserAsync(userId, isAdmin);
 
             List<EventDetailsViewModel> viewModel = events.Select(EventMapper.ToDetails).ToList();
 
@@ -320,6 +322,48 @@ namespace CptcEvents.Controllers
             return RedirectToAction(nameof(GroupsController.ManageEvents), "Groups", new { groupId = eventItem.GroupId });
         }
 
+        // GET: Events/Details/5
+        [HttpGet("Events/Details/{eventId}")]
+        /// <summary>
+        /// Returns JSON data for a single event to display in a modal.
+        /// GET /Events/Details/{eventId}
+        /// </summary>
+        /// <param name="eventId">The ID of the event to retrieve.</param>
+        /// <returns>JSON with event details or NotFound if event doesn't exist or user lacks access.</returns>
+        public async Task<IActionResult> Details(int eventId)
+        {
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user has access to this event (either public, or user is member of the group)
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            // Check if user is member of the group (needed for both access control and UI display)
+            bool isAdmin = User.IsInRole("Admin");
+            bool isUserMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+
+            // If event is not public, check if user is member of the group (admins can access all events)
+            if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
+            {
+                if (!isAdmin && !isUserMember)
+                {
+                    return Forbid();
+                }
+            }
+
+            // For UI purposes, treat admins as members (so they can see the "View Group" button)
+            bool canAccessGroup = isAdmin || isUserMember;
+            var eventDetails = EventMapper.ToDetails(eventItem, canAccessGroup);
+            return Json(eventDetails);
+        }
+
         #endregion
 
         #region Helper Methods
@@ -397,8 +441,11 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
+            bool isAdmin = User?.IsInRole("Admin") == true;
             bool isMember = await _groupService.IsUserMemberAsync(groupId, userId);
-            if (!isMember)
+            
+            // Admins can access any group, regular users need membership
+            if (!isAdmin && !isMember)
             {
                 return Forbid();
             }
@@ -411,12 +458,12 @@ namespace CptcEvents.Controllers
 
         /// <summary>
         /// Retrieves all approved public calendar events and returns their data formatted for FullCalendar.
-        /// Logged-in users also see events from their groups.
+        /// Logged-in users also see events from their groups. Admins see all events.
         /// GET /Events/GetEvents
         /// </summary>
         /// <remarks>This method is intended for use by pages that require event data
         /// formatted for the FullCalendar JavaScript library. The returned list will be empty if no events are
-        /// found. Only events marked as both IsPublic and IsApprovedPublic are included.</remarks>
+        /// found. Only events marked as both IsPublic and IsApprovedPublic are included for non-admin users.</remarks>
         /// <returns>A JSON result containing a list of event objects formatted for FullCalendar.</returns>
         [AllowAnonymous]
         public async Task<IActionResult> GetEvents()
@@ -426,10 +473,20 @@ namespace CptcEvents.Controllers
 
             if (user != null)
             {
-                // Logged-in users see approved public events + events from their groups
-                var approvedPublicEvents = await _eventsService.GetApprovedPublicEventsAsync();
-                var userGroupEvents = await _eventsService.GetEventsForUserAsync(user.Id);
-                events = approvedPublicEvents.Concat(userGroupEvents).DistinctBy(e => e.Id);
+                bool isAdmin = User.IsInRole("Admin");
+                
+                if (isAdmin)
+                {
+                    // Admins see all events
+                    events = await _eventsService.GetEventsForUserAsync(user.Id, isAdmin);
+                }
+                else
+                {
+                    // Regular logged-in users see approved public events + events from their groups
+                    var approvedPublicEvents = await _eventsService.GetApprovedPublicEventsAsync();
+                    var userGroupEvents = await _eventsService.GetEventsForUserAsync(user.Id);
+                    events = approvedPublicEvents.Concat(userGroupEvents).DistinctBy(e => e.Id);
+                }
             }
             else
             {

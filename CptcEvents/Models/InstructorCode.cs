@@ -45,4 +45,14 @@ public class InstructorCode
     /// UTC timestamp when the code was created.
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The user ID of who used this instructor code for registration. Null if the code hasn't been used yet.
+    /// </summary>
+    public string? UsedByUserId { get; set; }
+
+    /// <summary>
+    /// UTC timestamp when the code was used. Null if the code hasn't been used yet.
+    /// </summary>
+    public DateTime? UsedAt { get; set; }
 }

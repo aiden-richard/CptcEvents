@@ -11,7 +11,7 @@ public class EventDetailsViewModel
 
     public string Title { get; init; } = string.Empty;
 
-    public string Description { get; init; } = string.Empty;
+    public string? Description { get; init; } = string.Empty;
 
     public string? GroupName { get; init; }
 
@@ -27,5 +27,11 @@ public class EventDetailsViewModel
 
     public bool IsPublic { get; init; }
 
+    public bool IsApprovedPublic { get; init; }
+
+    public bool IsDeniedPublic { get; init; }
+
     public string? Url { get; init; }
+
+    public bool IsCurrentUserMember { get; init; }
 }

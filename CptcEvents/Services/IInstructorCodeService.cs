@@ -8,6 +8,20 @@ namespace CptcEvents.Services;
 public interface IInstructorCodeService
 {
     /// <summary>
+    /// Checks if an instructor code is currently in use.
+    /// </summary>
+    /// <param name="code">The instructor code to check.</param>
+    /// <returns>True if the code is in use, otherwise false.</returns>
+    Task<bool> InstructorCodeInUseAsync(string code);
+
+    /// <summary>
+    /// Generates a unique instructor code of specified length. An instructor code contains alphanumeric characters.
+    /// </summary>
+    /// <param name="length">The length of the code to generate.</param>
+    /// <returns>A unique instructor code.</returns>
+    Task<string> GenerateUniqueInstructorCodeAsync(int length);
+
+    /// <summary>
     /// Validates if the provided instructor code is valid and active.
     /// </summary>
     /// <param name="code">The instructor code to validate.</param>
@@ -34,6 +48,14 @@ public interface IInstructorCodeService
     /// Deletes an instructor code.
     /// </summary>
     /// <param name="id">The ID of the code to delete.</param>
-    /// <returns>True if deleted, false if not found.</returns>
+    /// <returns>True if deletion was successful, otherwise false.</returns>
     Task<bool> DeleteCodeAsync(int id);
+
+    /// <summary>
+    /// Marks an instructor code as used by a specific user.
+    /// </summary>
+    /// <param name="code">The instructor code to mark as used.</param>
+    /// <param name="userId">The user ID who is using the code.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task MarkCodeAsUsedAsync(string code, string userId);
 }

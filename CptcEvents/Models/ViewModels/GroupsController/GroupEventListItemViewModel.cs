@@ -11,6 +11,10 @@ public class GroupEventListItemViewModel
 
     public string Title { get; init; } = string.Empty;
 
+    public string? GroupName { get; init; }
+
+    public int GroupId { get; init; }
+
     public DateOnly DateOfEvent { get; init; }
 
     public TimeOnly StartTime { get; init; }

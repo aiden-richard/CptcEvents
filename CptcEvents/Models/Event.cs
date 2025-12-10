@@ -28,7 +28,7 @@ public class Event : IValidatableObject
     /// Optional description providing details about the event.
     /// </summary>
     [StringLength(1000)]
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a value indicating whether this event is marked as public.
@@ -69,7 +69,7 @@ public class Event : IValidatableObject
     /// <summary>
     /// Optional URL associated with the event (e.g., event details page, registration link).
     /// </summary>
-    [StringLength(2083)]
+    [StringLength(100)]
     [DataType(DataType.Url)]
     [Url]
     public string? Url { get; set; }

@@ -50,6 +50,24 @@ public interface IEventService
     Task<IEnumerable<Event>> GetActiveEventsForUserAsync(string userId);
 
     /// <summary>
+    /// Retrieves all events visible to a user, considering admin privileges.
+    /// Admins can see all events regardless of group membership.
+    /// </summary>
+    /// <param name="userId">The ID of the user to retrieve events for.</param>
+    /// <param name="isAdmin">Whether the user has admin privileges.</param>
+    /// <returns>A collection of events. All events for admins, or user's group events for non-admins.</returns>
+    Task<IEnumerable<Event>> GetEventsForUserAsync(string userId, bool isAdmin);
+
+    /// <summary>
+    /// Retrieves all active (upcoming) events visible to a user, considering admin privileges.
+    /// Admins can see all active events regardless of group membership.
+    /// </summary>
+    /// <param name="userId">The ID of the user to retrieve events for.</param>
+    /// <param name="isAdmin">Whether the user has admin privileges.</param>
+    /// <returns>A collection of upcoming events. All upcoming events for admins, or user's group upcoming events for non-admins.</returns>
+    Task<IEnumerable<Event>> GetActiveEventsForUserAsync(string userId, bool isAdmin);
+
+    /// <summary>
     /// Retrieves a single event by its unique identifier.
     /// </summary>
     /// <param name="id">The ID of the event to retrieve.</param>
@@ -124,6 +142,7 @@ public class EventService : IEventService
     public async Task<IEnumerable<Event>> GetApprovedPublicEventsAsync()
     {
         return await _context.Events
+            .Include(e => e.Group)
             .Where(e => e.IsPublic && e.IsApprovedPublic)
             .OrderByDescending(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
@@ -230,7 +249,52 @@ public class EventService : IEventService
     public async Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end)
     {
         return await _context.Events
+            .Include(e => e.Group)
             .Where(e => e.DateOfEvent >= start && e.DateOfEvent <= end)
             .ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<Event>> GetEventsForUserAsync(string userId, bool isAdmin)
+    {
+        if (string.IsNullOrEmpty(userId)) return Enumerable.Empty<Event>();
+
+        if (isAdmin)
+        {
+            // Admins can see all events
+            return await _context.Events
+                .Include(e => e.Group)
+                .OrderBy(e => e.DateOfEvent)
+                .ThenBy(e => e.StartTime)
+                .ToListAsync();
+        }
+        else
+        {
+            // Regular users see only events from groups they're members of
+            return await GetEventsForUserAsync(userId);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<Event>> GetActiveEventsForUserAsync(string userId, bool isAdmin)
+    {
+        if (string.IsNullOrEmpty(userId)) return Enumerable.Empty<Event>();
+
+        if (isAdmin)
+        {
+            // Admins can see all active events
+            DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+            return await _context.Events
+                .Include(e => e.Group)
+                .Where(e => e.DateOfEvent >= today)
+                .OrderBy(e => e.DateOfEvent)
+                .ThenBy(e => e.StartTime)
+                .ToListAsync();
+        }
+        else
+        {
+            // Regular users see only active events from groups they're members of
+            return await GetActiveEventsForUserAsync(userId);
+        }
     }
 }
