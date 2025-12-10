@@ -94,4 +94,21 @@ public class InstructorCodeService : IInstructorCodeService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    /// <inheritdoc/>
+    public async Task MarkCodeAsUsedAsync(string code, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return;
+        
+        var instructorCode = await _context.InstructorCodes
+            .FirstOrDefaultAsync(ic => ic.Code.ToUpper() == code.ToUpper());
+        
+        if (instructorCode != null)
+        {
+            instructorCode.UsedByUserId = userId;
+            instructorCode.UsedAt = DateTime.UtcNow;
+            _context.InstructorCodes.Update(instructorCode);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

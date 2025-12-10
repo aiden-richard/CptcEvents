@@ -146,6 +146,13 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
+                bool isValidInstructorCode = await _instructorCodeService.ValidateCodeAsync(Input.InstructorCode, Input.Email);
+                if (!isValidInstructorCode && !string.IsNullOrWhiteSpace(Input.InstructorCode))
+                {
+                    ModelState.AddModelError("Input.InstructorCode", "Invalid instructor code.");
+                    return Page();
+                }
+
                 var user = CreateUser();
 
                 // Set additional properties
@@ -158,19 +165,10 @@ namespace CptcEvents.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    // Assign default role
-                    bool isValidInstructorCode = false;
-                    if (!string.IsNullOrWhiteSpace(Input.InstructorCode))
-                    {
-                        isValidInstructorCode = await _instructorCodeService.ValidateCodeAsync(Input.InstructorCode, Input.Email);
-                        if (!isValidInstructorCode)
-                        {
-                            ModelState.AddModelError("Input.InstructorCode", "Invalid instructor code.");
-                            return Page();
-                        }
-                    }
                     string role = isValidInstructorCode && !string.IsNullOrWhiteSpace(Input.InstructorCode) ? "Staff" : "Student";
                     await _userManager.AddToRoleAsync(user, role);
+
+                    await _instructorCodeService.MarkCodeAsUsedAsync(Input.InstructorCode, user.Id);
 
                     _logger.LogInformation("User created a new account with password.");
 

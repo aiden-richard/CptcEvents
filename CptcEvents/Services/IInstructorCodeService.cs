@@ -48,6 +48,14 @@ public interface IInstructorCodeService
     /// Deletes an instructor code.
     /// </summary>
     /// <param name="id">The ID of the code to delete.</param>
-    /// <returns>True if deleted, false if not found.</returns>
+    /// <returns>True if deletion was successful, otherwise false.</returns>
     Task<bool> DeleteCodeAsync(int id);
+
+    /// <summary>
+    /// Marks an instructor code as used by a specific user.
+    /// </summary>
+    /// <param name="code">The instructor code to mark as used.</param>
+    /// <param name="userId">The user ID who is using the code.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task MarkCodeAsUsedAsync(string code, string userId);
 }
