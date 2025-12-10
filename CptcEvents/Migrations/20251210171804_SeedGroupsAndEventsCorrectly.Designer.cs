@@ -3,6 +3,7 @@ using System;
 using CptcEvents.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CptcEvents.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251210171804_SeedGroupsAndEventsCorrectly")]
+    partial class SeedGroupsAndEventsCorrectly
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0-rc.2.25502.107");
@@ -99,7 +102,7 @@ namespace CptcEvents.Migrations
                         {
                             Id = "admin-user-id",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6ecc7137-ed2f-4c46-bf28-269d0d78b2c7",
+                            ConcurrencyStamp = "50af8439-ef29-4b16-895b-38e55a2009b8",
                             Email = "admin@cptc.edu",
                             EmailConfirmed = true,
                             FirstName = "Admin",
@@ -107,9 +110,9 @@ namespace CptcEvents.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@CPTC.EDU",
                             NormalizedUserName = "ADMIN@CPTC.EDU",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIU2jyByxYA/kt8RlKhguT0WTLN/wmEJtWm2VINlKCNoBxBf18GVCmsY/Dll8jc7iQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFyFKOLx/AJhkWoFwpz60MkKvaleHmtSdqjyppyonMZ3cF4RnsiQiR8tHLnmM8dmcg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b4ad8bdf-7064-473e-b171-7be54832fd2d",
+                            SecurityStamp = "8131ece5-5ab8-4238-a17d-51c3afc15fa8",
                             TwoFactorEnabled = false,
                             UserName = "admin@cptc.edu"
                         });
@@ -932,7 +935,7 @@ namespace CptcEvents.Migrations
                         new
                         {
                             Id = 1,
-                            Color = "#502a7f",
+                            Color = "#007bff",
                             CreatedAt = new DateTime(2025, 12, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Default group for CPTC events and announcements",
                             Name = "Cptc Dates",
@@ -1098,21 +1101,21 @@ namespace CptcEvents.Migrations
                         new
                         {
                             Id = "admin-role-id",
-                            ConcurrencyStamp = "1390a2fb-d7b7-445f-9be6-298161c55a5b",
+                            ConcurrencyStamp = "a93c7ebe-b801-4843-9a26-38943f4a45d7",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "staff-role-id",
-                            ConcurrencyStamp = "ff67b34e-e596-4764-a9f0-ce5d07280b85",
+                            ConcurrencyStamp = "fb5c9cd4-010f-4285-84ca-99ddd7e541c2",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
                             Id = "student-role-id",
-                            ConcurrencyStamp = "e2fa5184-c221-419a-ba3a-b59bdd7e4199",
+                            ConcurrencyStamp = "c0dc756a-f9f7-4eaa-9525-658db4bae84f",
                             Name = "Student",
                             NormalizedName = "STUDENT"
                         });
