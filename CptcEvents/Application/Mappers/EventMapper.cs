@@ -25,7 +25,31 @@ public static class EventMapper
         IsPublic = e.IsPublic,
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
-        Url = e.Url
+        Url = e.Url,
+        IsCurrentUserMember = false // Default value when membership status is not provided
+    };
+
+    /// <summary>
+    /// Builds a full event view model for details and list scenarios with user membership info.
+    /// </summary>
+    /// <param name="e">Event entity from the database.</param>
+    /// <param name="isCurrentUserMember">Whether the current user is a member of the event's group.</param>
+    public static EventDetailsViewModel ToDetails(Event e, bool isCurrentUserMember) => new()
+    {
+        Id = e.Id,
+        Title = e.Title,
+        Description = e.Description,
+        GroupName = e.Group?.Name,
+        GroupId = e.GroupId,
+        DateOfEvent = e.DateOfEvent,
+        StartTime = e.StartTime,
+        EndTime = e.EndTime,
+        IsAllDay = e.IsAllDay,
+        IsPublic = e.IsPublic,
+        IsApprovedPublic = e.IsApprovedPublic,
+        IsDeniedPublic = e.IsDeniedPublic,
+        Url = e.Url,
+        IsCurrentUserMember = isCurrentUserMember
     };
 
     /// <summary>
