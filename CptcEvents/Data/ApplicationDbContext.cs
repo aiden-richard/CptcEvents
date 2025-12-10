@@ -15,6 +15,7 @@ namespace CptcEvents.Data
         public DbSet<Group> Groups { get; set; } = default!;
         public DbSet<GroupMember> GroupMemberships { get; set; } = default!;
         public DbSet<GroupInvite> GroupInvites { get; set; } = default!;
+        public DbSet<InstructorCode> InstructorCodes { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
