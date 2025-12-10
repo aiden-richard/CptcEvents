@@ -27,5 +27,9 @@ public class EventDetailsViewModel
 
     public bool IsPublic { get; init; }
 
+    public bool IsApprovedPublic { get; init; }
+
+    public bool IsDeniedPublic { get; init; }
+
     public string? Url { get; init; }
 }
