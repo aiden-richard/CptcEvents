@@ -5,48 +5,22 @@
 <h1>@ViewData["Title"]</h1>
 
 <div class="row">
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Users</h5>
-                <p class="card-text">Manage application users.</p>
-                <a href="@Url.Action("Users", "Admin")" class="btn btn-primary">View Users</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Groups</h5>
-                <p class="card-text">Manage groups.</p>
-                <a href="@Url.Action("Groups", "Admin")" class="btn btn-primary">View Groups</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Events</h5>
-                <p class="card-text">Manage events.</p>
-                <a href="@Url.Action("Events", "Admin")" class="btn btn-primary">View Events</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Invites</h5>
-                <p class="card-text">Manage invites.</p>
-                <a href="@Url.Action("Invites", "Admin")" class="btn btn-primary">View Invites</a>
-            </div>
-        </div>
-    </div>
+    
     <div class="col-md-3 mt-3">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Instructor Codes</h5>
                 <p class="card-text">Manage instructor codes.</p>
                 <a href="@Url.Action("ManageInstructorCodes", "Admin")" class="btn btn-primary">View Codes</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mt-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Approve Events for Homepage</h5>
+                <p class="card-text">Manage Homepage Events.</p>
+                <a href="@Url.Action("ApprovePublicEvents", "Admin")" class="btn btn-primary">Review Events</a>
             </div>
         </div>
     </div>
