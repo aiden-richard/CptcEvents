@@ -12,12 +12,14 @@ namespace CptcEvents.Controllers
     {
         private readonly IInstructorCodeService _instructorCodeService;
         private readonly IEventService _eventService;
+        private readonly IGroupService _groupService;
         private readonly UserManager<Models.ApplicationUser> _userManager;
 
-        public AdminController(IInstructorCodeService instructorCodeService, IEventService eventService, UserManager<Models.ApplicationUser> userManager)
+        public AdminController(IInstructorCodeService instructorCodeService, IEventService eventService, IGroupService groupService, UserManager<Models.ApplicationUser> userManager)
         {
             _instructorCodeService = instructorCodeService;
             _eventService = eventService;
+            _groupService = groupService;
             _userManager = userManager;
         }
 
@@ -238,6 +240,28 @@ namespace CptcEvents.Controllers
 
             TempData["Success"] = $"Event '{eventItem.Title}' has been restored to pending.";
             return RedirectToAction(nameof(ApprovePublicEvents));
+        }
+
+        /// <summary>
+        /// Displays all groups in the system for admin management.
+        /// GET /Admin/ManageGroups
+        /// </summary>
+        /// <returns>View listing all groups with member counts and details.</returns>
+        public async Task<IActionResult> ManageGroups()
+        {
+            var groups = await _groupService.GetAllGroupsAsync();
+            return View(groups);
+        }
+
+        /// <summary>
+        /// Displays all events in the system for admin management.
+        /// GET /Admin/ManageEvents
+        /// </summary>
+        /// <returns>View listing all events with group information and status.</returns>
+        public async Task<IActionResult> ManageEvents()
+        {
+            var events = await _eventService.GetAllEventsAsync();
+            return View(events);
         }
     }
 }
