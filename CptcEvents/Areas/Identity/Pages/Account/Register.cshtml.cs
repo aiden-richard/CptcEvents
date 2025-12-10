@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using CptcEvents.Models;
+using CptcEvents.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -30,13 +31,15 @@ namespace CptcEvents.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly IInstructorCodeService _instructorCodeService;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IInstructorCodeService instructorCodeService)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +47,7 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _instructorCodeService = instructorCodeService;
         }
 
         /// <summary>
@@ -118,13 +122,20 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            /// <summary>
+            /// Gets or sets the instructor code.
+            /// </summary>
+            [Display(Name = "Instructor Code")]
+            public string InstructorCode { get; set; }
         }
 
 
-        public async Task OnGetAsync(string returnUrl = null)
+        public async Task OnGetAsync(string returnUrl = null, string instructorCode = null)
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            Input = new InputModel { InstructorCode = instructorCode };
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -145,6 +156,20 @@ namespace CptcEvents.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
+                    // Assign default role
+                    bool isValidInstructorCode = false;
+                    if (!string.IsNullOrWhiteSpace(Input.InstructorCode))
+                    {
+                        isValidInstructorCode = await _instructorCodeService.ValidateCodeAsync(Input.InstructorCode, Input.Email);
+                        if (!isValidInstructorCode)
+                        {
+                            ModelState.AddModelError("Input.InstructorCode", "Invalid instructor code.");
+                            return Page();
+                        }
+                    }
+                    string role = isValidInstructorCode && !string.IsNullOrWhiteSpace(Input.InstructorCode) ? "Staff" : "Student";
+                    await _userManager.AddToRoleAsync(user, role);
+
                     _logger.LogInformation("User created a new account with password.");
 
                     var userId = await _userManager.GetUserIdAsync(user);
