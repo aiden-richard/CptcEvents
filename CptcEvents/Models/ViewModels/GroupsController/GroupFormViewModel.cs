@@ -32,6 +32,13 @@ public class GroupFormViewModel
     public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.ModeratorInvitePrivate;
 
     /// <summary>
+    /// Hex color code for the group used in calendar displays.
+    /// </summary>
+    [StringLength(7)]
+    [RegularExpression(@"^#[0-9A-Fa-f]{6}$", ErrorMessage = "Color must be a valid hex code (e.g., #0d6efd)")]
+    public string? Color { get; set; }
+
+    /// <summary>
     /// Indicates whether the current user is the owner (UI gating only).
     /// </summary>
     public bool IsOwner { get; set; }

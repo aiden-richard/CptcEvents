@@ -20,8 +20,12 @@ public class GroupEventListItemViewModel
     public bool IsAllDay { get; init; }
 
     public bool IsPublic { get; init; }
+    public bool IsApprovedPublic { get; init; }
+    public bool IsDeniedPublic { get; init; }
 
     public string Description { get; init; } = string.Empty;
 
     public string? Url { get; init; }
+
+    public string CreatedByUserId { get; init; } = string.Empty;
 }
