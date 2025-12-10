@@ -744,7 +744,7 @@ namespace CptcEvents.Controllers
                 InvitedUserId = validation.InvitedUserId,
                 InviteCode = inviteCode,
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = expiresAtUtc.HasValue ? DateTime.SpecifyKind(expiresAtUtc.Value, DateTimeKind.Utc) : null,
+                ExpiresAt = expiresAtUtc,
                 OneTimeUse = invite.OneTimeUse,
                 TimesUsed = 0
             };
