@@ -146,7 +146,7 @@ namespace CptcEvents.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
-                bool isValidInstructorCode = await _instructorCodeService.ValidateCodeAsync(Input.InstructorCode, Input.Email);
+                bool isValidInstructorCode = !String.IsNullOrEmpty(Input.InstructorCode) ? await _instructorCodeService.ValidateCodeAsync(Input.InstructorCode, Input.Email) : false;
                 if (!isValidInstructorCode && !string.IsNullOrWhiteSpace(Input.InstructorCode))
                 {
                     ModelState.AddModelError("Input.InstructorCode", "Invalid instructor code.");
@@ -181,8 +181,54 @@ namespace CptcEvents.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    string subject = "Confirm Your CPTC Events Email";
+                    string htmlMessage = $@"
+                        <html>
+                        <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                            <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                                <h2 style='color: #502a7f;'>Welcome to CPTC Events, {HtmlEncoder.Default.Encode(user.FirstName)}!</h2>
+                                <p>Thank you for registering with CPTC Events. We're excited to have you join our community!</p>
+                                
+                                <div style='background-color: #f4f4f4; border-left: 4px solid #502a7f; padding: 15px; margin: 20px 0;'>
+                                    <p style='margin: 0;'><strong>Account Details:</strong></p>
+                                    <p style='margin: 5px 0;'><strong>Username:</strong> {HtmlEncoder.Default.Encode(user.UserName)}</p>
+                                    <p style='margin: 5px 0;'><strong>Email:</strong> {HtmlEncoder.Default.Encode(user.Email)}</p>
+                                    <p style='margin: 5px 0;'><strong>Role:</strong> {HtmlEncoder.Default.Encode(role)}</p>
+                                </div>
+                                
+                                <p>To complete your registration and activate your account, please confirm your email address by clicking the button below:</p>
+                                
+                                <p style='margin: 30px 0; text-align: center;'>
+                                    <a href='{HtmlEncoder.Default.Encode(callbackUrl)}' 
+                                       style='background-color: #502a7f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;'>
+                                        Confirm Email Address
+                                    </a>
+                                </p>
+                                
+                                <p style='font-size: 12px; color: #666;'>
+                                    Or copy and paste this link into your browser:<br>
+                                    <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>{HtmlEncoder.Default.Encode(callbackUrl)}</a>
+                                </p>
+                                
+                                <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
+                                
+                                <h3 style='color: #502a7f;'>What's Next?</h3>
+                                <ul>
+                                    <li>Browse and join groups that interest you</li>
+                                    <li>Stay updated with upcoming CPTC events</li>
+                                    <li>Connect with fellow students and staff</li>
+                                </ul>
+                                
+                                <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
+                                
+                                <p style='font-size: 12px; color: #666;'>
+                                    If you did not create this account, please disregard this email.
+                                </p>
+                            </div>
+                        </body>
+                        </html>";
+
+                    await _emailSender.SendEmailAsync(Input.Email, subject, htmlMessage);
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {

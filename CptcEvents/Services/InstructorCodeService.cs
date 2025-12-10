@@ -2,6 +2,8 @@ using CptcEvents.Models;
 using CptcEvents.Services;
 using CptcEvents.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace CptcEvents.Services;
 
@@ -12,14 +14,20 @@ namespace CptcEvents.Services;
 public class InstructorCodeService : IInstructorCodeService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IEmailSender _emailSender;
+    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InstructorCodeService"/> class.
     /// </summary>
     /// <param name="context">The application database context.</param>
-    public InstructorCodeService(ApplicationDbContext context)
+    /// <param name="emailSender">The email sender service.</param>
+    /// <param name="configuration">The application configuration.</param>
+    public InstructorCodeService(ApplicationDbContext context, IEmailSender emailSender, IConfiguration configuration)
     {
         _context = context;
+        _emailSender = emailSender;
+        _configuration = configuration;
     }
 
     public async Task<bool> InstructorCodeInUseAsync(string code)
@@ -80,7 +88,8 @@ public class InstructorCodeService : IInstructorCodeService
         _context.InstructorCodes.Add(instructorCode);
         await _context.SaveChangesAsync();
 
-        // TODO: Call sendgrid or email service here to notify the instructor about their code.
+        // Send invitation email to the instructor
+        await SendInstructorInviteEmailAsync(instructorCode);
 
         return instructorCode;
     }
@@ -110,5 +119,69 @@ public class InstructorCodeService : IInstructorCodeService
             _context.InstructorCodes.Update(instructorCode);
             await _context.SaveChangesAsync();
         }
+    }
+
+    /// <summary>
+    /// Sends an invitation email to the instructor with their registration code and link.
+    /// </summary>
+    /// <param name="instructorCode">The instructor code to send.</param>
+    private async Task SendInstructorInviteEmailAsync(InstructorCode instructorCode)
+    {
+        string? baseUrl = _configuration["AppSettings:BaseUrl"];
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            baseUrl = "https://localhost:7134"; // Fallback for development
+        }
+
+        string registrationUrl = $"{baseUrl}/Identity/Account/Register?instructorCode={Uri.EscapeDataString(instructorCode.Code)}";
+        
+        string expiryInfo = instructorCode.ExpiresAt.HasValue 
+            ? $"<p><strong>Expiration:</strong> {instructorCode.ExpiresAt.Value.ToLocalTime():MMMM dd, yyyy h:mm tt}</p>"
+            : "<p>This code does not expire.</p>";
+
+        string subject = "Your CPTC Events Instructor Registration Code";
+        string htmlMessage = $@"
+            <html>
+            <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #502a7f;'>Welcome to CPTC Events!</h2>
+                    <p>You have been invited to register as an instructor on the CPTC Events platform.</p>
+                    
+                    <div style='background-color: #f4f4f4; border-left: 4px solid #502a7f; padding: 15px; margin: 20px 0;'>
+                        <p style='margin: 0;'><strong>Your Registration Code:</strong></p>
+                        <p style='font-size: 24px; font-weight: bold; color: #502a7f; margin: 10px 0;'>{instructorCode.Code}</p>
+                    </div>
+                    
+                    {expiryInfo}
+                    
+                    <p>To complete your registration, please:</p>
+                    <ol>
+                        <li>Click the registration link below</li>
+                        <li>Fill out the registration form</li>
+                        <li>Enter your registration code when prompted</li>
+                    </ol>
+                    
+                    <p style='margin: 30px 0;'>
+                        <a href='{registrationUrl}' 
+                           style='background-color: #502a7f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;'>
+                            Register Now
+                        </a>
+                    </p>
+                    
+                    <p style='font-size: 12px; color: #666;'>
+                        Or copy and paste this link into your browser:<br>
+                        <a href='{registrationUrl}'>{registrationUrl}</a>
+                    </p>
+                    
+                    <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
+                    
+                    <p style='font-size: 12px; color: #666;'>
+                        If you did not request this invitation, please disregard this email.
+                    </p>
+                </div>
+            </body>
+            </html>";
+
+        await _emailSender.SendEmailAsync(instructorCode.Email, subject, htmlMessage);
     }
 }
