@@ -5,6 +5,7 @@ namespace CptcEvents.Models;
 
 /// <summary>
 /// Represents an application user with additional profile information.
+/// Extends <see cref="IdentityUser"/> with custom properties for the application.
 /// </summary>
 public class ApplicationUser : IdentityUser
 {
@@ -24,7 +25,8 @@ public class ApplicationUser : IdentityUser
     public string? ProfilePictureUrl { get; set; }
 
     /// <summary>
-    /// Groups that this user has joined. Many-to-many relationship with Group.Members
+    /// Gets or sets the collection of group memberships for this user.
+    /// Represents the many-to-many relationship with groups through <see cref="GroupMember"/>.
     /// </summary>
     public ICollection<GroupMember> GroupMemberships { get; set; } = new List<GroupMember>();
 }

@@ -14,4 +14,8 @@ public class FullCalendarEventDto
     public string End { get; init; } = string.Empty;
 
     public bool AllDay { get; init; }
+
+    public int GroupId { get; init; }
+
+    public string? BackgroundColor { get; init; }
 }

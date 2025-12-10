@@ -8,6 +8,14 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
             <h2>Create Event</h2>
             <hr />
 
@@ -29,17 +37,24 @@
 
                 <div class="form-floating mb-3">
                     <select asp-for="GroupId" class="form-select border-secondary-subtle bg-light" asp-items="@(ViewData["Groups"] as SelectList)">
-                        <option value="">-- Select a Group --</option>
+                        <option value="">Select a group</option>
                     </select>
                     <label asp-for="GroupId">Group</label>
                     <span asp-validation-for="GroupId" class="text-danger"></span>
                 </div>
-
-                <div class="form-check mb-3">
-                    <input asp-for="IsPublic" class="form-check-input" />
-                    <label asp-for="IsPublic" class="form-check-label">Public Event</label>
-                    <span asp-validation-for="IsPublic" class="text-danger"></span>
-                </div>
+                
+                @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                {
+                    <div class="form-check mb-3">
+                        <input asp-for="IsPublic" class="form-check-input" />
+                        <label asp-for="IsPublic" class="form-check-label">Show on Homepage</label>
+                        <span asp-validation-for="IsPublic" class="text-danger"></span>
+                    </div>
+                }
+                else
+                {
+                        <input asp-for="IsPublic" type="hidden" value="false" />
+                }
 
                 <div class="form-check mb-3">
                     <input asp-for="IsAllDay" class="form-check-input" id="IsAllDay" />

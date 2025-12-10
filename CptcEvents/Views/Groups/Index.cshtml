@@ -1,35 +1,60 @@
 ﻿@model IEnumerable<CptcEvents.Models.Group>
 @{
+    ViewData["Title"] = "Groups";
 }
 
 @* List all groups available to the current user *@
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Groups</h1>
-    <a asp-action="Join" asp-controller="Groups" class="btn btn-primary">Join Group</a>
+<div class="page-shell">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <p class="text-muted small mb-1">Community</p>
+            <h2 class="mb-0">Groups</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" asp-action="Join" asp-controller="Groups">Join Group</a>
+            <a class="btn btn-primary" asp-action="Create" asp-controller="Groups">Create Group</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">You are not a member of any groups yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Privacy</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Group group in Model)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@group.Name</td>
+                                    <td>
+                                        <span class="badge text-bg-secondary">@group.PrivacyLevel</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-primary me-1" asp-action="Events" asp-controller="Groups" asp-route-groupId="@group.Id">View</a>
+                                        <form method="post" class="d-inline" asp-action="Leave" asp-route-groupId="@group.Id" onsubmit="return confirm('Leave this group?');">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Leave</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
 </div>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (!Model.Any())
-        {
-            <tr>
-                <td colspan="2">You are not a member of any groups yet.</td>
-            </tr>
-        }
-        @foreach (Group group in Model)
-        {
-            <tr>
-                <td>@group.Name</td>
-                <td>
-                    <a asp-action="Events" asp-controller="Groups" asp-route-groupId="@group.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>

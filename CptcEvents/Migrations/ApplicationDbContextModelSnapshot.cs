@@ -98,6 +98,10 @@ namespace CptcEvents.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<DateOnly>("DateOfEvent")
                         .HasColumnType("TEXT");
 
@@ -113,6 +117,12 @@ namespace CptcEvents.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsAllDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsApprovedPublic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeniedPublic")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsPublic")
@@ -132,6 +142,8 @@ namespace CptcEvents.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("GroupId");
 
                     b.ToTable("Events");
@@ -142,6 +154,10 @@ namespace CptcEvents.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -246,6 +262,38 @@ namespace CptcEvents.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("GroupMemberships");
+                });
+
+            modelBuilder.Entity("CptcEvents.Models.InstructorCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InstructorCodes");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -382,11 +430,19 @@ namespace CptcEvents.Migrations
 
             modelBuilder.Entity("CptcEvents.Models.Event", b =>
                 {
+                    b.HasOne("CptcEvents.Models.ApplicationUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("CptcEvents.Models.Group", "Group")
                         .WithMany()
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreatedByUser");
 
                     b.Navigation("Group");
                 });

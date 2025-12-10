@@ -1,0 +1,90 @@
+@using System.Linq
+@model IEnumerable<CptcEvents.Models.InstructorCode>
+
+@{
+    ViewData["Title"] = "Manage Instructor Codes";
+}
+
+<div class="page-shell">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <p class="text-muted small mb-1">Admin</p>
+            <h2 class="mb-0">Instructor Codes</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Admin")">Back to admin</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+            <a class="btn btn-primary" href="@Url.Action("CreateInstructorCode", "Admin")">Create code</a>
+            <span class="text-muted small">@Model.Count() codes</span>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Created By</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var code in Model)
+                            {
+                                var status = code.IsActive ? (code.ExpiresAt.HasValue && code.ExpiresAt < DateTime.UtcNow ? "Expired" : "Active") : "Inactive";
+                                <tr>
+                                    <td class="fw-semibold">@code.Code</td>
+                                    <td>@(code.Email ?? "—")</td>
+                                    <td>
+                                        <span class="badge @(status == "Active" ? "text-bg-success" : status == "Expired" ? "text-bg-secondary" : "text-bg-warning")">@status</span>
+                                    </td>
+                                    <td>@(code.CreatedBy ?? "—")</td>
+                                    <td>@code.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@(code.ExpiresAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "Never")</td>
+                                    <td class="text-end">
+                                        <form method="post" class="d-inline" asp-action="DeleteInstructorCode" asp-route-id="@code.Id" onsubmit="return confirm('Delete this code?');">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">No instructor codes have been created yet.</p>
+            }
+        </div>
+    </div>
+</div>

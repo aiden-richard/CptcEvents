@@ -49,6 +49,13 @@
                     })
                     .then(function (eventsArray) {
                         if (Array.isArray(eventsArray)) {
+                            // Apply background color from the DTO
+                            eventsArray.forEach(event => {
+                                if (event.backgroundColor) {
+                                    event.backgroundColor = event.backgroundColor;
+                                    event.borderColor = event.backgroundColor;
+                                }
+                            });
                             success(eventsArray);
                         } else {
                             success([]);
@@ -85,7 +92,28 @@
                         initialView: initialView,
                         events: function (info, successCallback, failureCallback) {
                             fetchEvents(eventsUrl, successCallback, failureCallback);
-                        }
+                        },
+                        eventClick: function(info) {
+                            var groupId = info.event.groupId || (info.event.extendedProps && info.event.extendedProps.groupId);
+                            if (!groupId) {
+                                console.warn('GroupId not found in event:', info.event);
+                                return;
+                            }
+                            var url = '/Groups/' + groupId + '/Events';
+                            window.location.href = url;
+                        },
+                        eventMouseEnter: function(info) {
+                            // Add visual effect on hover - increase opacity/brightness
+                            info.el.style.opacity = '0.8';
+                            info.el.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
+                            info.el.style.transform = 'scale(1.02)';
+                        },
+                        eventMouseLeave: function(info) {
+                            // Reset on mouse leave
+                            info.el.style.opacity = '1';
+                            info.el.style.boxShadow = 'none';
+                            info.el.style.transform = 'scale(1)';
+                        },
                     });
 
                     calendar.render();
@@ -126,3 +154,11 @@
         })();
 
 </script>
+
+<style>
+    /* Change cursor to pointer on event hover in FullCalendar */
+    #@(Model.ElementId) .fc-event {
+        cursor: pointer;
+        transition: opacity 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+</style>

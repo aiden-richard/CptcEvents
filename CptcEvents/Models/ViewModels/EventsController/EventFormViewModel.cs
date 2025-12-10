@@ -44,6 +44,16 @@ public class EventFormViewModel : IValidatableObject
     public bool IsPublic { get; set; }
 
     /// <summary>
+    /// Whether the event has been approved for display on the homepage.
+    /// </summary>
+    public bool IsApprovedPublic { get; set; }
+
+    /// <summary>
+    /// Whether the event has been denied from display on the homepage.
+    /// </summary>
+    public bool IsDeniedPublic { get; set; }
+
+    /// <summary>
     /// Whether the event is an all-day event.
     /// </summary>
     public bool IsAllDay { get; set; }

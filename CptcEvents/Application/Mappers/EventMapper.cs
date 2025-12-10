@@ -39,8 +39,11 @@ public static class EventMapper
         EndTime = e.EndTime,
         IsAllDay = e.IsAllDay,
         IsPublic = e.IsPublic,
+        IsApprovedPublic = e.IsApprovedPublic,
+        IsDeniedPublic = e.IsDeniedPublic,
         Description = e.Description,
-        Url = e.Url
+        Url = e.Url,
+        CreatedByUserId = e.CreatedByUserId
     };
 
     /// <summary>
@@ -97,13 +100,53 @@ public static class EventMapper
             end = e.DateOfEvent.ToDateTime(e.EndTime).ToString("s");
         }
 
+        // Use group's custom color if available, otherwise generate a deterministic color based on group ID
+        string color = !string.IsNullOrEmpty(e.Group?.Color) 
+            ? e.Group.Color 
+            : GenerateColorForGroup(e.GroupId);
+
         return new FullCalendarEventDto
         {
             Id = e.Id,
             Title = e.Title,
             Start = start,
             End = end,
-            AllDay = e.IsAllDay
+            AllDay = e.IsAllDay,
+            GroupId = e.GroupId,
+            BackgroundColor = color
         };
+    }
+
+    /// <summary>
+    /// Generates a consistent pseudo-random color for a group based on its ID.
+    /// The same GroupId will always produce the same color.
+    /// </summary>
+    /// <param name="groupId">The group identifier.</param>
+    /// <returns>A hex color string.</returns>
+    private static string GenerateColorForGroup(int groupId)
+    {
+        // List of distinct, visually appealing colors
+        string[] colors = new[]
+        {
+            "#0d6efd", // Blue
+            "#198754", // Green
+            "#dc3545", // Red
+            "#ffc107", // Yellow
+            "#17a2b8", // Cyan
+            "#e83e8c", // Pink
+            "#fd7e14", // Orange
+            "#6610f2", // Indigo
+            "#6f42c1", // Purple
+            "#20c997", // Teal
+            "#ff6b6b", // Coral
+            "#4ecdc4", // Turquoise
+            "#45b7d1", // Sky Blue
+            "#96ceb4", // Sage
+            "#ffeaa7"  // Light Yellow
+        };
+
+        // Use groupId modulo to select a color deterministically
+        int colorIndex = Math.Abs(groupId) % colors.Length;
+        return colors[colorIndex];
     }
 }

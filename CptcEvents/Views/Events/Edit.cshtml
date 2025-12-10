@@ -36,11 +36,37 @@
                     <small class="text-muted">Group cannot be changed after event creation.</small>
                 </div>
 
-                <div class="form-check mb-3">
-                    <input asp-for="IsPublic" class="form-check-input" />
-                    <label asp-for="IsPublic" class="form-check-label">Public Event</label>
-                    <span asp-validation-for="IsPublic" class="text-danger"></span>
-                </div>
+                @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                {
+                    <div class="form-check mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div>
+                                <input asp-for="IsPublic" class="form-check-input" />
+                                <label asp-for="IsPublic" class="form-check-label">Show on Homepage</label>
+                                <span asp-validation-for="IsPublic" class="text-danger"></span>
+                            </div>
+                            @if (Model.IsPublic)
+                            {
+                                @if (Model.IsDeniedPublic)
+                                {
+                                    <span class="badge bg-danger">Denied</span>
+                                }
+                                else if (Model.IsApprovedPublic)
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Pending Approval</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <input asp-for="IsPublic" type="hidden" />
+                }
 
                 <div class="form-check mb-3">
                     <input asp-for="IsAllDay" class="form-check-input" id="IsAllDay" />

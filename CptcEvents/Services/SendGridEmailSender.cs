@@ -6,19 +6,24 @@ using System.Text.RegularExpressions;
 
 namespace CptcEvents.Services;
 
+/// <summary>
+/// Email sender implementation using SendGrid for sending transactional emails.
+/// Implements ASP.NET Identity's <see cref="IEmailSender"/> interface for account confirmation and other notifications.
+/// </summary>
 public class SendGridEmailSender : IEmailSender
 {
     private readonly IConfiguration _config;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SendGridEmailSender"/> class.
+    /// </summary>
+    /// <param name="config">The application configuration containing SendGrid API key and sender settings.</param>
     public SendGridEmailSender(IConfiguration config)
     {
         _config = config;
     }
 
-    /// <summary>
-    /// Sends an email using SendGrid. This implements the Identity `IEmailSender` used for account confirmation.
-    /// Signature matches what ASP.NET Identity expects: `Task SendEmailAsync(string email, string subject, string htmlMessage)`.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task SendEmailAsync(string email, string subject, string htmlMessage)
     {
         string? apiKey = _config["SendGrid:ApiKey"];
@@ -48,6 +53,11 @@ public class SendGridEmailSender : IEmailSender
         }
     }
 
+    /// <summary>
+    /// Removes HTML tags from a string to create plain text version.
+    /// </summary>
+    /// <param name="input">The HTML string to clean.</param>
+    /// <returns>The input string with all HTML tags removed.</returns>
     private static string StripHtml(string? input)
     {
         if (string.IsNullOrEmpty(input))

@@ -3,14 +3,26 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CptcEvents.Models;
 
+/// <summary>
+/// Defines the role a user can have within a group.
+/// </summary>
 public enum RoleType
 {
+    /// <summary>
+    /// Standard member with limited permissions.
+    /// </summary>
     [Display(Name = "Member")]
     Member,
 
+    /// <summary>
+    /// Moderator with elevated permissions to manage group content and members.
+    /// </summary>
     [Display(Name = "Moderator")]
     Moderator,
 
+    /// <summary>
+    /// Owner of the group with full administrative control.
+    /// </summary>
     [Display(Name = "Owner")]
     Owner
 }

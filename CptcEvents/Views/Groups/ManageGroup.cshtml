@@ -94,7 +94,7 @@
 							@:Only the group owner can create invites.
 						}
 					</p>
-					@if (Model.UserIsOwner)
+					@if (Model.ModeratorsCanInvite || Model.UserIsOwner)
 					{
 						<div class="d-flex flex-wrap gap-2 mt-auto">
 							<a class="btn btn-primary" href="@Url.Action("ManageInvites", "Groups", new { groupId = Model.Group.Id })">Manage invites</a>

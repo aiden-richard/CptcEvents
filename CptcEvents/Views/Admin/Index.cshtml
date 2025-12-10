@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row">
+    
+    <div class="col-md-3 mt-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Instructor Codes</h5>
+                <p class="card-text">Manage instructor codes.</p>
+                <a href="@Url.Action("ManageInstructorCodes", "Admin")" class="btn btn-primary">View Codes</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mt-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Approve Events for Homepage</h5>
+                <p class="card-text">Manage Homepage Events.</p>
+                <a href="@Url.Action("ApprovePublicEvents", "Admin")" class="btn btn-primary">Review Events</a>
+            </div>
+        </div>
+    </div>
+</div>

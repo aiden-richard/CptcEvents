@@ -23,6 +23,12 @@ public interface IEventService
     Task<IEnumerable<Event>> GetPublicEventsAsync();
 
     /// <summary>
+    /// Retrieves all approved public events for display on the homepage.
+    /// </summary>
+    /// <returns>A collection of events where <see cref="Event.IsPublic"/> and <see cref="Event.IsApprovedPublic"/> are both true.</returns>
+    Task<IEnumerable<Event>> GetApprovedPublicEventsAsync();
+
+    /// <summary>
     /// Retrieves all events belonging to a specific group.
     /// </summary>
     /// <param name="groupId">The ID of the group to retrieve events for.</param>
@@ -111,6 +117,16 @@ public class EventService : IEventService
     {
         return await _context.Events
             .Where(e => e.IsPublic)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<Event>> GetApprovedPublicEventsAsync()
+    {
+        return await _context.Events
+            .Where(e => e.IsPublic && e.IsApprovedPublic)
+            .OrderByDescending(e => e.DateOfEvent)
+            .ThenBy(e => e.StartTime)
             .ToListAsync();
     }
 
