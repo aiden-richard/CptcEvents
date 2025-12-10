@@ -61,6 +61,13 @@ public class GroupMemberHandler : AuthorizationHandler<GroupMemberRequirement>
             return;
         }
         
+        // Admins have access to all groups
+        if (context.User.IsInRole("Admin"))
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
         // Check for membership record once we have groupId and userId
         bool isMember = await _groupService.IsUserMemberAsync(groupId, userId);
         if (isMember)

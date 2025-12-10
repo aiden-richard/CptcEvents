@@ -133,6 +133,17 @@ public class GroupAuthorizationService : IGroupAuthorizationService
             return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotAuthenticated);
         }
 
+        // Admins can access any group
+        if (user.IsInRole("Admin"))
+        {
+            Group? adminGroup = await _groupService.GetGroupByIdAsync(groupId);
+            if (adminGroup == null)
+            {
+                return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+            }
+            return GroupAuthorizationResult.Success();
+        }
+
         Group? group = await _groupService.GetGroupByIdAsync(groupId);
         if (group == null)
         {
@@ -157,6 +168,17 @@ public class GroupAuthorizationService : IGroupAuthorizationService
             return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotAuthenticated);
         }
 
+        // Admins have moderator privileges in any group
+        if (user.IsInRole("Admin"))
+        {
+            Group? adminGroup = await _groupService.GetGroupByIdAsync(groupId);
+            if (adminGroup == null)
+            {
+                return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+            }
+            return GroupAuthorizationResult.Success();
+        }
+
         Group? group = await _groupService.GetGroupByIdAsync(groupId);
         if (group == null)
         {
@@ -179,6 +201,17 @@ public class GroupAuthorizationService : IGroupAuthorizationService
         if (userId == null)
         {
             return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotAuthenticated);
+        }
+
+        // Admins have owner privileges in any group
+        if (user.IsInRole("Admin"))
+        {
+            Group? adminGroup = await _groupService.GetGroupByIdAsync(groupId);
+            if (adminGroup == null)
+            {
+                return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+            }
+            return GroupAuthorizationResult.Success();
         }
 
         Group? group = await _groupService.GetGroupByIdAsync(groupId);
@@ -214,7 +247,7 @@ public static class GroupAuthorizationResultExtensions
         {
             GroupAuthorizationFailure.NotAuthenticated => controller.Challenge(),
             GroupAuthorizationFailure.GroupNotFound => controller.NotFound(),
-            GroupAuthorizationFailure.NotMember => controller.Forbid(),
+            GroupAuthorizationFailure.NotMember => controller.RedirectToAction("Index"),
             GroupAuthorizationFailure.NotModerator => controller.Forbid(),
             GroupAuthorizationFailure.NotOwner => controller.Forbid(),
             _ => controller.Forbid()

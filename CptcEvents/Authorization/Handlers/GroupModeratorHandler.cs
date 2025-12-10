@@ -56,6 +56,13 @@ public class GroupModeratorHandler : AuthorizationHandler<GroupModeratorRequirem
             return;
         }
 
+        // Admins have moderator privileges in all groups
+        if (context.User.IsInRole("Admin"))
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
         // Check for moderator status (includes owners) once we have groupId and userId
         bool isModerator = await _groupService.IsUserModeratorAsync(groupId, userId);
         if (isModerator)
