@@ -13,7 +13,7 @@ namespace CptcEvents.Models;
 /// </summary>
 public enum PrivacyLevel
 {
-    [Display(Name = "Public")]
+    [Display(Name = "Public - Anyone can join")]
     Public,
 
     [Display(Name = "Moderators and above can create invites")]
