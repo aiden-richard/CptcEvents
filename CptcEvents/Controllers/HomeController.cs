@@ -1,4 +1,6 @@
 using CptcEvents.Models;
+using CptcEvents.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -6,7 +8,16 @@ namespace CptcEvents.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly IEventService _eventService;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public HomeController(IEventService eventService, UserManager<ApplicationUser> userManager)
+        {
+            _eventService = eventService;
+            _userManager = userManager;
+        }
+
+        public async Task<IActionResult> Index()
         {
             return View();
         }
