@@ -15,23 +15,28 @@ namespace CptcEvents.Controllers
     {
         private readonly IInviteService _inviteService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IGroupService _groupService;
 
         /// <summary>
         /// Creates a new instance of <see cref="InvitesController"/>.
         /// </summary>
         /// <param name="inviteService">Invite service for data operations.</param>
         /// <param name="userManager">User manager for identity operations.</param>
-        public InvitesController(IInviteService inviteService, UserManager<ApplicationUser> userManager)
+        /// <param name="groupService">Group service for group-related operations.</param>
+        public InvitesController(IInviteService inviteService, UserManager<ApplicationUser> userManager, IGroupService groupService)
         {
             _inviteService = inviteService;
             _userManager = userManager;
+            _groupService = groupService;
         }
 
         /// <summary>
         /// Handles invite redemption when the code is provided as a query string.
         /// Redirects to the route variant or back to Join when missing.
+        /// GET /Invites/Redeem?code={code}
         /// </summary>
         /// <param name="inviteCode">Invite code supplied via query string.</param>
+        /// <returns>Redirects to Redeem action with code parameter or to Groups.Join if no code provided.</returns>
         [HttpGet("/Invites/Redeem")]
         public IActionResult RedeemByQuery([FromQuery(Name = "code")] string? inviteCode)
         {
@@ -48,7 +53,7 @@ namespace CptcEvents.Controllers
         /// GET /Invites/Redeem/{code}
         /// </summary>
         /// <param name="code">The invite code to redeem.</param>
-        /// <returns>View with redemption details, NotFound if invalid, or Unauthorized if user-specific.</returns>
+        /// <returns>View with redemption details, or redirects if invalid, expired, or user-specific mismatch.</returns>
         [HttpGet("/Invites/Redeem/{code}")]
         public async Task<IActionResult> Redeem(string code)
         {
@@ -62,7 +67,7 @@ namespace CptcEvents.Controllers
 
             if (invite == null || invite.IsExpired)
             {
-                return NotFound();
+                return RedirectToAction(nameof(RedeemByQuery));
             }
 
             if (invite.InvitedUserId != null && invite.InvitedUserId != userId)
@@ -78,7 +83,7 @@ namespace CptcEvents.Controllers
         /// POST /Invites/Redeem/{code}
         /// </summary>
         /// <param name="code">The invite code to redeem.</param>
-        /// <returns>Redirect to group details on success, or view with errors on failure.</returns>
+        /// <returns>Redirects to Groups.Index on success, or view with errors on failure.</returns>
         [HttpPost("/Invites/Redeem/{code}")]
         [ValidateAntiForgeryToken]
         [ActionName("Redeem")]
@@ -107,6 +112,14 @@ namespace CptcEvents.Controllers
             if (invite.InvitedUserId != null && invite.InvitedUserId != userId)
             {
                 return Unauthorized();
+            }
+
+            if (await _groupService.IsUserMemberAsync(invite.GroupId, userId))
+            {
+                ViewData["Error"] = "You are already a member of this group.";
+                // Re-fetch to ensure view has current state
+                invite = await _inviteService.GetInviteByCodeAsync(code);
+                return View(invite);
             }
 
             GroupMember? member = await _inviteService.RedeemInviteAsync(invite.Id, userId);
