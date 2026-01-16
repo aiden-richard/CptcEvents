@@ -1,13 +1,26 @@
 # CPTC Events
 
-The CPTC Events website will be an easy-to-use web app that allows people to find information about events happening at Clover Park. The core of the website will be the event calendar. The goal with the calendar is to be able to pack a lot of information into a cramped space like a calendar. We will do this by allowing the user to sort and filter the events that they see, as well as keeping the length of text to a minimum.
+## Overview
+CPTC Events is an easy-to-use web app that allows people to find information about events happening at Clover Park. The core of the website will be the event calendar. The goal with the calendar is to be able to pack a lot of information into a cramped space like a calendar. We will do this by allowing the user to sort and filter the events that they see, as well as keeping the length of text to a minimum.
 
-## Access
-The website will be open to the public with limited read-only access. Once logged in with a verified account, members will be able to see events for groups that they are a part of. If the member is an admin of a group, they will be able to manage group members and post new events to that group.
+## Features
+List the core features and planned functionality.
+- Groups for keeping track of related events
+- A public homepage that displays events that are visible to everyone, even non-logged in users
+- Ability to create a verified CPTC account (any account created with a CPTC email and was verified)
 
-A verified account is any user that can verify ownership of a cptc.edu email address. 
+## Target Users
+- Students and staff at CPTC
+- Any members of the community who utilize CPTC services
+
+## Tech Stack
+- Frontend: Razor Views and Bootstrap 5
+- Backend: ASP.NET Core
+- Database: Sqlite with EF Core
 
 
-### Tech stack:
-- ASP.NET Core MVC
-- running on .NET 10 Preview
+## Installation & Setup
+Steps required to set up the project locally.
+1. Open the .slnx file in the latest Visual Studio
+2. Run migrations
+3. Run `dotnet run`
