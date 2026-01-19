@@ -53,7 +53,8 @@ builder.Services.AddAuthorization(options =>
 
 
 // Wire up SendGrid email sender for Identity confirmation emails
-builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, SendGridEmailSender>();
+// SendGrid is currently disabled due to free trial ending
+// builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, SendGridEmailSender>();
 
 var app = builder.Build();
 
