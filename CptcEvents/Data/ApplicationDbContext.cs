@@ -58,6 +58,7 @@ namespace CptcEvents.Data
                 .HasForeignKey(i => i.CreatedById)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // Configure NO ACTION for GroupInvite -> InvitedUser relationship to prevent cascade cycles
             builder.Entity<GroupInvite>()
                 .HasOne(i => i.InvitedUser)
                 .WithMany()
