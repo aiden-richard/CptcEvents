@@ -23,6 +23,13 @@ namespace CptcEvents.Data
         {
             base.OnModelCreating(builder);
 
+            // Configure NO ACTION for GroupMember -> User to prevent cascade cycles
+            builder.Entity<GroupMember>()
+                .HasOne(m => m.User)
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Configure cascade delete for Group -> GroupMember relationship
             builder.Entity<GroupMember>()
                 .HasOne(m => m.Group)
@@ -30,12 +37,33 @@ namespace CptcEvents.Data
                 .HasForeignKey(m => m.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure NO ACTION for Event -> User to prevent cascade cycles
+            builder.Entity<Event>()
+                .HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Configure cascade delete for Group -> Event relationship
             builder.Entity<Event>()
                 .HasOne(e => e.Group)
                 .WithMany()
                 .HasForeignKey(e => e.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure NO ACTION for GroupInvite -> User relationships to prevent cascade cycles
+            builder.Entity<GroupInvite>()
+                .HasOne(i => i.CreatedBy)
+                .WithMany()
+                .HasForeignKey(i => i.CreatedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Configure NO ACTION for GroupInvite -> InvitedUser relationship to prevent cascade cycles
+            builder.Entity<GroupInvite>()
+                .HasOne(i => i.InvitedUser)
+                .WithMany()
+                .HasForeignKey(i => i.InvitedUserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Configure cascade delete for Group -> GroupInvite relationship
             builder.Entity<GroupInvite>()
