@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document describes the complete deployment process for the CptcEvents application, including Azure infrastructure setup and CI/CD pipeline configuration using GitHub Actions.
+This document describes the complete deployment process for the CptcEvents application, including Azure infrastructure setup and CI/CD pipeline configuration using GitHub Actions.  
+
+For detailed local development setup instructions, including prerequisites, Docker setup, user secrets configuration, and troubleshooting, see the [Local Development Guide](DEVELOPMENT.md).
 
 ## Architecture
 
@@ -257,39 +259,6 @@ dotnet ef database update
 ### Migration Strategy
 
 **Current Approach**: Migrations are applied automatically on application startup in `Program.cs` by running `await context.Database.MigrateAsync();`.
-
-## Local Development Setup
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/your-username/CptcEvents.git
-cd CptcEvents
-```
-
-### 2. Configure User Secrets
-
-```bash
-cd CptcEvents
-dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<local-or-azure-connection-string>"
-dotnet user-secrets set "SendGrid:ApiKey" "<sendgrid-api-key>"
-dotnet user-secrets set "AdminUser:Password" "<admin-password>"
-```
-
-### 3. Run Migrations
-
-```bash
-dotnet ef database update
-```
-
-### 4. Run Application
-
-```bash
-dotnet run
-```
-
-Application will be available at `http://localhost:5000`. (Port number is set in `/CptcEvents/Properties/launchSetting.json`)
 
 ## Deployment Process
 
