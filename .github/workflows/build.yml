@@ -30,10 +30,17 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      # Step 5: Build
+      # Step 5: Cache NuGet packages
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+
+      # Step 6: Build
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-      # Step 6: Run tests (if tests exist)
+      # Step 7: Run tests (if tests exist)
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
