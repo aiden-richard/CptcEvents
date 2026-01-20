@@ -156,9 +156,6 @@ The application will be available at:
 - `https://localhost:7274` (HTTPS)
 - `http://localhost:5000` (HTTP)
 
-
-Changes to Razor views, CSS, and C# code will automatically reload.
-
 ## IDE Setup
 
 ### Visual Studio 2022
