@@ -35,3 +35,50 @@ jobs:
       # Step 5: Build
       - name: Build
         run: dotnet build --configuration Release --no-restore
+
+      # Step 6: Login to Azure
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 7: Login to ACR
+      - name: Login to Azure Container Registry
+        run: az acr login --name cptcevents
+
+      # Step 8: Build and Push Docker Image
+      - name: Build and Push Docker Image
+        working-directory: ./CptcEvents
+        run: |
+          docker build -t cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:${{ github.sha }} \
+                       -t cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest .
+          docker push cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:${{ github.sha }}
+          docker push cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest
+
+      # Step 9: Deploy to Azure Container Instances
+      - name: Deploy to ACI
+        run: |
+          # Delete existing container if it exists
+          az container delete \
+            --resource-group CptcEventsResourceGroup \
+            --name cptcevents-container \
+            --yes || true
+          
+          # Create new container with latest image
+          az container create \
+            --resource-group CptcEventsResourceGroup \
+            --name cptcevents-container \
+            --image cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest \
+            --cpu 1 --memory 1.5 \
+            --registry-login-server cptcevents-fbh7bqh0f6a6hpgt.azurecr.io \
+            --registry-username cptcevents \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
+            --ip-address Public \
+            --dns-name-label cptcevents \
+            --ports 8080 \
+            --environment-variables \
+              ASPNETCORE_ENVIRONMENT=Production \
+            --secure-environment-variables \
+              ConnectionStrings__DefaultConnection="${{ secrets.SQL_CONNECTION_STRING }}" \
+              SendGrid__ApiKey="${{ secrets.SENDGRID_API_KEY }}" \
+              AdminUser__Password="${{ secrets.ADMIN_PASSWORD }}"
