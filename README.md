@@ -88,81 +88,33 @@ CptcEvents/
 
 ## Local Development Setup
 
-### Prerequisites
-
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (version 10.0.100-rc.2.25502.107 or later)
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) (recommended) or VS Code
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for running SQL Server locally)
-- [SendGrid Account](https://sendgrid.com/) (for email functionality)
-
-### Installation Steps
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/aiden-richard/CptcEvents.git
-   cd CptcEvents
-   ```
-
-2. **Configure User Secrets**
-   
-   Navigate to the project directory and initialize user secrets:
-   ```bash
-   cd CptcEvents
-   dotnet user-secrets init
-   ```
-
-   Start SQL Server in Docker:
-   ```bash
-   docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourStrong@Passw0rd" \
-     -p 1433:1433 --name sqlserver --hostname sqlserver \
-     -d mcr.microsoft.com/mssql/server:2022-latest
-   ```
-
-   Set required secrets:
-   ```bash
-   # Database connection (SQL Server running in Docker)
-   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=CptcEvents;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
-   
-   # SendGrid API key (get from https://app.sendgrid.com/settings/api_keys)
-   dotnet user-secrets set "SendGrid:ApiKey" "your-sendgrid-api-key"
-   
-   # Initial admin password
-   dotnet user-secrets set "AdminUser:Password" "YourSecurePassword123!"
-   ```
-
-3. **Apply Database Migrations**
-   ```bash
-   dotnet ef database update
-   ```
-
-4. **Run the Application**
-   ```bash
-   dotnet run
-   ```
-   
-   The application will be available at `http://localhost:5000` (or the port specified in `launchSettings.json`)
-
-5. **Access the Application**
-   - Navigate to `http://localhost:5000`
-   - Register a new account or log in with admin credentials
-   - The admin account is created automatically on first run using the password from user secrets
-
-
-### Adding Database Migrations
-
-When you modify models or the database schema:
+### Quick Start
 
 ```bash
-# Create a new migration
-dotnet ef migrations add YourMigrationName
+# Clone the repository
+git clone https://github.com/aiden-richard/CptcEvents.git
+cd CptcEvents
 
-# Review the generated migration file in Migrations/
+# Start SQL Server in Docker
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourStrong@Passw0rd" \
+  -p 1433:1433 --name sqlserver --hostname sqlserver \
+  -d mcr.microsoft.com/mssql/server:2022-latest
 
-# Apply to local database
+# Configure user secrets
+cd CptcEvents
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=CptcEvents;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
+dotnet user-secrets set "SendGrid:ApiKey" "your-sendgrid-api-key"
+dotnet user-secrets set "AdminUser:Password" "YourSecurePassword123!"
+
+# Apply migrations and run
 dotnet ef database update
+dotnet run
 ```
 
-Migrations are automatically applied to production on deployment.
+The application will be available at `http://localhost:5000`.
+
+For detailed setup instructions, troubleshooting, and IDE configuration, see the [Local Development Guide](docs/DEVELOPMENT.md).
 
 ## Deployment
 
@@ -179,25 +131,7 @@ The application uses GitHub Actions for CI/CD with two workflows:
 - Pushes to Azure Container Registry
 - Deploys to Azure Container Apps
 
-For detailed deployment documentation, infrastructure setup, and troubleshooting, see [DEPLOYMENT.md](docs/DEPLOYMENT.md).
-
-## Configuration
-
-### Environment Variables (Production)
-
-The following environment variables are configured in Azure Container Apps:
-
-- `ASPNETCORE_ENVIRONMENT=Production`
-- `ConnectionStrings__DefaultConnection` - Azure SQL connection string
-- `SendGrid__ApiKey` - SendGrid API key for email
-- `AdminUser__Password` - Initial admin user password
-
-### User Secrets (Development)
-
-Local development uses user secrets instead of environment variables:
-- `ConnectionStrings:DefaultConnection`
-- `SendGrid:ApiKey`
-- `AdminUser:Password`
+For detailed deployment documentation, infrastructure setup, and troubleshooting, see the [Deployment documentation](docs/DEPLOYMENT.md).
 
 ## License
 
