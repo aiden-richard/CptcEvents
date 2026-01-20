@@ -79,7 +79,7 @@ The application follows the MVC (Model-View-Controller) pattern with additional 
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-username/CptcEvents.git
+   git clone https://github.com/aiden-richard/CptcEvents.git
    cd CptcEvents
    ```
 
