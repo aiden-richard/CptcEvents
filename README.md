@@ -200,16 +200,6 @@ Local development uses user secrets instead of environment variables:
 - `SendGrid:ApiKey`
 - `AdminUser:Password`
 
-## Testing
-
-```bash
-# Run all tests
-dotnet test
-
-# Run tests with coverage
-dotnet test --collect:"XPlat Code Coverage"
-```
-
 ## License
 
 This project is licensed under the terms specified in [LICENSE.txt](LICENSE.txt).
