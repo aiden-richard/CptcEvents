@@ -82,18 +82,24 @@ Server=tcp:cptcevents-sqlserver.database.windows.net,1433;Initial Catalog=cptcev
 
 **Why**: Container Apps abstracts away infrastructure management while providing enterprise features. The environment can host multiple container apps and handles networking, scaling, and monitoring automatically.
 
-### 5. Azure Credentials (for GitHub Actions)
+### 5. Azure Service Principal (for GitHub Actions)
 
-**Purpose**: Provides authentication credentials that GitHub Actions uses to authenticate with Azure and perform deployments.
+**Purpose**: Provides authentication credentials that GitHub Actions uses to authenticate with Azure and perform deployments. A service principal is a non-human identity with specific permissions.
 
-**Configuration**:
-- Using personal Azure account credentials (Owner role on subscription)
-- Credentials include: client ID, client secret, subscription ID, tenant ID
-- Stored as JSON in GitHub Secrets
+**How to Create**:
+Run the following Azure CLI command (replace `{subscription-id}` with your actual subscription ID):
 
-**Note**: For this project, we're using personal Azure credentials rather than a dedicated service principal. In a production enterprise environment, you would typically create a service principal with limited contributor access to just the resource group for better security isolation.
+```bash
+az ad sp create-for-rbac --name "cptcevents-github" --role contributor --scopes /subscriptions/{subscription-id}/resourceGroups/CptcEventsResourceGroup --sdk-auth
+```
 
-**Important**: The credentials are stored in the `AZURE_CREDENTIALS` GitHub Secret in JSON format.
+**Important Notes**:
+- The `--sdk-auth` flag is **required** to generate the correct JSON format for GitHub Actions
+- Save the entire JSON output - you'll need it for the `AZURE_CREDENTIALS` GitHub Secret
+- The output includes: clientId, clientSecret, subscriptionId, tenantId, and other required fields
+- This service principal has Contributor access scoped to only the CptcEventsResourceGroup
+
+**Why**: Service principals follow security best practices by providing limited, scoped access rather than using personal credentials. This allows automated deployments while maintaining security and audit trails.
 
 ### 6. Cost Management Setup
 
@@ -113,11 +119,11 @@ Navigate to your GitHub repository → Settings → Secrets and variables → Ac
 
 | Secret Name | Description | How to Obtain |
 |------------|-------------|---------------|
-| `AZURE_CREDENTIALS` | Azure service principal credentials | Output from `az ad sp create-for-rbac` command |
-| `ACR_PASSWORD` | Azure Container Registry password | From `az acr credential show --name cptcevents` |
-| `SQL_CONNECTION_STRING` | Azure SQL Database connection string | From Azure Portal or construct manually |
-| `SENDGRID_API_KEY` | SendGrid API key for email sending | From SendGrid dashboard |
-| `ADMIN_PASSWORD` | Initial admin user password | Choose a secure password |
+| `AZURE_CREDENTIALS` | Azure service principal credentials in SDK auth format | Run: `az ad sp create-for-rbac --name "cptcevents-github" --role contributor --scopes /subscriptions/{subscription-id}/resourceGroups/CptcEventsResourceGroup --sdk-auth` (Note: the `--sdk-auth` flag is required for the correct JSON format) |
+| `ACR_PASSWORD` | Azure Container Registry password | Azure Portal → Container Registry → Access keys → password, or run: `az acr credential show --name cptcevents` |
+| `SQL_CONNECTION_STRING` | Azure SQL Database connection string | Azure Portal → SQL Database → Connection strings → ADO.NET |
+| `SENDGRID_API_KEY` | SendGrid API key for email sending | SendGrid dashboard → Settings → API Keys |
+| `ADMIN_PASSWORD` | Initial admin user password | Choose a secure password (used for initial admin account setup) |
 
 ## CI/CD Pipeline
 
