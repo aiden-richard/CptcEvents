@@ -127,11 +127,32 @@ Navigate to your GitHub repository → Settings → Secrets and variables → Ac
 
 ## CI/CD Pipeline
 
-### GitHub Actions Workflow
+### GitHub Actions Workflows
 
-The deployment pipeline (`.github/workflows/dotnet.yml`) runs automatically on every push to `main` or on pull requests.
+The project uses two separate GitHub Actions workflows to handle different scenarios:
 
-#### Pipeline Stages
+#### 1. Build Workflow (`.github/workflows/build.yml`)
+
+**Trigger**: Runs on pull requests to `main` branch
+
+**Purpose**: Validates that code changes compile and pass tests before merging. This ensures the main branch remains stable by catching build errors early in the development process.
+
+**Steps**:
+- Checkout code
+- Install .NET 10 Preview SDK
+- Restore dependencies
+- Build application in Release configuration
+- Run tests (continues even if no tests exist)
+
+**Why Separate**: This workflow is lightweight and fast, providing quick feedback to developers without the overhead of Docker builds or Azure deployments. It prevents broken code from being merged into main.
+
+#### 2. Deploy Workflow (`.github/workflows/deploy.yml`)
+
+**Trigger**: Runs automatically on pushes to `main` branch
+
+**Purpose**: Builds the application, creates a Docker image, and deploys to Azure Container Apps. This workflow handles the complete CI/CD pipeline for production deployments.
+
+#### Deployment Pipeline Stages
 
 1. **Checkout Code**
    - Pulls the latest code from the main branch
@@ -264,23 +285,35 @@ Application will be available at `http://localhost:5000`. (Port number is set in
 
 ## Deployment Process
 
-### Automated Deployment (Main Branch)
+### Automated Deployment
 
-1. Make changes to code
-2. Commit and push to `main` branch:
+#### Pull Request Workflow
+
+1. Create a feature branch and make changes
+2. Push branch and create a pull request to `main`
+3. The Build workflow automatically runs to validate:
+   - Code compiles successfully
+   - All dependencies resolve
+   - Tests pass (if they exist)
+4. Review the build status in the pull request checks
+5. Merge only when the build workflow succeeds
+
+#### Main Branch Deployment
+
+1. After merging to `main` (or pushing directly):
    ```bash
    git add .
    git commit -m "Description of changes"
    git push origin main
    ```
-3. GitHub Actions automatically:
+2. The Deploy workflow automatically:
    - Builds the application
    - Creates Docker image
    - Pushes to ACR
    - Deploys to Azure Container Apps
-4. Monitor deployment in GitHub Actions tab
+3. Monitor deployment in GitHub Actions tab
 
-The entire process takes approximately 5-10 minutes from push to live deployment.
+The build workflow takes approximately 2-3 minutes. The full deployment process takes approximately 5-10 minutes from push to live deployment.
 
 ### Manual Deployment via Azure Portal
 
