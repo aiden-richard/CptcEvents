@@ -35,3 +35,42 @@ jobs:
       # Step 5: Build
       - name: Build
         run: dotnet build --configuration Release --no-restore
+
+      # Step 6: Login to Azure
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 7: Login to ACR
+      - name: Login to Azure Container Registry
+        run: az acr login --name cptcevents
+
+      # Step 8: Build and Push Docker Image
+      - name: Build and Push Docker Image
+        working-directory: ./CptcEvents
+        run: |
+          docker build -t cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:${{ github.sha }} \
+                       -t cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest .
+          docker push cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:${{ github.sha }}
+          docker push cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest
+
+      # Step 9: Deploy to Azure Container Apps
+      - name: Deploy to Container Apps
+        run: |
+          az containerapp up \
+            --name cptcevents-app \
+            --resource-group CptcEventsResourceGroup \
+            --location westus2 \
+            --environment cptcevents-env \
+            --image cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest \
+            --target-port 8080 \
+            --ingress external \
+            --registry-server cptcevents-fbh7bqh0f6a6hpgt.azurecr.io \
+            --registry-username cptcevents \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
+            --env-vars \
+              ASPNETCORE_ENVIRONMENT=Production \
+              ConnectionStrings__DefaultConnection="${{ secrets.SQL_CONNECTION_STRING }}" \
+              SendGrid__ApiKey="${{ secrets.SENDGRID_API_KEY }}" \
+              AdminUser__Password="${{ secrets.ADMIN_PASSWORD }}"
