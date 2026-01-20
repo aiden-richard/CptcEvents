@@ -75,6 +75,7 @@ jobs:
             --registry-password ${{ secrets.ACR_PASSWORD }} \
             --ip-address Public \
             --dns-name-label cptcevents \
+            --os-type Linux \
             --ports 8080 \
             --environment-variables \
               ASPNETCORE_ENVIRONMENT=Production \
