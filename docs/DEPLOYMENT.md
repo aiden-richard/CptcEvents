@@ -352,7 +352,7 @@ If needed, you can trigger a deployment manually through the Azure Portal:
 3. Run Entity Framework rollback to specific migration
 4. Restart the Container App to prevent automatic re-migration
 
-**Caution**: Database rollbacks can cause data loss if the migration being reverted removed columns or tables. Always backup the database before rolling back migrations.- Scan images for vulnerabilities
+**Caution**: Database rollbacks can cause data loss if the migration being reverted removed columns or tables. Always backup the database before rolling back migrations. Additionally, scan container images for vulnerabilities before deployment.
 
 4. **Access Control**
    - Use Azure RBAC for resource access
