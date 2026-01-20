@@ -115,8 +115,9 @@ async Task CreateRolesAsync(WebApplication app)
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-    // Ensure database is created and migrations are applied
+    // Apply pending migrations
     await context.Database.EnsureCreatedAsync();
+    await context.Database.MigrateAsync();
 
     // Get admin user configuration from appsettings
     var adminEmail = configuration.GetValue<string>("AdminUser:Email") ?? "admin@cptc.edu";
