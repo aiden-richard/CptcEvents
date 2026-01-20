@@ -42,7 +42,6 @@ CPTC Events is an event management web application designed for Clover Park Tech
 - **Template Engine**: Razor Views (MVC pattern)
 - **CSS Framework**: Bootstrap 5
 - **Calendar**: FullCalendar JavaScript library
-- **Icons**: Bootstrap Icons
 
 ### Database
 - **Development**: SQL Server on Docker
@@ -65,6 +64,27 @@ The application follows the MVC (Model-View-Controller) pattern with additional 
 - **Mappers**: Transform between models and view models
 - **View Components**: Reusable UI components (CalendarViewComponent)
 - **Data Layer**: Entity Framework Core with ApplicationDbContext
+
+### Project Structure
+
+```
+CptcEvents/
+├── Application/              # Application layer components
+│   └── Mappers/             # Model-ViewModel mappers
+├── Areas/
+│   └── Identity/            # ASP.NET Identity customization
+├── Authorization/           # Authorization policies and handlers
+│   ├── Handlers/           # Custom authorization handlers
+│   └── Requirements/       # Custom authorization requirements
+├── Controllers/            # MVC controllers
+├── Data/                   # Database context
+├── Migrations/             # EF Core migrations
+├── Models/                 # Domain models and ViewModels
+├── Services/               # Business logic services
+├── ViewComponents/         # Reusable view components
+├── Views/                  # Razor views
+└── wwwroot/                # Static files (CSS, JS, images)
+```
 
 ## Local Development Setup
 
@@ -126,27 +146,6 @@ The application follows the MVC (Model-View-Controller) pattern with additional 
    - Navigate to `http://localhost:5000`
    - Register a new account or log in with admin credentials
    - The admin account is created automatically on first run using the password from user secrets
-
-## Project Structure
-
-```
-CptcEvents/
-├── Application/              # Application layer components
-│   └── Mappers/             # Model-ViewModel mappers
-├── Areas/
-│   └── Identity/            # ASP.NET Identity customization
-├── Authorization/           # Authorization policies and handlers
-│   ├── Handlers/           # Custom authorization handlers
-│   └── Requirements/       # Custom authorization requirements
-├── Controllers/            # MVC controllers
-├── Data/                   # Database context
-├── Migrations/             # EF Core migrations
-├── Models/                 # Domain models and ViewModels
-├── Services/               # Business logic services
-├── ViewComponents/         # Reusable view components
-├── Views/                  # Razor views
-└── wwwroot/                # Static files (CSS, JS, images)
-```
 
 
 ### Adding Database Migrations
