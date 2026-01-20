@@ -227,9 +227,7 @@ dotnet ef database update
 
 ### Migration Strategy
 
-**Current Approach**: Migrations are applied automatically on application startup in `Program.cs`.
-
-![Screenshot of two lines of code that Ensure the databse is created and apply the migrations](ApplyMigrations.png)
+**Current Approach**: Migrations are applied automatically on application startup in `Program.cs` by running `await context.Database.MigrateAsync();`.
 
 ## Local Development Setup
 

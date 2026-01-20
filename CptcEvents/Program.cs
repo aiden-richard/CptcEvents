@@ -116,7 +116,6 @@ async Task CreateRolesAsync(WebApplication app)
     var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
     // Apply pending migrations
-    await context.Database.EnsureCreatedAsync();
     await context.Database.MigrateAsync();
 
     // Get admin user configuration from appsettings
