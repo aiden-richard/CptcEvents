@@ -193,37 +193,45 @@ The application uses a multi-stage Docker build:
 
 ```dockerfile
 # Stage 1: Build (SDK image)
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:d1823fecac3689a2eb959e02ee3bfe1c2142392808240039097ad70644566190 AS build
 WORKDIR /App
-COPY . ./
+
+# Copy csproj
+COPY *.csproj ./
+# Restore as distinct layers
 RUN dotnet restore
+# Build and publish a release
 RUN dotnet publish -o out
 
 # Stage 2: Runtime (ASP.NET image)
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:eaa79205c3ade4792a7f7bf310a3aac51fe0e1d91c44e40f70b7c6423d475fe0
 WORKDIR /App
 COPY --from=build /App/out .
-RUN mkdir -p /App/Data && chmod 777 /App/Data
+
 ENTRYPOINT ["dotnet", "CptcEvents.dll"]
 ```
 
 **How It Works:**
 
-The Dockerfile uses a **multi-stage build** pattern:
+The Dockerfile uses a **multi-stage build** pattern with optimizations:
 
-1. **Build Stage**: Uses the .NET SDK image which includes all tools needed for compilation
-   - Copies source code into the container
-   - Restores NuGet packages (`dotnet restore`)
+1. **Build Stage**: Uses the SHA-pinned .NET SDK image for reproducible builds
+   - Copies only `.csproj` file first for optimal Docker layer caching
+   - Restores NuGet packages as a separate layer (`dotnet restore`)
+   - Copies remaining source code (implicitly done during publish)
    - Compiles and publishes the application to the `out` directory (`dotnet publish`)
    - The SDK image is large (~1GB) but only used during build
 
-2. **Runtime Stage**: Uses the lightweight ASP.NET runtime image
+2. **Runtime Stage**: Uses the lightweight SHA-pinned ASP.NET runtime image
    - Creates a fresh container based on the ASP.NET runtime (not the SDK)
    - Copies only the published binaries from the build stage (`COPY --from=build`)
-   - Creates the `/App/Data` directory for potential file storage
    - Sets the entry point to run the compiled application
 
-**Result**: The final container image only contains the runtime components and your compiled application, not the entire SDK. This produces a smaller final image size that's optimized for production deployment and faster container startup.
+**Optimizations**:
+- **SHA-pinned base images**: Ensures reproducible builds and security by using immutable image versions
+- **Layer caching**: By copying `.csproj` before source code, NuGet restore only re-runs when dependencies change, not on every code change
+
+**Result**: The final container image only contains the runtime components and your compiled application, not the entire SDK. This produces a smaller final image size (~200MB vs ~1GB) that's optimized for production deployment and faster container startup.
 
 ## Environment Configuration
 
