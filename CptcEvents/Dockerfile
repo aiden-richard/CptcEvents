@@ -13,7 +13,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:eaa79205c3ade4792a7f7bf310a3aac
 WORKDIR /App
 COPY --from=build /App/out .
 
-# Create Data directory for SQLite database with proper permissions
-RUN mkdir -p /App/Data && chmod 777 /App/Data
-
 ENTRYPOINT ["dotnet", "CptcEvents.dll"]
