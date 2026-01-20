@@ -1,0 +1,40 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install .NET 10 Preview manually
+      - name: Install .NET 10 Preview SDK
+        run: |
+          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+          chmod +x dotnet-install.sh
+          ./dotnet-install.sh --version 10.0.100-rc.2.25502.107
+          echo "DOTNET_ROOT=$HOME/.dotnet" >> $GITHUB_ENV
+          echo "$HOME/.dotnet:$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      # Step 3: Verify .NET version
+      - name: Verify .NET version
+        run: dotnet --info
+
+      # Step 4: Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Step 5: Build
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # Step 6: Run tests (if tests exist)
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+        continue-on-error: true
