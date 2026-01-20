@@ -1,8 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:d1823fecac3689a2eb959e02ee3bfe1c2142392808240039097ad70644566190 AS build
 WORKDIR /App
 
-# Copy everything
-COPY . ./
+# Copy csproj
+COPY *.csproj ./
 # Restore as distinct layers
 RUN dotnet restore
 # Build and publish a release
