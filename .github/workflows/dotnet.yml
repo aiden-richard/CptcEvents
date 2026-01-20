@@ -55,30 +55,22 @@ jobs:
           docker push cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:${{ github.sha }}
           docker push cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest
 
-      # Step 9: Deploy to Azure Container Instances
-      - name: Deploy to ACI
+      # Step 9: Deploy to Azure Container Apps
+      - name: Deploy to Container Apps
         run: |
-          # Delete existing container if it exists
-          az container delete \
+          az containerapp up \
+            --name cptcevents-app \
             --resource-group CptcEventsResourceGroup \
-            --name cptcevents-container \
-            --yes || true
-          
-          # Create new container with latest image
-          az container create \
-            --resource-group CptcEventsResourceGroup \
-            --name cptcevents-container \
+            --location westus2 \
+            --environment cptcevents-env \
             --image cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest \
-            --cpu 1 --memory 1.5 \
-            --registry-login-server cptcevents-fbh7bqh0f6a6hpgt.azurecr.io \
+            --target-port 8080 \
+            --ingress external \
+            --registry-server cptcevents-fbh7bqh0f6a6hpgt.azurecr.io \
             --registry-username cptcevents \
             --registry-password ${{ secrets.ACR_PASSWORD }} \
-            --ip-address Public \
-            --dns-name-label cptcevents \
-            --ports 8080 \
-            --environment-variables \
+            --env-vars \
               ASPNETCORE_ENVIRONMENT=Production \
-            --secure-environment-variables \
               ConnectionStrings__DefaultConnection="${{ secrets.SQL_CONNECTION_STRING }}" \
               SendGrid__ApiKey="${{ secrets.SENDGRID_API_KEY }}" \
               AdminUser__Password="${{ secrets.ADMIN_PASSWORD }}"
