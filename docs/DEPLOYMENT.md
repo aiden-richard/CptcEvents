@@ -106,10 +106,10 @@ az ad sp create-for-rbac --name "cptcevents-github" --role contributor --scopes 
 **Purpose**: Monitors Azure spending and sends alerts when costs exceed thresholds, preventing unexpected charges.
 
 **Configuration**:
-- Budget name: `cptcevents-monthly-budget`
-- Amount: $50 per month
-- Alert threshold: 80% of budget (~$40)
-- Notification email: Your email address
+- Budget name: `CptcEventsBudget`
+- Amount: $20 per month
+- Alert threshold: 85% of budget (~$17)
+- Notification sent to: Your email address and optionally phone number as a text message
 
 **Why**: Azure services bill based on usage, and costs can escalate if resources aren't monitored. Budget alerts provide early warning before spending exceeds expectations, allowing you to take action before the billing period ends.
 
@@ -398,8 +398,8 @@ If needed, you can trigger a deployment manually through the Azure Portal:
 |----------|-----|------------------------------|
 | Azure SQL Database | General Purpose - Serverless: Gen5, 2 vCores | **$0** (Azure for Students) |
 | Azure Container Registry | Basic | ~$5 |
-| Azure Container Apps | Consumption | ~$5-20 (usage-based) |
-| **Total** | | **~$10-25/month** |
+| Azure Container Apps | Consumption | ~$5-15 (usage-based) |
+| **Total** | | **~$10-20/month** |
 
 **Note**: The SQL Database cost is waived through the Azure for Students program. Without this discount, a comparable SQL Database would cost approximately $15-30/month depending on configuration.
 
