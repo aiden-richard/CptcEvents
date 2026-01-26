@@ -71,3 +71,10 @@
   - set group color
 
 ## System/Technical
+- calendar interface
+  - filter by group
+  - display event modal
+  - navigate to other months
+- database
+  - connect
+  - run migrations
