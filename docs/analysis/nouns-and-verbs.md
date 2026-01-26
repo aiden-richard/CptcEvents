@@ -2,15 +2,22 @@
 
 ## Entities
 - Event
-  - verbs: create, edit, delete, approve, deny
+  - CRUD
+  - approve
+  - deny
 - Group
-  - verbs: create, edit, delete
+  - CRUD
 - Group Member
-  - verbs: create, edit, delete, promote, demote
+  - CRUD
+  - promote
+  - demote
 - Group Invite
-  - verbs: create, edit, delete, redeem
+  - CRUD
+  - redeem
 - Instructor Code
-  - verbs: create, edit, delete, redeem, send/email code
+  - CRUD
+  - redeem
+  - send/email code
 
 ## Roles/Actors
 
