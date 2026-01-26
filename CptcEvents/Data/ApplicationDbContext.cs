@@ -18,6 +18,7 @@ namespace CptcEvents.Data
         public DbSet<GroupMember> GroupMemberships { get; set; } = default!;
         public DbSet<GroupInvite> GroupInvites { get; set; } = default!;
         public DbSet<InstructorCode> InstructorCodes { get; set; } = default!;
+        public DbSet<EventRsvp> EventRsvps { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -71,6 +72,25 @@ namespace CptcEvents.Data
                 .WithMany()
                 .HasForeignKey(i => i.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure NO ACTION for EventRsvp -> User to prevent cascade cycles
+            builder.Entity<EventRsvp>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Configure cascade delete for Event -> EventRsvp relationship
+            builder.Entity<EventRsvp>()
+                .HasOne(r => r.Event)
+                .WithMany()
+                .HasForeignKey(r => r.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Create unique index to prevent duplicate RSVPs for same user/event combination
+            builder.Entity<EventRsvp>()
+                .HasIndex(r => new { r.EventId, r.UserId })
+                .IsUnique();
 
             // Seed data
             SeedData(builder);
