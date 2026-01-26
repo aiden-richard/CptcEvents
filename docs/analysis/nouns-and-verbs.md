@@ -52,5 +52,22 @@
   - view all groups and events regardless of membership status
 
 ## Attributes
+- title, description
+  - set, get, update
+- event date
+  - set, get, update
+- time (start time, end time)
+  - set, get, update
+  - Validate: start time < end time
+- privacy level
+- visibility status
+  - set to visible on homepage
+  - set to hidden (regular event)
+- invite code
+  - ensure unique
+- expiration date & time
+  Validate: date and time are in the future
+- color
+  - set group color
 
 ## System/Technical
