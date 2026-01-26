@@ -14,6 +14,12 @@
 - Group Invite
   - CRUD
   - redeem
+- Event RSVP
+  - CRUD
+  - respond (Going/Maybe/Not Going)
+  - get RSVP(s) by various criteria
+  - get RSVP count by status
+  - check if user has RSVP'd
 - Instructor Code
   - CRUD
   - redeem
