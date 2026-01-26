@@ -1,9 +1,6 @@
 using CptcEvents.Data;
 using CptcEvents.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CptcEvents.Services;
 
@@ -27,6 +24,13 @@ public interface IInviteService
 	public Task<List<GroupInvite>> GetInvitesCreatedByUserAsync(string userId);
 
 	/// <summary>
+	/// Retrieves all invites for a given group, including creator and invited user data.
+	/// </summary>
+	/// <param name="groupId">The group id.</param>
+	/// <returns>List of invites belonging to the group.</returns>
+	public Task<List<GroupInvite>> GetInvitesForGroupAsync(int groupId);
+
+	/// <summary>
 	/// Creates a new group invite and persists it to the database.
 	/// </summary>
 	/// <param name="invite">The invite entity to create.</param>
@@ -34,11 +38,11 @@ public interface IInviteService
 	public Task<GroupInvite> CreateInviteAsync(GroupInvite invite);
 
 	/// <summary>
-	/// Retrieves all invites for a given group, including creator and invited user data.
+	/// Persists changes to an invite.
 	/// </summary>
-	/// <param name="groupId">The group id.</param>
-	/// <returns>List of invites belonging to the group.</returns>
-	public Task<List<GroupInvite>> GetInvitesForGroupAsync(int groupId);
+	/// <param name="invite">The invite entity to update.</param>
+	/// <returns>The updated invite.</returns>
+	public Task<GroupInvite> UpdateInviteAsync(GroupInvite invite);
 
 	/// <summary>
 	/// Deletes an invite by id if it exists.
@@ -56,18 +60,18 @@ public interface IInviteService
 	public Task<GroupMember?> RedeemInviteAsync(int inviteId, string userId);
 
 	/// <summary>
-	/// Checks whether an invite code is already in use (case-insensitive).
-	/// </summary>
-	/// <param name="code">The invite code to check.</param>
-	/// <returns><c>true</c> if the code exists; otherwise <c>false</c>.</returns>
-	Task<bool> InviteCodeInUseAsync(string code);
-
-	/// <summary>
 	/// Retrieves an invite by its code (case-insensitive), including group information.
 	/// </summary>
 	/// <param name="code">The invite code to look up.</param>
 	/// <returns>The invite or <c>null</c> if not found.</returns>
 	public Task<GroupInvite?> GetInviteByCodeAsync(string code);
+
+	/// <summary>
+	/// Checks whether an invite code is already in use (case-insensitive).
+	/// </summary>
+	/// <param name="code">The invite code to check.</param>
+	/// <returns><c>true</c> if the code exists; otherwise <c>false</c>.</returns>
+	Task<bool> InviteCodeInUseAsync(string code);
 
 	/// <summary>
 	/// Generates a unique invite code of the specified length that is not already in use.
@@ -93,13 +97,6 @@ public interface IInviteService
 	/// <param name="editModel">The edit view model with updated fields.</param>
 	/// <returns>Validation result with errors, authorized status, and validated data.</returns>
 	public Task<InviteValidationResult> ValidateUpdateInviteAsync(string currentUserId, GroupInvite invite, GroupInviteEditViewModel editModel);
-
-	/// <summary>
-	/// Persists changes to an invite.
-	/// </summary>
-	/// <param name="invite">The invite entity to update.</param>
-	/// <returns>The updated invite.</returns>
-	public Task<GroupInvite> UpdateInviteAsync(GroupInvite invite);
 }
 
 /// <summary>
@@ -126,17 +123,6 @@ public class InviteService : IInviteService
 	}
 
 	/// <inheritdoc/>
-	public async Task<List<GroupInvite>> GetInvitesCreatedByUserAsync(string userId)
-	{
-		if (string.IsNullOrWhiteSpace(userId)) return new List<GroupInvite>();
-		return await _context.GroupInvites
-			.Include(i => i.Group)
-			.Include(i => i.CreatedBy)
-			.Where(i => i.CreatedById == userId)
-			.ToListAsync();
-	}
-
-	/// <inheritdoc/>
 	public async Task<GroupInvite?> GetInviteAsync(int id)
 	{
 		// Include the Group navigation property so views can access GroupInvite.Group safely
@@ -147,11 +133,14 @@ public class InviteService : IInviteService
 	}
 
 	/// <inheritdoc/>
-	public async Task<GroupInvite> CreateInviteAsync(GroupInvite invite)
+	public async Task<List<GroupInvite>> GetInvitesCreatedByUserAsync(string userId)
 	{
-		_context.GroupInvites.Add(invite);
-		await _context.SaveChangesAsync();
-		return invite;
+		if (string.IsNullOrWhiteSpace(userId)) return new List<GroupInvite>();
+		return await _context.GroupInvites
+			.Include(i => i.Group)
+			.Include(i => i.CreatedBy)
+			.Where(i => i.CreatedById == userId)
+			.ToListAsync();
 	}
 
 	/// <inheritdoc/>
@@ -164,6 +153,22 @@ public class InviteService : IInviteService
 			.Where(i => i.GroupId == groupId)
 			.OrderByDescending(i => i.CreatedAt)
 			.ToListAsync();
+	}
+
+	/// <inheritdoc/>
+	public async Task<GroupInvite> CreateInviteAsync(GroupInvite invite)
+	{
+		_context.GroupInvites.Add(invite);
+		await _context.SaveChangesAsync();
+		return invite;
+	}
+
+	/// <inheritdoc/>
+	public async Task<GroupInvite> UpdateInviteAsync(GroupInvite invite)
+	{
+		_context.GroupInvites.Update(invite);
+		await _context.SaveChangesAsync();
+		return invite;
 	}
 
 	/// <inheritdoc/>
@@ -396,13 +401,5 @@ public class InviteService : IInviteService
 		result.InvitedUserId = invite.InvitedUserId;
 
 		return result;
-	}
-
-	/// <inheritdoc/>
-	public async Task<GroupInvite> UpdateInviteAsync(GroupInvite invite)
-	{
-		_context.GroupInvites.Update(invite);
-		await _context.SaveChangesAsync();
-		return invite;
 	}
 }
