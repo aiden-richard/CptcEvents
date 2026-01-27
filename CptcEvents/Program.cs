@@ -15,7 +15,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        ForwardedHeaders.XForwardedFor | 
+        ForwardedHeaders.XForwardedProto | 
+        ForwardedHeaders.XForwardedHost;
+    
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
 });
 
 // Add services to the container.
