@@ -14,10 +14,8 @@ Before you begin, ensure you have the following installed:
 ## Quick Start
 
 1. Clone the repository
-2. Start SQL Server in Docker
-3. Configure user secrets
-4. Run database migrations
-5. Start the application
+2. Start SQL Server with Docker Compose
+3. Run the application (migrations run automatically)
 
 ## Detailed Setup Instructions
 
@@ -28,99 +26,98 @@ git clone https://github.com/aiden-richard/CptcEvents.git
 cd CptcEvents
 ```
 
-### 2. Start SQL Server in Docker
+### 2. Start SQL Server with Docker Compose
 
-The application uses SQL Server for data storage. Run the following command to start a SQL Server container:
+The application uses SQL Server for data storage. A Docker Compose configuration is provided for easy setup:
 
 ```bash
-docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourStrong@Passw0rd" \
-  -p 1433:1433 --name sqlserver --hostname sqlserver \
-  -d mcr.microsoft.com/mssql/server:2022-latest
+cd SqlDevServer
+docker compose up -d
 ```
+
+This will:
+- Start SQL Server 2022 on port 1433
+- Create the `CptcEvents-Sql-DevServer` database automatically
+- Persist data in a Docker volume (survives restarts)
+- Use SA password from `.env` file (`CptcDev123!`)
 
 **Verify SQL Server is running:**
 ```bash
-docker ps
+docker compose ps
 ```
 
-You should see the `sqlserver` container in the list with status "Up".
+You should see the `sqlserver` container with status "Up".
 
-**Common Docker Commands:**
+**Common Docker Compose Commands:**
 ```bash
-# Stop SQL Server
-docker stop sqlserver
+# Stop SQL Server (data persists)
+docker compose stop
 
 # Start SQL Server (after stopping)
-docker start sqlserver
-
-# Remove SQL Server container (data will be lost)
-docker rm sqlserver
+docker compose start
 
 # View SQL Server logs
-docker logs sqlserver
+docker compose logs -f
+
+# Restart SQL Server
+docker compose restart
+
+# Stop and remove container (data persists in volume)
+docker compose down
+
+# Stop and remove everything including data
+docker compose down -v
 ```
 
-### 3. Configure User Secrets
+### 3. Configuration (Optional)
 
-Navigate to the project directory and initialize user secrets:
+**Development settings are pre-configured** in `appsettings.Development.json`:
+- Database: `CptcEvents-Sql-DevServer` on localhost:1433
+- Admin credentials: `admin@cptc.edu` / `CptcDev`
+- SA password: `CptcDev123!` (from `SqlDevServer/.env`)
+
+**User Secrets (Optional - for production-like testing):**
+
+If you need to override development settings or test with production services:
 
 ```bash
 cd CptcEvents
-dotnet user-secrets init
-```
 
-Set the required secrets:
+# Override connection string (e.g., for Azure SQL testing)
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-connection-string"
 
-```bash
-# Database connection (SQL Server running in Docker)
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=CptcEvents;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
-
-# SendGrid API key (get from https://app.sendgrid.com/settings/api_keys)
+# Add SendGrid API key for email testing
 dotnet user-secrets set "SendGrid:ApiKey" "your-sendgrid-api-key"
 
-# Initial admin password
+# Override admin password
 dotnet user-secrets set "AdminUser:Password" "YourSecurePassword123!"
 ```
 
-**View configured secrets:**
-```bash
-dotnet user-secrets list
-```
+**Note:** User secrets take precedence over `appsettings.Development.json`.
 
-### Required Secrets Reference
-
-| Secret Name | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `ConnectionStrings:DefaultConnection` | SQL Server connection string | Use the Docker SQL Server connection string above, or connect to Azure SQL for testing against production data |
-| `SendGrid:ApiKey` | API key for sending emails | [SendGrid Dashboard](https://app.sendgrid.com/settings/api_keys) → Create API Key |
-| `AdminUser:Password` | Password for the initial admin account | Choose a secure password (min 8 chars, uppercase, lowercase, number, special char) |
-
-### 4. Apply Database Migrations
-
-Create the database and apply all migrations:
+### 4. Run the Application
 
 ```bash
-dotnet ef database update
-```
-
-**If you encounter issues:**
-- Ensure SQL Server container is running (`docker ps`)
-- Verify the connection string in user secrets (`dotnet user-secrets list`)
-- Check that port 1433 is not in use by another application
-
-### 5. Run the Application
-
-```bash
+cd CptcEvents
 dotnet run
 ```
 
-The application will be available at `http://localhost:5000` (or the port specified in `Properties/launchSettings.json`).
+The application will:
+- Automatically apply pending migrations
+- Create the database if it doesn't exist
+- Seed the admin user and default data
+- Start on `https://localhost:7274` (HTTPS) and `http://localhost:5000` (HTTP)
 
-### 6. Access the Application
+### 5. Access the Application
 
-- Navigate to `http://localhost:5000`
-- Register a new account or log in with admin credentials
-- The admin account (`admin@cptc.edu`) is created automatically on first run using the password from user secrets
+- Navigate to `https://localhost:7274` or `http://localhost:5000`
+- Log in with admin credentials: `admin@cptc.edu` / `CptcDev`
+- Register new accounts or create events/groups
+
+**If you encounter database connection issues:**
+- Ensure SQL Server container is running: `docker compose ps` (in SqlDevServer/)
+- Check Docker logs: `docker compose logs sqlserver`
+- Verify port 1433 is not in use: `lsof -i :1433`
 
 ## Development Workflow
 
@@ -144,17 +141,16 @@ dotnet ef database update
 - Test migrations locally before pushing to main branch
 - Migrations are automatically applied to production on deployment
 
-### Running with HTTPS (Optional)
+### Running with HTTPS
 
-To run with HTTPS locally:
-
-```bash
-dotnet run --launch-profile https
-```
-
-The application will be available at:
-- `https://localhost:7274` (HTTPS)
+HTTPS is enabled by default. The application runs on:
+- `https://localhost:7274` (HTTPS - default)
 - `http://localhost:5000` (HTTP)
+
+To run HTTP only:
+```bash
+dotnet run --launch-profile http
+```
 
 ## IDE Setup
 

@@ -4,11 +4,28 @@ using CptcEvents.Authorization;
 using CptcEvents.Data;
 using CptcEvents.Models;
 using CptcEvents.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure forwarded headers to work correctly behind our reverse proxy
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | 
+        ForwardedHeaders.XForwardedProto | 
+        ForwardedHeaders.XForwardedHost;
+    
+    // Clear KnownProxies and KnownNetworks to trust all proxies.
+    // This is safe because the app runs in a private network (Docker/container)
+    // that is ONLY accessible through our reverse proxy - there is no direct
+    // external access to this application. Network isolation is our security boundary.
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -57,6 +74,7 @@ builder.Services.AddAuthorization(options =>
 // builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, SendGridEmailSender>();
 
 var app = builder.Build();
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
