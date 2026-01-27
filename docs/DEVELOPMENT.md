@@ -106,11 +106,11 @@ The application will:
 - Automatically apply pending migrations
 - Create the database if it doesn't exist
 - Seed the admin user and default data
-- Start on `https://localhost:7134` (HTTPS) and `http://localhost:5000` (HTTP)
+- Start on `https://localhost:7274` (HTTPS) and `http://localhost:5000` (HTTP)
 
 ### 5. Access the Application
 
-- Navigate to `https://localhost:7134` or `http://localhost:5000`
+- Navigate to `https://localhost:7274` or `http://localhost:5000`
 - Log in with admin credentials: `admin@cptc.edu` / `CptcDev`
 - Register new accounts or create events/groups
 
