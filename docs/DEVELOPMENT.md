@@ -9,7 +9,7 @@ Before you begin, ensure you have the following installed:
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (version 10.0.100-rc.2.25502.107 or later)
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) (recommended) or VS Code
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for running SQL Server locally)
-- [SendGrid Account](https://sendgrid.com/) (for email functionality)
+- [SendGrid Account](https://sendgrid.com/) (Optional, for sending emails)
 
 ## Quick Start
 
@@ -17,7 +17,7 @@ Before you begin, ensure you have the following installed:
 2. Start SQL Server with Docker Compose
 3. Run the application (migrations run automatically)
 
-## Detailed Setup Instructions
+## Setup Instructions
 
 ### 1. Clone the Repository
 
@@ -106,7 +106,6 @@ The application will:
 - Automatically apply pending migrations
 - Create the database if it doesn't exist
 - Seed the admin user and default data
-- Start on `https://localhost:7274` (HTTPS) and `http://localhost:5000` (HTTP)
 
 ### 5. Access the Application
 
@@ -117,40 +116,12 @@ The application will:
 **If you encounter database connection issues:**
 - Ensure SQL Server container is running: `docker compose ps` (in SqlDevServer/)
 - Check Docker logs: `docker compose logs sqlserver`
-- Verify port 1433 is not in use: `lsof -i :1433`
-
-## Development Workflow
-
-### Adding Database Migrations
-
-When you modify models or the database schema:
-
-```bash
-# Create a new migration
-dotnet ef migrations add YourMigrationName
-
-# Review the generated migration file in Migrations/
-
-# Apply to local database
-dotnet ef database update
-```
-
-**Migration Best Practices:**
-- Use descriptive migration names (e.g., `AddEventLocationField`, `CreateGroupInvitesTable`)
-- Review generated migration code before applying
-- Test migrations locally before pushing to main branch
-- Migrations are automatically applied to production on deployment
 
 ### Running with HTTPS
 
 HTTPS is enabled by default. The application runs on:
 - `https://localhost:7274` (HTTPS - default)
 - `http://localhost:5000` (HTTP)
-
-To run HTTP only:
-```bash
-dotnet run --launch-profile http
-```
 
 ## IDE Setup
 
