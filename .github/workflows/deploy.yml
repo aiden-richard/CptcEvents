@@ -71,4 +71,6 @@ jobs:
               ASPNETCORE_ENVIRONMENT=Production \
               ConnectionStrings__DefaultConnection="${{ secrets.SQL_CONNECTION_STRING }}" \
               SendGrid__ApiKey="${{ secrets.SENDGRID_API_KEY }}" \
+              AdminUser__Email="${{ secrets.ADMIN_EMAIL }}" \
+              AdminUser__UserName="${{ secrets.ADMIN_USERNAME }}" \
               AdminUser__Password="${{ secrets.ADMIN_PASSWORD }}"
