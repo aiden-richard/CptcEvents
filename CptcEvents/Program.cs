@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,21 +138,51 @@ async Task CreateRolesAsync(WebApplication app)
     await context.Database.MigrateAsync();
 
     // Get admin user configuration from appsettings
-    var adminEmail = configuration.GetValue<string>("AdminUser:Email") ?? "admin@cptc.edu";
-    var adminUsername = configuration.GetValue<string>("AdminUser:UserName") ?? adminEmail;
-    var adminPassword = configuration.GetValue<string>("AdminUser:Password") ?? "Admin123!";
+    var adminEmail = configuration.GetValue<string>("AdminUser:Email");
+    var adminUsername = configuration.GetValue<string>("AdminUser:UserName");
+    var adminPassword = configuration.GetValue<string>("AdminUser:Password");
     var adminFirstName = configuration.GetValue<string>("AdminUser:FirstName") ?? "Admin";
     var adminLastName = configuration.GetValue<string>("AdminUser:LastName") ?? "User";
 
+    if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminUsername) || string.IsNullOrWhiteSpace(adminPassword))
+    {
+        throw new InvalidOperationException("AdminUser configuration missing. Provide AdminUser:Email, AdminUser:UserName and AdminUser:Password in configuration or environment variables.");
+    }
+
+    // Ensure Admin role exists
+    if (!await roleManager.RoleExistsAsync("Admin"))
+    {
+        var roleCreateResult = await roleManager.CreateAsync(new IdentityRole("Admin"));
+        if (!roleCreateResult.Succeeded)
+        {
+            var logger = app.Services.GetService<ILogger<Program>>();
+            logger?.LogError("Failed to create Admin role: {Errors}", string.Join(", ", roleCreateResult.Errors.Select(e => e.Description)));
+            throw new InvalidOperationException("Failed to create default roles during startup.");
+        }
+    }
+
     // Find or create the admin user
     ApplicationUser? adminUser = await userManager.FindByEmailAsync(adminEmail);
-    
     if (adminUser == null)
     {
-        // If the seeded admin user doesn't exist, log an error
-        var logger = app.Services.GetService<ILogger<Program>>();
-        logger?.LogError("Seeded admin user not found in database. Database seeding may have failed.");
-        return;
+        adminUser = new ApplicationUser
+        {
+            UserName = adminUsername,
+            NormalizedUserName = adminUsername.ToUpperInvariant(),
+            Email = adminEmail,
+            NormalizedEmail = adminEmail.ToUpperInvariant(),
+            EmailConfirmed = true,
+            FirstName = adminFirstName,
+            LastName = adminLastName
+        };
+
+        var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+        if (!createResult.Succeeded)
+        {
+            var logger = app.Services.GetService<ILogger<Program>>();
+            logger?.LogError("Failed to create seeded admin user: {Errors}", string.Join(", ", createResult.Errors.Select(e => e.Description)));
+            throw new InvalidOperationException("Failed to create admin user during startup.");
+        }
     }
 
     // Update admin user properties if they've changed in configuration
