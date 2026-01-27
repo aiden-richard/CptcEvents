@@ -19,6 +19,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         ForwardedHeaders.XForwardedProto | 
         ForwardedHeaders.XForwardedHost;
     
+    // Clear KnownProxies and KnownNetworks to trust all proxies.
+    // This is safe because the app runs in a private network (Docker/container)
+    // that is ONLY accessible through our reverse proxy - there is no direct
+    // external access to this application. Network isolation is our security boundary.
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
