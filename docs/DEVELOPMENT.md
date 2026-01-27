@@ -144,7 +144,7 @@ dotnet ef database update
 ### Running with HTTPS
 
 HTTPS is enabled by default. The application runs on:
-- `https://localhost:7134` (HTTPS - default)
+- `https://localhost:7274` (HTTPS - default)
 - `http://localhost:5000` (HTTP)
 
 To run HTTP only:
