@@ -1,145 +1,115 @@
-# CPTC Events
+# CptcEvents
 
 ## Overview
 
-CPTC Events is an event management web application designed for Clover Park Technical College. The platform features an interactive calendar that allows students, staff, and community members to discover, create, and manage events efficiently. The application supports group-based event organization and provides both public and authenticated access levels.
+An event management web application for Clover Park Technical College. Students, staff, and community members can discover, create, and manage campus events through an interactive calendar. The platform supports group-based event organization, role-based access control, and automated email notifications.
 
 ## Features
 
 ### Event Management
-- **Interactive Calendar**: FullCalendar-based interface with sorting and filtering capabilities
-- **Event CRUD Operations**: Create, read, update, and delete events with rich details
-- **Public & Private Events**: Control event visibility for different user groups
-- **Event Approval System**: Events shown on the homepage are approved by Admin
+- Interactive calendar
+- Create, edit, and delete events
+- Public events for the community, private events for groups
+- Admin approval system for homepage events
 
-### Group Management
-- **Group Creation**: Create groups for your class, club, and more
-- **Role-Based Access**: Owner, Moderator, and Member roles with different permissions
-- **Group Invitations**: Invite members via invite codes
-- **Group-Specific Calendars**: See a group's events on its dedicated calendar
+### Groups
+- Create groups for classes, clubs, departments, or interests
+- Role-based permissions: Owner, Moderator, and Member
+- Invite members using secure codes
+- Dedicated calendar for each group
 
-### User Authentication
-- **ASP.NET Core Identity**: Secure authentication and authorization
-- **Email Verification**: Verified CPTC accounts using institutional email addresses
-- **Instructor Codes**: Special registration codes for verified instructors
-- **Admin Panel**: Site Moderation for Admin
+### Authentication
+- ASP.NET Core Identity
+- Email verification using @cptc.edu addresses
+- Special instructor registration codes
+- Custom authorization policies for group roles
 
-### Email Integration
-- **SendGrid Integration**: Professional email delivery for notifications
-- **Invitation Emails**: Automated group invitation system
-- **Account Verification**: Email-based account confirmation
+### Email
+- SendGrid integration for email delivery
+- Automated group invitations
+- Account confirmation emails
 
 ## Tech Stack
 
 ### Backend
-- **Framework**: ASP.NET Core 10.0
+- **Framework**: ASP.NET Core 10.0 (MVC)
 - **Language**: C# 13
-- **ORM**: Entity Framework Core 10.0
+- **ORM**: Entity Framework Core 10.0 with automatic migrations
 - **Authentication**: ASP.NET Core Identity
 - **Authorization**: Policy-based with custom requirements and handlers
 
 ### Frontend
 - **Template Engine**: Razor Views (MVC pattern)
 - **CSS Framework**: Bootstrap 5
-- **Calendar**: FullCalendar JavaScript library
+- **JavaScript**: FullCalendar interactive calendar
 
-### Database
-- **Development**: SQL Server on Docker
-- **Production**: Azure SQL Database (SQL Server)
-- **Migrations**: EF Core migrations with automatic deployment
-
-### Infrastructure
-- **Hosting**: Azure Container Apps
-- **Container Registry**: Azure Container Registry (ACR)
+### Database & Infrastructure
+- **Development**: SQL Server 2022 (Docker)
+- **Production**: Azure SQL Database
+- **Hosting**: Azure Container Apps (serverless)
 - **CI/CD**: GitHub Actions
-- **Email Service**: SendGrid
 
-## Architecture
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for complete infrastructure details.
 
-The application follows the MVC (Model-View-Controller) pattern with additional layers:
-
-- **Controllers**: Handle HTTP requests and coordinate business logic
-- **Services**: Encapsulate business logic (EventService, GroupService, InviteService)
-- **Authorization**: Policy-based authorization with custom handlers for group roles
-- **Mappers**: Transform between models and view models
-- **View Components**: Reusable UI components (CalendarViewComponent)
-- **Data Layer**: Entity Framework Core with ApplicationDbContext
-
-### Project Structure
-
-```
-CptcEvents/
-├── Application/              # Application layer components
-│   └── Mappers/             # Model-ViewModel mappers
-├── Areas/
-│   └── Identity/            # ASP.NET Identity customization
-├── Authorization/           # Authorization policies and handlers
-│   ├── Handlers/           # Custom authorization handlers
-│   └── Requirements/       # Custom authorization requirements
-├── Controllers/            # MVC controllers
-├── Data/                   # Database context
-├── Migrations/             # EF Core migrations
-├── Models/                 # Domain models and ViewModels
-├── Services/               # Business logic services
-├── ViewComponents/         # Reusable view components
-├── Views/                  # Razor views
-└── wwwroot/                # Static files (CSS, JS, images)
-```
-
-## Local Development Setup
-
-### Quick Start
+## Get Started
 
 ```bash
 # Clone the repository
 git clone https://github.com/aiden-richard/CptcEvents.git
 cd CptcEvents
 
-# Start SQL Server in Docker
-docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourStrong@Passw0rd" \
-  -p 1433:1433 --name sqlserver --hostname sqlserver \
-  -d mcr.microsoft.com/mssql/server:2022-latest
+# Start SQL Server with Docker Compose
+cd SqlDevServer
+docker compose up -d
 
-# Configure user secrets
-cd CptcEvents
-dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=CptcEvents;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
-dotnet user-secrets set "SendGrid:ApiKey" "your-sendgrid-api-key"
-dotnet user-secrets set "AdminUser:Password" "YourSecurePassword123!"
-
-# Apply migrations and run
-dotnet ef database update
+# Run the application (migrations run automatically)
+cd ../CptcEvents
 dotnet run
 ```
 
-The application will be available at `http://localhost:5000`.
+Open https://localhost:7274 or http://localhost:5000 and log in with `admin@cptc.edu` / `CptcDev`
 
-For detailed setup instructions, troubleshooting, and IDE configuration, see the [Local Development Guide](docs/DEVELOPMENT.md).
+See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed setup instructions.
 
 ## Deployment
 
-The application uses GitHub Actions for CI/CD with two workflows:
+GitHub Actions handles CI/CD with build validation on pull requests and automatic deployment to Azure Container Apps after merging to `main`.
 
-### Build Workflow (`.github/workflows/build.yml`)
-- Triggers on pull requests to `main`
-- Validates code compilation and tests
-- Provides quick feedback before merging
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for infrastructure details.
 
-### Deploy Workflow (`.github/workflows/deploy.yml`)
-- Triggers on pushes to `main`
-- Builds Docker image
-- Pushes to Azure Container Registry
-- Deploys to Azure Container Apps
+## Project Structure
 
-For detailed deployment documentation, infrastructure setup, and troubleshooting, see the [Deployment documentation](docs/DEPLOYMENT.md).
+```
+CptcEvents/
+├── Application/
+│   └── Mappers/
+├── Areas/
+│   └── Identity/
+├── Authorization/
+│   ├── Handlers/
+│   └── Requirements/
+├── Controllers/
+├── Data/
+├── Migrations/
+├── Models/
+├── Services/
+├── ViewComponents/
+├── Views/
+└── wwwroot/
+
+SqlDevServer/
+docs/
+```
+
+## Documentation
+
+- [DEVELOPMENT.md](docs/DEVELOPMENT.md) - Local setup and troubleshooting
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Cloud architecture and CI/CD
 
 ## License
 
-This project is licensed under the terms specified in [LICENSE.txt](LICENSE.txt).
+See [LICENSE.txt](LICENSE.txt)
 
-## Support
+---
 
-For issues, questions, or contributions:
-- Open an issue on GitHub
-- Contact the development team
-- Review the [deployment documentation](docs/DEPLOYMENT.md) for infrastructure questions
+Built for Clover Park Technical College
