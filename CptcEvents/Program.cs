@@ -4,11 +4,19 @@ using CptcEvents.Authorization;
 using CptcEvents.Data;
 using CptcEvents.Models;
 using CptcEvents.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure forwarded headers to work correctly behind our reverse proxy
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -62,10 +70,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
+    app.UseForwardedHeaders();
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
+    app.UseForwardedHeaders();
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
