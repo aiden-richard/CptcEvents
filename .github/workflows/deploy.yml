@@ -63,6 +63,7 @@ jobs:
           SQL_CONNECTION_STRING: ${{ secrets.SQL_CONNECTION_STRING }}
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
         run: |
+          # Check for presence of required secrets
           missing=""
           [ -z "$ADMIN_EMAIL" ] && missing="$missing ADMIN_EMAIL"
           [ -z "$ADMIN_USERNAME" ] && missing="$missing ADMIN_USERNAME"
