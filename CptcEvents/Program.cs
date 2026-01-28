@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -144,39 +145,70 @@ async Task CreateRolesAsync(WebApplication app)
     var adminFirstName = configuration.GetValue<string>("AdminUser:FirstName") ?? "Admin";
     var adminLastName = configuration.GetValue<string>("AdminUser:LastName") ?? "User";
 
-    if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminUsername) || string.IsNullOrWhiteSpace(adminPassword))
+    static bool IsMissingOrPlaceholder(string? value)
     {
-        throw new InvalidOperationException("AdminUser configuration missing. Provide AdminUser:Email, AdminUser:UserName and AdminUser:Password in configuration or environment variables.");
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+        // Treat known placeholder values from appsettings as missing to avoid unsafe defaults.
+        return string.Equals(value, "Set in secrets", StringComparison.OrdinalIgnoreCase);
+    }
+    var missingFields = new List<string>();
+    if (IsMissingOrPlaceholder(adminEmail))
+    {
+        missingFields.Add("AdminUser:Email");
+    }
+    if (IsMissingOrPlaceholder(adminUsername))
+    {
+        missingFields.Add("AdminUser:UserName");
+    }
+    if (IsMissingOrPlaceholder(adminPassword))
+    {
+        missingFields.Add("AdminUser:Password");
     }
 
-    // Ensure Admin role exists
-    if (!await roleManager.RoleExistsAsync("Admin"))
+    if (missingFields.Count > 0)
     {
-        var roleCreateResult = await roleManager.CreateAsync(new IdentityRole("Admin"));
-        if (!roleCreateResult.Succeeded)
+        var logger = app.Services.GetService<ILogger<Program>>();
+        logger?.LogWarning(
+            "Admin user configuration is missing or uses placeholder values for: {MissingFields}. Skipping admin user creation.",
+            string.Join(", ", missingFields));
+        return;
+    }
+
+        // Ensure required roles exist
+        var requiredRoles = new[] { "Admin", "Staff", "Student" };
+        foreach (var roleName in requiredRoles)
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
         {
-            var logger = app.Services.GetService<ILogger<Program>>();
-            logger?.LogError("Failed to create Admin role: {Errors}", string.Join(", ", roleCreateResult.Errors.Select(e => e.Description)));
-            throw new InvalidOperationException("Failed to create default roles during startup.");
+            var roleCreateResult = await roleManager.CreateAsync(new IdentityRole(roleName));
+            if (!roleCreateResult.Succeeded)
+            {
+                var logger = app.Services.GetService<ILogger<Program>>();
+                logger?.LogError("Failed to create {RoleName} role: {Errors}", roleName, string.Join(", ", roleCreateResult.Errors.Select(e => e.Description)));
+                throw new InvalidOperationException("Failed to create default roles during startup.");
+            }
         }
     }
 
     // Find or create the admin user
-    ApplicationUser? adminUser = await userManager.FindByEmailAsync(adminEmail);
+    ApplicationUser? adminUser = await userManager.FindByEmailAsync(adminEmail!);
     if (adminUser == null)
     {
         adminUser = new ApplicationUser
         {
             UserName = adminUsername,
-            NormalizedUserName = adminUsername.ToUpperInvariant(),
+            NormalizedUserName = adminUsername!.ToUpperInvariant(),
             Email = adminEmail,
-            NormalizedEmail = adminEmail.ToUpperInvariant(),
+            NormalizedEmail = adminEmail!.ToUpperInvariant(),
             EmailConfirmed = true,
             FirstName = adminFirstName,
             LastName = adminLastName
         };
 
-        var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+        var createResult = await userManager.CreateAsync(adminUser, adminPassword!);
         if (!createResult.Succeeded)
         {
             var logger = app.Services.GetService<ILogger<Program>>();
@@ -200,15 +232,15 @@ async Task CreateRolesAsync(WebApplication app)
     if (adminUser.UserName != adminUsername)
     {
         adminUser.UserName = adminUsername;
-        adminUser.NormalizedUserName = adminUsername.ToUpper();
+        adminUser.NormalizedUserName = adminUsername!.ToUpper();
         userNeedsUpdate = true;
     }
 
     // Update the password if it doesn't match
-    var passwordVerificationResult = userManager.PasswordHasher.VerifyHashedPassword(adminUser, adminUser.PasswordHash!, adminPassword);
+    var passwordVerificationResult = userManager.PasswordHasher.VerifyHashedPassword(adminUser, adminUser.PasswordHash!, adminPassword!);
     if (passwordVerificationResult == PasswordVerificationResult.Failed)
     {
-        adminUser.PasswordHash = userManager.PasswordHasher.HashPassword(adminUser, adminPassword);
+        adminUser.PasswordHash = userManager.PasswordHasher.HashPassword(adminUser, adminPassword!);
         userNeedsUpdate = true;
     }
 
