@@ -285,7 +285,7 @@ async Task SeedDB(WebApplication app)
     }
 
     // Define all default events
-    var defaultEvents = new[]
+    var systemEvents = new[]
     {
         // Summer 2025 Quarter Events
         new Event { Title = "Summer 2025 - Priority Registration", Description = "Priority registration for Summer 2025 quarter", DateOfEvent = new DateOnly(2025, 5, 19), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
@@ -347,7 +347,7 @@ async Task SeedDB(WebApplication app)
     };
 
     // Ensure default CPTC academic calendar events exist
-    var eventTitles = defaultEvents.Select(e => e.Title).ToArray();
+    var eventTitles = systemEvents.Select(e => e.Title).ToArray();
 
     var existingEventTitles = await context.Events
         .Where(e => e.GroupId == systemEventsGroup.Id)
@@ -361,7 +361,7 @@ async Task SeedDB(WebApplication app)
         logger?.LogInformation("Seeding {MissingCount} missing CPTC calendar events.", missingCount);
 
         // Add only missing events
-        var missingEvents = defaultEvents
+        var missingEvents = systemEvents
             .Where(e => !existingEventTitles.Contains(e.Title))
             .ToList();
 
