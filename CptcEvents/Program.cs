@@ -290,6 +290,7 @@ async Task SeedDB(WebApplication app)
     #endregion
 
     #region Dev Seeding
+
     if (app.Environment.IsDevelopment())
     {
         // Define test events to seed into the database for testing and demonstration purposes. These events are based on the CPTC academic calendar and are associated with the "System Events" group.
@@ -321,5 +322,6 @@ async Task SeedDB(WebApplication app)
             }
         }
     }
+  
     #endregion
 }
