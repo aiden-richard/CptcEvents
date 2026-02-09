@@ -284,91 +284,37 @@ async Task SeedDB(WebApplication app)
         await context.SaveChangesAsync();
     }
 
-    // Define all default events
-    var systemEvents = new[]
+    #region Seed Events For Dev
+    if (app.Environment.IsDevelopment())
     {
-        // Summer 2025 Quarter Events
-        new Event { Title = "Summer 2025 - Priority Registration", Description = "Priority registration for Summer 2025 quarter", DateOfEvent = new DateOnly(2025, 5, 19), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Continuing Student Registration", Description = "Registration period for continuing students (May 20-23)", DateOfEvent = new DateOnly(2025, 5, 20), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Open Registration", Description = "Open registration for all admitted students (May 27 - July 2)", DateOfEvent = new DateOnly(2025, 5, 27), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Tuition & Fees Deadline", Description = "Deadline for tuition and fees payment", DateOfEvent = new DateOnly(2025, 6, 17), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - First Day of Quarter", Description = "First day of Summer 2025 quarter", DateOfEvent = new DateOnly(2025, 7, 1), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Last Day to Drop (100% Refund)", Description = "Last day to drop with 100% refund", DateOfEvent = new DateOnly(2025, 7, 8), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Last Day to Withdraw (50% Refund)", Description = "Last day to withdraw with 50% refund", DateOfEvent = new DateOnly(2025, 7, 29), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Last Day to Withdraw (W Grade)", Description = "Last day to withdraw with W grade", DateOfEvent = new DateOnly(2025, 8, 19), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Graduation Application Deadline", Description = "Deadline for graduation application", DateOfEvent = new DateOnly(2025, 7, 25), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Last Day of Quarter", Description = "Last day of Summer 2025 quarter", DateOfEvent = new DateOnly(2025, 9, 2), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Summer 2025 - Official Grades Posted", Description = "Official grades on transcript (ccLink)", DateOfEvent = new DateOnly(2025, 9, 8), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
+        // Define test events to seed into the database for testing and demonstration purposes. These events are based on the CPTC academic calendar and are associated with the "System Events" group.
+        List<Event> testEvents = DevSeedEvents.Create(systemEventsGroup, adminUser);
 
-        // Fall 2025 Quarter Events
-        new Event { Title = "Fall 2025 - Priority Registration", Description = "Priority registration for Fall 2025 quarter", DateOfEvent = new DateOnly(2025, 5, 19), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Continuing Student Registration", Description = "Registration period for continuing students (May 20-23)", DateOfEvent = new DateOnly(2025, 5, 20), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Open Registration", Description = "Open registration for all admitted students (May 27 - Sept 30)", DateOfEvent = new DateOnly(2025, 5, 27), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Tuition & Fees Deadline", Description = "Deadline for tuition and fees payment", DateOfEvent = new DateOnly(2025, 9, 15), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - First Day of Quarter", Description = "First day of Fall 2025 quarter", DateOfEvent = new DateOnly(2025, 9, 29), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Last Day to Drop (100% Refund)", Description = "Last day to drop with 100% refund", DateOfEvent = new DateOnly(2025, 10, 3), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Last Day to Withdraw (50% Refund)", Description = "Last day to withdraw with 50% refund", DateOfEvent = new DateOnly(2025, 10, 28), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Last Day to Withdraw (W Grade)", Description = "Last day to withdraw with W grade", DateOfEvent = new DateOnly(2025, 11, 19), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Graduation Application Deadline", Description = "Deadline for graduation application", DateOfEvent = new DateOnly(2025, 10, 24), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Last Day of Quarter", Description = "Last day of Fall 2025 quarter", DateOfEvent = new DateOnly(2025, 12, 12), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Official Grades Posted", Description = "Official grades on transcript (ccLink)", DateOfEvent = new DateOnly(2025, 12, 18), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
+        // Ensure default CPTC academic calendar events exist
+        var eventTitles = testEvents.Select(e => e.Title).ToArray();
 
-        // Winter 2026 Quarter Events
-        new Event { Title = "Winter 2026 - Priority Registration", Description = "Priority registration for Winter 2026 quarter", DateOfEvent = new DateOnly(2025, 11, 17), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Continuing Student Registration", Description = "Registration period for continuing students (Nov 18-21)", DateOfEvent = new DateOnly(2025, 11, 18), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Open Registration", Description = "Open registration for all admitted students (Nov 24 - Jan 6)", DateOfEvent = new DateOnly(2025, 11, 24), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Tuition & Fees Deadline", Description = "Deadline for tuition and fees payment", DateOfEvent = new DateOnly(2025, 12, 18), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - First Day of Quarter", Description = "First day of Winter 2026 quarter", DateOfEvent = new DateOnly(2026, 1, 5), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Last Day to Drop (100% Refund)", Description = "Last day to drop with 100% refund", DateOfEvent = new DateOnly(2026, 1, 9), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Last Day to Withdraw (50% Refund)", Description = "Last day to withdraw with 50% refund", DateOfEvent = new DateOnly(2026, 2, 2), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Last Day to Withdraw (W Grade)", Description = "Last day to withdraw with W grade", DateOfEvent = new DateOnly(2026, 2, 24), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Graduation Application Deadline", Description = "Deadline for graduation application", DateOfEvent = new DateOnly(2026, 1, 30), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Last Day of Quarter", Description = "Last day of Winter 2026 quarter", DateOfEvent = new DateOnly(2026, 3, 18), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Official Grades Posted", Description = "Official grades on transcript (ccLink)", DateOfEvent = new DateOnly(2026, 3, 24), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
+        var existingEventTitles = await context.Events
+            .Where(e => e.GroupId == systemEventsGroup.Id)
+            .Select(e => e.Title)
+            .ToListAsync();
 
-        // Spring 2026 Quarter Events
-        new Event { Title = "Spring 2026 - Priority Registration", Description = "Priority registration for Spring 2026 quarter", DateOfEvent = new DateOnly(2026, 2, 2), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Continuing Student Registration", Description = "Registration period for continuing students (Feb 3-6)", DateOfEvent = new DateOnly(2026, 2, 3), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Open Registration", Description = "Open registration for all admitted students (Feb 9 - Mar 31)", DateOfEvent = new DateOnly(2026, 2, 9), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Tuition & Fees Deadline", Description = "Deadline for tuition and fees payment", DateOfEvent = new DateOnly(2026, 3, 16), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - First Day of Quarter", Description = "First day of Spring 2026 quarter", DateOfEvent = new DateOnly(2026, 3, 30), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Last Day to Drop (100% Refund)", Description = "Last day to drop with 100% refund", DateOfEvent = new DateOnly(2026, 4, 3), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Last Day to Withdraw (50% Refund)", Description = "Last day to withdraw with 50% refund", DateOfEvent = new DateOnly(2026, 4, 24), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Last Day to Withdraw (W Grade)", Description = "Last day to withdraw with W grade", DateOfEvent = new DateOnly(2026, 5, 18), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Graduation Application Deadline", Description = "Deadline for graduation application", DateOfEvent = new DateOnly(2026, 4, 24), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Last Day of Quarter", Description = "Last day of Spring 2026 quarter", DateOfEvent = new DateOnly(2026, 6, 9), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Official Grades Posted", Description = "Official grades on transcript (ccLink)", DateOfEvent = new DateOnly(2026, 6, 15), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-
-        // Financial Aid Deadlines
-        new Event { Title = "Summer 2025 - Financial Aid Application Deadline", Description = "Deadline for CPTC Financial Aid application process", DateOfEvent = new DateOnly(2025, 5, 23), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Fall 2025 - Financial Aid Application Deadline", Description = "Deadline for CPTC Financial Aid application process", DateOfEvent = new DateOnly(2025, 6, 27), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Winter 2026 - Financial Aid Application Deadline", Description = "Deadline for CPTC Financial Aid application process", DateOfEvent = new DateOnly(2025, 11, 14), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id },
-        new Event { Title = "Spring 2026 - Financial Aid Application Deadline", Description = "Deadline for CPTC Financial Aid application process", DateOfEvent = new DateOnly(2026, 2, 20), IsAllDay = true, IsPublic = true, IsApprovedPublic = true, GroupId = systemEventsGroup.Id, CreatedByUserId = adminUser.Id }
-    };
-
-    // Ensure default CPTC academic calendar events exist
-    var eventTitles = systemEvents.Select(e => e.Title).ToArray();
-
-    var existingEventTitles = await context.Events
-        .Where(e => e.GroupId == systemEventsGroup.Id)
-        .Select(e => e.Title)
-        .ToListAsync();
-
-    if (existingEventTitles.Count < eventTitles.Length)
-    {
-        var logger = app.Services.GetService<ILogger<Program>>();
-        var missingCount = eventTitles.Length - existingEventTitles.Count;
-        logger?.LogInformation("Seeding {MissingCount} missing CPTC calendar events.", missingCount);
-
-        // Add only missing events
-        var missingEvents = systemEvents
-            .Where(e => !existingEventTitles.Contains(e.Title))
-            .ToList();
-
-        if (missingEvents.Count > 0)
+        if (existingEventTitles.Count < eventTitles.Length)
         {
-            context.Events.AddRange(missingEvents);
-            await context.SaveChangesAsync();
+            var logger = app.Services.GetService<ILogger<Program>>();
+            var missingCount = eventTitles.Length - existingEventTitles.Count;
+            logger?.LogInformation("Seeding {MissingCount} missing CPTC calendar events.", missingCount);
+
+            // Add only missing events
+            var missingEvents = testEvents
+                .Where(e => !existingEventTitles.Contains(e.Title))
+                .ToList();
+
+            if (missingEvents.Count > 0)
+            {
+                context.Events.AddRange(missingEvents);
+                await context.SaveChangesAsync();
+            }
         }
     }
+    #endregion
 }
