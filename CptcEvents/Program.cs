@@ -104,7 +104,8 @@ app.MapControllerRoute(
 app.MapRazorPages()
    .WithStaticAssets();
 
-// Seed DB with admin account and many default events generated from CPTC academic calendar
+// Seed DB with admin account and many system events
+// If in the development environment, also seed with test events
 try
 {
     await SeedDB(app);
@@ -124,6 +125,8 @@ catch (Exception ex)
 }
 
 app.Run();
+
+#region Seed Database
 
 async Task SeedDB(WebApplication app)
 {
@@ -284,7 +287,10 @@ async Task SeedDB(WebApplication app)
         await context.SaveChangesAsync();
     }
 
-    #region Seed Events For Dev
+    #endregion
+
+    #region Dev Seeding
+
     if (app.Environment.IsDevelopment())
     {
         // Define test events to seed into the database for testing and demonstration purposes. These events are based on the CPTC academic calendar and are associated with the "System Events" group.
@@ -316,5 +322,6 @@ async Task SeedDB(WebApplication app)
             }
         }
     }
+  
     #endregion
 }
