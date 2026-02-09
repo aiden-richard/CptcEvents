@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -106,28 +104,28 @@ app.MapControllerRoute(
 app.MapRazorPages()
    .WithStaticAssets();
 
-// Create default roles if they don't exist
+// Seed DB with admin account and many default events generated from CPTC academic calendar
 try
 {
-    await CreateRolesAsync(app);
+    await SeedDB(app);
 }
 catch (Exception ex)
 {
     var logger = app.Services.GetService<ILogger<Program>>();
     if (logger != null)
     {
-        logger.LogError(ex, "An error occurred while creating default roles during application startup.");
+        logger.LogError(ex, "An error occurred while seeding the database during application startup.");
     }
     else
     {
-        Console.Error.WriteLine($"An error occurred while creating default roles during application startup: {ex}");
+        Console.Error.WriteLine($"An error occurred while seeding the database during application startup: {ex}");
     }
     throw; // Re-throw to prevent app from starting in a bad state
 }
 
 app.Run();
 
-async Task CreateRolesAsync(WebApplication app)
+async Task SeedDB(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -255,11 +253,68 @@ async Task CreateRolesAsync(WebApplication app)
         await userManager.AddToRoleAsync(adminUser, "Admin");
     }
 
-    // Verify the default group exists
-    var cptcDatesGroup = await context.Groups.FirstOrDefaultAsync(g => g.Name == "Cptc Dates");
-    if (cptcDatesGroup == null)
+    // Ensure the default group exists
+    var systemEventsGroup = await context.Groups.FirstOrDefaultAsync(g => g.Name == "System Events");
+    if (systemEventsGroup == null)
     {
         var logger = app.Services.GetService<ILogger<Program>>();
-        logger?.LogError("Default 'Cptc Dates' group not found in database. Database seeding may have failed.");
+        logger?.LogInformation("Creating default 'System Events' group.");
+        
+        systemEventsGroup = new Group
+        {
+            Name = "System Events",
+            Description = "Default group for CPTC events and announcements",
+            OwnerId = adminUser.Id,
+            CreatedAt = DateTime.UtcNow,
+            PrivacyLevel = PrivacyLevel.Public,
+            Color = "#502a7f"
+        };
+        context.Groups.Add(systemEventsGroup);
+        await context.SaveChangesAsync();
+
+        // Add admin user as owner of the group
+        var adminMembership = new GroupMember
+        {
+            GroupId = systemEventsGroup.Id,
+            UserId = adminUser.Id,
+            Role = RoleType.Owner,
+            JoinedAt = DateTime.UtcNow
+        };
+        context.GroupMemberships.Add(adminMembership);
+        await context.SaveChangesAsync();
     }
+
+    #region Seed Events For Dev
+    if (app.Environment.IsDevelopment())
+    {
+        // Define test events to seed into the database for testing and demonstration purposes. These events are based on the CPTC academic calendar and are associated with the "System Events" group.
+        List<Event> testEvents = DevSeedEvents.Create(systemEventsGroup, adminUser);
+
+        // Ensure default CPTC academic calendar events exist
+        var eventTitles = testEvents.Select(e => e.Title).ToArray();
+
+        var existingEventTitles = await context.Events
+            .Where(e => e.GroupId == systemEventsGroup.Id)
+            .Select(e => e.Title)
+            .ToListAsync();
+
+        if (existingEventTitles.Count < eventTitles.Length)
+        {
+            var logger = app.Services.GetService<ILogger<Program>>();
+            var missingCount = eventTitles.Length - existingEventTitles.Count;
+            logger?.LogInformation("Seeding {MissingCount} missing CPTC calendar events.", missingCount);
+
+            // Add only missing events
+            var missingEvents = testEvents
+                .Where(e => !existingEventTitles.Contains(e.Title))
+                .ToList();
+
+            if (missingEvents.Count > 0)
+            {
+                context.Events.AddRange(missingEvents);
+                await context.SaveChangesAsync();
+            }
+        }
+    }
+    #endregion
 }
