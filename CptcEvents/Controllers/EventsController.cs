@@ -16,7 +16,6 @@ namespace CptcEvents.Controllers
     /// Controller for managing event operations including CRUD operations and calendar views.
     /// Requires authentication for all actions.
     /// </summary>
-    [Authorize]
     public class EventsController : Controller
     {
         private readonly IEventService _eventsService;
@@ -41,6 +40,7 @@ namespace CptcEvents.Controllers
         /// </summary>
         /// <param name="eventId">Optional event ID parameter (not currently used).</param>
         /// <returns>View with list of active events for the user.</returns>
+        [Authorize]
         public async Task<IActionResult> Index(int? eventId)
         {
             string? userId = await _groupAuthorization.GetUserIdAsync(User);
@@ -59,6 +59,7 @@ namespace CptcEvents.Controllers
 
         // GET: Events/Create
         [HttpGet("Events/Create")]
+        [Authorize]
         /// <summary>
         /// Displays the event creation form, optionally filtered to a specific group.
         /// GET /Events/Create?groupId={groupId}
@@ -99,6 +100,7 @@ namespace CptcEvents.Controllers
         // POST: Events/Create
         [HttpPost("Events/Create")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         /// <summary>
         /// Processes event creation with validation and authorization checks.
         /// POST /Events/Create
@@ -144,6 +146,7 @@ namespace CptcEvents.Controllers
 
         // GET: Events/Edit/5
         [HttpGet("Events/Edit/{eventId}")]
+        [Authorize]
         /// <summary>
         /// Displays the event editing form for a specific event.
         /// GET /Events/Edit/{eventId}
@@ -195,6 +198,7 @@ namespace CptcEvents.Controllers
         // POST: Events/Edit/5
         [HttpPost("Events/Edit/{eventId}")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         /// <summary>
         /// Processes event updates with validation and authorization checks.
         /// POST /Events/Edit/{eventId}
@@ -271,6 +275,7 @@ namespace CptcEvents.Controllers
 
         // GET: Events/Delete/5
         [HttpGet("Events/Delete/{eventId}")]
+        [Authorize]
         /// <summary>
         /// Displays the event deletion confirmation page.
         /// GET /Events/Delete/{eventId}
@@ -297,6 +302,7 @@ namespace CptcEvents.Controllers
         // POST: Events/Delete/5
         [HttpPost("Events/Delete/{eventId}"), ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         /// <summary>
         /// Processes event deletion with authorization checks.
         /// POST /Events/Delete/{eventId}
@@ -338,17 +344,17 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            // Check if user has access to this event (either public, or user is member of the group)
-            string? userId = await _groupAuthorization.GetUserIdAsync(User);
-            if (userId == null)
-            {
-                return Challenge();
-            }
-
             // Check if user is member of the group (needed for both access control and UI display)
-            bool isAdmin = User.IsInRole("Admin");
-            bool isUserMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+            bool isAdmin = false;
+            bool isUserMember = false;
 
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+            if (userId != null)
+            {
+                isAdmin = User.IsInRole("Admin");
+                isUserMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+            }
+            
             // If event is not public, check if user is member of the group (admins can access all events)
             if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
             {
@@ -372,6 +378,7 @@ namespace CptcEvents.Controllers
         /// Determines if a student user can edit the given event.
         /// Students can only edit events they created or events created by other students.
         /// </summary>
+        [Authorize]
         private async Task<bool> CanStudentEditEventAsync(Event eventItem, ApplicationUser? currentUser)
         {
             if (currentUser == null)
@@ -391,6 +398,7 @@ namespace CptcEvents.Controllers
         }
 
         // Helper that populates ViewData["Groups"] with groups available to the current user.
+        [Authorize]
         private async Task PopulateGroupsSelectListAsync(int? selectedGroupId = null)
         {
             var groups = new List<Group>();
@@ -427,6 +435,7 @@ namespace CptcEvents.Controllers
         /// <param name="groupId">The group whose events should be returned.</param>
         /// <returns>JSON array of FullCalendar-compatible event objects.</returns>
         [HttpGet("Events/Group/{groupId}/Events")]
+        [Authorize]
         public async Task<IActionResult> GetGroupEvents(int groupId)
         {
             string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
@@ -465,7 +474,6 @@ namespace CptcEvents.Controllers
         /// formatted for the FullCalendar JavaScript library. The returned list will be empty if no events are
         /// found. Only events marked as both IsPublic and IsApprovedPublic are included for non-admin users.</remarks>
         /// <returns>A JSON result containing a list of event objects formatted for FullCalendar.</returns>
-        [AllowAnonymous]
         public async Task<IActionResult> GetEvents()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -509,7 +517,7 @@ namespace CptcEvents.Controllers
         /// <param name="end">The end date (inclusive) in yyyy-MM-dd format.</param>
         /// <returns>JSON array of FullCalendar-compatible event objects within the date range.</returns>
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> GetEventsInRange([FromQuery] DateOnly start, [FromQuery] DateOnly end)
         {
             if (end < start)
