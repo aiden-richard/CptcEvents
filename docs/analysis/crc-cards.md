@@ -63,7 +63,9 @@
 ## GroupMember
 
 **Responsibilities**
-- 
+- Map User to Group
+- Track role within group (Member, Moderator, Owner)
+- Support role updates and member deletion
 
 **Collaborators**
 - User
