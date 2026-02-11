@@ -1,6 +1,6 @@
 # CRC Cards for CptcEvents
 
-## Bracket
+## User
 
 **Responsibilities**
 - 
@@ -8,7 +8,7 @@
 **Collaborators**
 - 
 
-## Bracket
+## Event
 
 **Responsibilities**
 - 
@@ -16,7 +16,7 @@
 **Collaborators**
 - 
 
-## Bracket
+## EventRsvp
 
 **Responsibilities**
 - 
@@ -24,7 +24,15 @@
 **Collaborators**
 - 
 
-## Bracket
+## InstructorCode
+
+**Responsibilities**
+- 
+
+**Collaborators**
+- 
+
+## GroupInvite
 
 **Responsibilities**
 - 
