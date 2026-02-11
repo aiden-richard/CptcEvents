@@ -18,7 +18,7 @@
 ## Event
 
 **Responsibilities**
-- Track Event Information such as Date/Time, URL, 
+- Track Event Information (Title, Description, Date/Time, URL)
 
 **Collaborators**
 - User
