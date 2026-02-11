@@ -23,7 +23,7 @@
 - Manage visibility on homepage by tracking visibility and approval status
 
 **Collaborators**
-- User
+- User (CreatedByUser)
 - Group
 - EventRsvp
 
@@ -45,7 +45,7 @@
 - Track Group ownership
 
 **Collaborators**
-- User
+- User (Owner)
 - Event
 - GroupInvite
 - GroupMember
@@ -54,6 +54,7 @@
 
 **Responsibilities**
 - Generates a unique invite code
+- Track CreatedByUser
 - Track invited User if provided
 - Track Expiration Date/Time
 - Control usage (One time use vs. multi-use)
