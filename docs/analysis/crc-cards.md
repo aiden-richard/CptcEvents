@@ -62,11 +62,3 @@
 **Collaborators**
 - User
 - Group
-
-## InstructorCode
-
-**Responsibilities**
-- 
-
-**Collaborators**
-- User
