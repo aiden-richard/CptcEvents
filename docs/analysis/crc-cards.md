@@ -22,6 +22,7 @@
 **Collaborators**
 - User
 - Group
+- EventRsvp
 
 ## EventRsvp
 
@@ -40,7 +41,7 @@
 **Collaborators**
 - User
 - Event
-- GrouopInvite
+- GroupInvite
 - GroupMember
 
 ## GroupInvite
@@ -51,6 +52,7 @@
 **Collaborators**
 - User
 - Group
+- GroupMember
 
 ## GroupMember
 
