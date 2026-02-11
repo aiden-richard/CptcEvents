@@ -20,7 +20,8 @@
 - 
 
 **Collaborators**
-- 
+- User
+- Group
 
 ## EventRsvp
 
@@ -28,7 +29,8 @@
 - 
 
 **Collaborators**
-- 
+- User
+- Event
 
 ## Group
 
@@ -36,7 +38,10 @@
 - 
 
 **Collaborators**
-- 
+- User
+- Event
+- GrouopInvite
+- GroupMember
 
 ## GroupInvite
 
@@ -44,7 +49,8 @@
 - 
 
 **Collaborators**
-- 
+- User
+- Group
 
 ## GroupMember
 
@@ -52,7 +58,8 @@
 - 
 
 **Collaborators**
--
+- User
+- Group
 
 ## InstructorCode
 
@@ -60,4 +67,4 @@
 - 
 
 **Collaborators**
-- 
+- User
