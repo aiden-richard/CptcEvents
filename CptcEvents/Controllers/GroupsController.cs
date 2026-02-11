@@ -800,7 +800,7 @@ namespace CptcEvents.Controllers
                     {
                         Id = i.Id,
                         InviteCode = i.InviteCode,
-                        CreatedBy = i.CreatedBy?.UserName ?? i.CreatedBy?.Email ?? i.CreatedById,
+                        CreatedBy = i.CreatedByUser?.UserName ?? i.CreatedByUser?.Email ?? i.CreatedById,
                         InvitedUser = i.InvitedUser != null ? (i.InvitedUser.UserName ?? i.InvitedUser.Email ?? i.InvitedUser.Id) : null,
                         CreatedAt = i.CreatedAt,
                         ExpiresAt = i.ExpiresAt,

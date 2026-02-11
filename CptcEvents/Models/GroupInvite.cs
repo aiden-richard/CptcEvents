@@ -40,7 +40,7 @@ public class GroupInvite : IValidatableObject
 	/// Navigation property for the user who created the invite.
 	/// </summary>
 	[ForeignKey(nameof(CreatedById))]
-	public ApplicationUser CreatedBy { get; set; } = null!;
+	public ApplicationUser CreatedByUser { get; set; } = null!;
 
 	/// <summary>
 	/// Foreign key to the <see cref="ApplicationUser"/> who is invited to the group (optional).
