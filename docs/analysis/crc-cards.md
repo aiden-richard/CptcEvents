@@ -44,6 +44,7 @@
 **Responsibilities**
 - Store Group information (Title, Description, color, etc.)
 - Track Group ownership
+- Track Privacy level
 
 **Collaborators**
 - User (Owner)
