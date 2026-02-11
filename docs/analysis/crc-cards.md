@@ -1,6 +1,6 @@
 # CRC Cards for CptcEvents
 
-## ApplicationUser (We will just call it User here)
+## 1. ApplicationUser (We will just call it User here)
 
 **Responsibilities**
 - Store user profile information (first and last name, username, email, etc.)
@@ -16,7 +16,7 @@
 - GroupMember
 - InstructorCode
 
-## Event
+## 2. Event
 
 **Responsibilities**
 - Track Event Information (Title, Description, Date/Time, URL)
@@ -28,7 +28,7 @@
 - Group
 - EventRsvp
 
-## EventRsvp
+## 3. EventRsvp
 
 **Responsibilities**
 - Track the Event the RSVP exists for
@@ -39,7 +39,7 @@
 - User
 - Event
 
-## Group
+## 4. Group
 
 **Responsibilities**
 - Store Group information (Title, Description, color, etc.)
@@ -52,7 +52,7 @@
 - GroupInvite
 - GroupMember
 
-## GroupInvite
+## 5. GroupInvite
 
 **Responsibilities**
 - Generates a unique invite code
@@ -67,7 +67,7 @@
 - Group
 - GroupMember
 
-## GroupMember
+## 6. GroupMember
 
 **Responsibilities**
 - Map User to Group
