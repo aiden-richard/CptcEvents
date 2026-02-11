@@ -31,7 +31,7 @@
 ## 3. EventRsvp
 
 **Responsibilities**
-- Track the Event the RSVP exists for
+- Track the Event that the RSVP exists for
 - Track User who RSVP'd
 - Track a User's response status (Going, Maybe, Not going)
 
