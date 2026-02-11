@@ -37,7 +37,8 @@
 ## Group
 
 **Responsibilities**
-- 
+- Store Group information (Title, Description, color, etc.)
+- Track Group ownership
 
 **Collaborators**
 - User
@@ -48,7 +49,11 @@
 ## GroupInvite
 
 **Responsibilities**
-- 
+- Generates a unique invite code
+- Track invited User if provided
+- Track Expiration Date/Time
+- Control usage (One time use vs. multi-use)
+- Redeem invite to create GroupMember
 
 **Collaborators**
 - User
