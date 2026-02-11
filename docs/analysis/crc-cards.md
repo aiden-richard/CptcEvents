@@ -6,6 +6,7 @@
 - Store user profile information (first and last name, username, email, etc.)
 - Login/Register
 - Create Events, EventRsvps, Groups, and GroupInvites
+- Admin role is able to create InstructorCodes
 
 **Collaborators**
 - Event
