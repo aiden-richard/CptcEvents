@@ -77,3 +77,4 @@
 **Collaborators**
 - User
 - Group
+- GroupInvite
