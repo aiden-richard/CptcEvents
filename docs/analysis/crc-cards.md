@@ -3,8 +3,9 @@
 ## User
 
 **Responsibilities**
+- Store user profile information (first and last name, username, email, etc.)
 - Login/Register
-- Create, Read, Update, Delete Events depending on roles and group membership
+- Create Events, EventRsvps, Groups, and GroupInvites
 
 **Collaborators**
 - Event
@@ -17,7 +18,7 @@
 ## Event
 
 **Responsibilities**
-- 
+- Track Event Information such as Date/Time, URL, 
 
 **Collaborators**
 - User
