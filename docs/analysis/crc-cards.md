@@ -1,6 +1,6 @@
 # CRC Cards for CptcEvents
 
-## User
+## ApplicationUser (We will just call it User here)
 
 **Responsibilities**
 - Store user profile information (first and last name, username, email, etc.)
