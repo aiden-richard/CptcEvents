@@ -3,10 +3,16 @@
 ## User
 
 **Responsibilities**
-- 
+- Login/Register
+- Create, Read, Update, Delete Events depending on roles and group membership
 
 **Collaborators**
-- 
+- Event
+- EventRsvp
+- Group
+- GroupInvite
+- GroupMember
+- InstructorCode
 
 ## Event
 
@@ -24,7 +30,7 @@
 **Collaborators**
 - 
 
-## InstructorCode
+## Group
 
 **Responsibilities**
 - 
@@ -33,6 +39,22 @@
 - 
 
 ## GroupInvite
+
+**Responsibilities**
+- 
+
+**Collaborators**
+- 
+
+## GroupMember
+
+**Responsibilities**
+- 
+
+**Collaborators**
+-
+
+## InstructorCode
 
 **Responsibilities**
 - 
