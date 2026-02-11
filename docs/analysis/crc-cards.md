@@ -20,7 +20,7 @@
 
 **Responsibilities**
 - Track Event Information (Title, Description, Date/Time, URL)
-- Validate event times (start time < end time)
+- Validate event times if not an all day event (start time < end time)
 - Manage visibility on homepage by tracking visibility and approval status
 
 **Collaborators**
