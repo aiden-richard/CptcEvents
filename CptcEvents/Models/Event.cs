@@ -27,7 +27,7 @@ public class Event : IValidatableObject
     /// <summary>
     /// Optional description providing details about the event.
     /// </summary>
-    [StringLength(1000)]
+    [StringLength(10000)]
     public string? Description { get; set; } = string.Empty;
 
     /// <summary>
@@ -67,12 +67,18 @@ public class Event : IValidatableObject
     public TimeOnly EndTime { get; set; }
 
     /// <summary>
-    /// Optional URL associated with the event (e.g., event details page, registration link).
+    /// Optional URL associated with the event
     /// </summary>
     [StringLength(100)]
     [DataType(DataType.Url)]
     [Url]
     public string? Url { get; set; }
+
+    /// <summary>
+    /// Optional URL for a banner image stored in Azure Blob Storage.
+    /// </summary>
+    [StringLength(500)]
+    public string? BannerImageUrl { get; set; }
 
     /// <summary>
     /// Foreign key to the <see cref="Group"/> this event belongs to.
