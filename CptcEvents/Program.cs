@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using CptcEvents.Authorization.Handlers;
 using CptcEvents.Authorization.Requirements;
 using CptcEvents.Authorization;
@@ -49,6 +50,14 @@ builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IInviteService, InviteService>();
 builder.Services.AddScoped<IInstructorCodeService, InstructorCodeService>();
 builder.Services.AddScoped<IGroupAuthorizationService, GroupAuthorizationService>();
+
+// Azure Blob Storage for image uploads
+var blobConnectionString = builder.Configuration["AzureBlobStorage:ConnectionString"];
+if (!string.IsNullOrEmpty(blobConnectionString) && blobConnectionString != "Set in secrets")
+{
+    builder.Services.AddSingleton(new BlobServiceClient(blobConnectionString));
+    builder.Services.AddScoped<IImageStorageService, BlobImageStorageService>();
+}
 
 // Add authorization handlers
 builder.Services.AddScoped<IAuthorizationHandler, GroupMemberHandler>();
