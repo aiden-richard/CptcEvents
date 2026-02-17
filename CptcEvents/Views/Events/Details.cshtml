@@ -129,12 +129,6 @@
 
                             <partial name="_EventFormFields" model="editModel" />
 
-                            @* Save / Cancel buttons *@
-                            <div class="d-flex justify-content-between">
-                                <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
-                                <button type="submit" class="btn btn-primary" id="saveBtn">Save Changes</button>
-                            </div>
-
                             @* Danger zone *@
                             <hr class="mt-4" />
                             <div class="d-flex justify-content-between align-items-center">
@@ -145,7 +139,7 @@
                     }
                 </div>
 
-                @* Card footer (view mode) *@
+                @* Card footer - toggles between view and edit mode buttons *@
                 <div class="card-footer d-flex justify-content-between" id="viewFooter">
                     <a asp-action="Index" class="btn btn-secondary">Back to Events</a>
                     @if (Model.CanEdit)
@@ -153,6 +147,15 @@
                         <button type="button" class="btn btn-primary" id="editBtn">Edit Event</button>
                     }
                 </div>
+
+                @* Edit mode footer (hidden by default) *@
+                @if (Model.CanEdit)
+                {
+                    <div class="card-footer d-flex justify-content-between" id="editFooter" style="display: none !important;">
+                        <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+                        <button type="submit" form="editMode" class="btn btn-primary" id="saveBtn">Save Changes</button>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -192,9 +195,13 @@
 
                 function enterEditMode() {
                     viewMode.style.display = 'none';
-                    viewFooter.style.display = 'none';
+                    viewFooter.style.setProperty('display', 'none', 'important');
                     bannerView.style.display = 'none';
                     editMode.style.display = 'block';
+                    var editFooter = document.getElementById('editFooter');
+                    if (editFooter) {
+                        editFooter.style.setProperty('display', 'flex', 'important');
+                    }
 
                     updateTimeFields();
 
@@ -224,8 +231,12 @@
                 function exitEditMode() {
                     editMode.style.display = 'none';
                     viewMode.style.display = 'block';
-                    viewFooter.style.display = 'flex';
+                    viewFooter.style.setProperty('display', 'flex', 'important');
                     bannerView.style.display = 'block';
+                    var editFooter = document.getElementById('editFooter');
+                    if (editFooter) {
+                        editFooter.style.setProperty('display', 'none', 'important');
+                    }
                 }
 
                 if (editBtn) {
