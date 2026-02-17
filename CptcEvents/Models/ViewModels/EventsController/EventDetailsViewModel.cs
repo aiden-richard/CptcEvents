@@ -33,5 +33,9 @@ public class EventDetailsViewModel
 
     public string? Url { get; init; }
 
+    public string? BannerImageUrl { get; init; }
+
     public bool IsCurrentUserMember { get; init; }
+
+    public bool CanEdit { get; init; }
 }
