@@ -23,41 +23,33 @@
     else
     {
         @* Horizontal cards that stretch the container width *@
-        <div id="eventsList" class="d-flex flex-column gap-3">
+        <div id="eventsList" class="d-flex flex-column gap-1">
             @foreach (EventDetailsViewModel e in Model)
             {
                 <div class="card w-100">
-                    <div class="card-body">
-                        <div class="d-flex flex-column flex-md-row align-items-start gap-3">
-                            <div class="flex-grow-1">
-                                <h5 class="card-title mb-1">
+                    <div class="card-body p-2">
+                        <div class="d-flex flex-column flex-lg-row align-items-start justify-content-between gap-2">
+                            <div class="flex-grow-1 d-flex flex-column justify-content-center">
+                                <p class="fw-semibold mb-1">
+                                    <a asp-controller="Groups" asp-action="Events" asp-route-groupId="@e.GroupId" class="text-decoration-none text-body">@e.GroupName</a>
+                                </p>
+                                <h6 class="mb-0">
                                     <a asp-action="Details" asp-route-eventId="@e.Id" class="text-decoration-none text-body">@e.Title</a>
-                                </h5>
-                                @if (!string.IsNullOrWhiteSpace(e.Description))
-                                {
-                                    <p class="card-text text-muted mb-1">@Html.Raw(e.Description)</p>
-                                }
+                                </h6>
                             </div>
-                            <div class="d-flex flex-column align-items-md-end text-md-end h-100">
-                                <div class="fw-semibold">@e.DateOfEvent.ToString("MMM d, yyyy")</div>
+                            <div class="d-flex flex-column align-items-lg-end text-lg-end flex-shrink-0">
+                                <div class="fw-semibold small">@e.DateOfEvent.ToString("MMM d, yyyy")</div>
                                 @if (e.IsAllDay)
                                 {
-                                    <div class="text-muted">All day</div>
+                                    <div class="text-muted small">All day</div>
                                 }
                                 else
                                 {
-                                    <div class="text-muted">@e.StartTime.ToString("h:mm tt") - @e.EndTime.ToString("h:mm tt")</div>
+                                    <div class="text-muted small">@e.StartTime.ToString("h:mm tt") - @e.EndTime.ToString("h:mm tt")</div>
                                 }
-                                @if (!string.IsNullOrWhiteSpace(e.Url))
-                                {
-                                    <div><a href="@e.Url" class="small">@e.Url</a></div>
-                                }
-                                <p class="text-muted small mt-3 mb-0">Group: @e.GroupName</p>
+                                <a asp-action="Details" asp-route-eventId="@e.Id" class="btn btn-outline-primary btn-sm mt-2">Details</a>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-end">
-                        <a asp-action="Details" asp-route-eventId="@e.Id" class="btn btn-primary btn-sm">Details</a>
                     </div>
                 </div>
             }
