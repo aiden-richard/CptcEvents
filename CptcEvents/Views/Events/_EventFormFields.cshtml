@@ -10,21 +10,21 @@
 @* Banner Image Section *@
 <div class="mb-3">
     <label class="form-label fw-semibold">Banner Image</label>
-    @if (!string.IsNullOrEmpty(Model.BannerImageUrl))
+    @if (Model != null && !string.IsNullOrEmpty(Model.BannerImageUrl))
     {
         <div class="mb-2">
-            <img src="@Model.BannerImageUrl" class="img-fluid rounded" alt="Current banner" style="max-height: 200px; object-fit: cover;" />
-        </div>
-        <div class="form-check mb-2">
-            <input type="checkbox" class="form-check-input" id="clearBannerImage" name="ClearBannerImage" />
-            <label class="form-check-label" for="clearBannerImage">Remove banner image</label>
+            <input type="hidden" id="clearBannerImage" name="ClearBannerImage" value="false" />
+            <button type="button" class="btn btn-outline-danger btn-sm mb-2" id="removeExistingBannerBtn" title="Delete the current banner image">Remove Current</button>
+            <div>
+                <img src="@Model.BannerImageUrl" class="img-fluid rounded" alt="Current banner" style="max-height: 200px; object-fit: cover;" />
+            </div>
         </div>
     }
     <div class="d-flex gap-2 align-items-end">
         <div class="flex-grow-1">
             <input type="file" asp-for="BannerImage" class="form-control" id="bannerImageInput" accept="image/jpeg,image/png,image/gif,image/webp" />
         </div>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearBannerInputBtn" style="display: none;">Clear</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearBannerInputBtn" style="display: none;" title="Cancel the new file selection">Clear File</button>
     </div>
     <small class="text-muted d-block mt-1">Max 5 MB. Accepts JPG, PNG, GIF, WebP.</small>
 </div>
@@ -33,6 +33,9 @@
     (function () {
         var bannerInput = document.getElementById('bannerImageInput');
         var clearBtn = document.getElementById('clearBannerInputBtn');
+        var removeBtn = document.getElementById('removeExistingBannerBtn');
+        var clearCheckbox = document.getElementById('clearBannerImage');
+        var currentImageDiv = document.querySelector('[style*="max-height: 200px"]')?.parentElement;
 
         if (bannerInput && clearBtn) {
             // Show Clear button when a file is selected
@@ -45,6 +48,20 @@
                 e.preventDefault();
                 bannerInput.value = '';
                 clearBtn.style.display = 'none';
+            });
+        }
+
+        if (removeBtn && clearCheckbox) {
+            // Remove the existing banner image
+            removeBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                clearCheckbox.value = 'true';
+                if (currentImageDiv) {
+                    currentImageDiv.style.display = 'none';
+                }
+                bannerInput.value = '';
+                clearBtn.style.display = 'none';
+                removeBtn.parentElement.style.display = 'none';
             });
         }
     })();
@@ -65,7 +82,7 @@
 </div>
 
 @* Group Section *@
-@if (!Model.Id.HasValue)
+@if (Model == null || !Model.Id.HasValue)
 {
     @* Create mode: Show group dropdown *@
     <div class="form-floating mb-3">
@@ -96,7 +113,7 @@ else
                 <label asp-for="IsPublic" class="form-check-label">Show on Homepage</label>
             </div>
             @* In edit mode, show approval status badge *@
-            @if (Model.Id.HasValue && Model.IsPublic)
+            @if (Model != null && Model.Id.HasValue && Model.IsPublic)
             {
                 @if (Model.IsDeniedPublic)
                 {
@@ -122,7 +139,7 @@ else
 }
 
 @* IsAllDay, Date, Time, URL Fields *@
-@if (Model.Id.HasValue)
+@if (Model != null && Model.Id.HasValue)
 {
     @* Edit mode: Wrap in collapsible "Event Settings" card *@
     <div class="card mb-3">
