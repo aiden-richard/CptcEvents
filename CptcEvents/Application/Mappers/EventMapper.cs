@@ -26,7 +26,8 @@ public static class EventMapper
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
         Url = e.Url,
-        IsCurrentUserMember = false // Default value when membership status is not provided
+        BannerImageUrl = e.BannerImageUrl,
+        IsCurrentUserMember = false
     };
 
     /// <summary>
@@ -49,7 +50,31 @@ public static class EventMapper
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
         Url = e.Url,
+        BannerImageUrl = e.BannerImageUrl,
         IsCurrentUserMember = isCurrentUserMember
+    };
+
+    /// <summary>
+    /// Builds a full event view model including user membership and edit permission info.
+    /// </summary>
+    public static EventDetailsViewModel ToDetails(Event e, bool isCurrentUserMember, bool canEdit) => new()
+    {
+        Id = e.Id,
+        Title = e.Title,
+        Description = e.Description,
+        GroupName = e.Group?.Name,
+        GroupId = e.GroupId,
+        DateOfEvent = e.DateOfEvent,
+        StartTime = e.StartTime,
+        EndTime = e.EndTime,
+        IsAllDay = e.IsAllDay,
+        IsPublic = e.IsPublic,
+        IsApprovedPublic = e.IsApprovedPublic,
+        IsDeniedPublic = e.IsDeniedPublic,
+        Url = e.Url,
+        BannerImageUrl = e.BannerImageUrl,
+        IsCurrentUserMember = isCurrentUserMember,
+        CanEdit = canEdit
     };
 
     /// <summary>
@@ -85,7 +110,8 @@ public static class EventMapper
         DateOfEvent = model.DateOfEvent,
         StartTime = model.StartTime,
         EndTime = model.EndTime,
-        Url = model.Url
+        Url = model.Url,
+        BannerImageUrl = model.BannerImageUrl
     };
 
     /// <summary>
@@ -103,6 +129,7 @@ public static class EventMapper
         target.StartTime = model.StartTime;
         target.EndTime = model.EndTime;
         target.Url = model.Url;
+        target.BannerImageUrl = model.BannerImageUrl;
     }
 
     /// <summary>
