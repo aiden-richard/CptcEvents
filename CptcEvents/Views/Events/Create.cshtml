@@ -58,14 +58,17 @@
             // Copy Quill content to hidden textarea before form submission
             var form = document.querySelector('form');
             if (form) {
-                form.addEventListener('submit', function () {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
                     var html = quillEditor.root.innerHTML;
                     // Quill sets empty content as <p><br></p>
                     if (html === '<p><br></p>') {
                         html = '';
                     }
                     document.querySelector('textarea[asp-for="Description"]').value = html;
-                });
+                    // Now submit the form after Quill content is synced
+                    form.submit();
+                }, false);
             }
 
             // All-day checkbox toggle for time fields
