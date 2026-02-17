@@ -98,6 +98,11 @@ public class EventFormViewModel : IValidatableObject
     public IFormFile? BannerImage { get; set; }
 
     /// <summary>
+    /// When true, the existing banner image should be removed.
+    /// </summary>
+    public bool ClearBannerImage { get; set; }
+
+    /// <summary>
     /// Indicates whether the current user is at least a moderator of the group (for UI permissions).
     /// </summary>
     public bool IsModerator { get; set; }
