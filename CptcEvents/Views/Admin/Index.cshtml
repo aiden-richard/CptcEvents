@@ -2,11 +2,14 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="page-shell">
+    <div>
+        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Administration</p>
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+    </div>
 
-<div class="row">
-    
-    <div class="col-md-3 mt-3">
+    <div class="row g-3">
+        <div class="col-md-3">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Instructor Codes</h5>
@@ -15,7 +18,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3 mt-3">
+    <div class="col-md-3">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Approve Events for Homepage</h5>
@@ -24,7 +27,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3 mt-3">
+    <div class="col-md-3">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">All Groups</h5>
@@ -33,7 +36,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3 mt-3">
+    <div class="col-md-3">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">All Events</h5>
@@ -41,5 +44,6 @@
                 <a href="@Url.Action("ManageEvents", "Admin")" class="btn btn-primary">Manage Events</a>
             </div>
         </div>
+    </div>
     </div>
 </div>

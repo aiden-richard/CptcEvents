@@ -29,136 +29,179 @@
     };
 }
 
-@* Event detail page with inline editing support *@
+@* Event detail page with sidebar layout and inline editing support *@
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+<div class="page-shell">
 
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    @TempData["Error"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-            <div class="card shadow-sm" id="eventCard">
-                @* Banner image *@
-                <div id="bannerView">
-                    @if (!string.IsNullOrEmpty(Model.BannerImageUrl))
-                    {
-                        <img src="@Model.BannerImageUrl" class="card-img-top" alt="Event banner" style="max-height: 300px; object-fit: cover;" />
-                    }
-                </div>
-
-                <div class="card-body">
-                    @* === VIEW MODE === *@
-                    <div id="viewMode">
-                        <h2 class="card-title mb-3" id="viewTitle">@Model.Title</h2>
-
-                        @if (!string.IsNullOrEmpty(Model.Description))
-                        {
-                            <div class="mb-3" id="viewDescription">
-                                @Html.Raw(Model.Description)
-                            </div>
-                            <hr />
-                        }
-
-                        <dl class="row mb-0">
-                            <dt class="col-sm-4">Group</dt>
-                            <dd class="col-sm-8">
-                                @if (Model.IsCurrentUserMember)
-                                {
-                                    <a asp-controller="Groups" asp-action="Events" asp-route-groupId="@Model.GroupId">@Model.GroupName</a>
-                                }
-                                else
-                                {
-                                    @Model.GroupName
-                                }
-                            </dd>
-
-                            <dt class="col-sm-4">Date</dt>
-                            <dd class="col-sm-8">@Model.DateOfEvent.ToString("dddd, MMMM d, yyyy")</dd>
-
-                            <dt class="col-sm-4">Time</dt>
-                            <dd class="col-sm-8">@timeLabel</dd>
-
-                            <dt class="col-sm-4">Visibility</dt>
-                            <dd class="col-sm-8">
-                                @if (Model.IsPublic)
-                                {
-                                    <span class="badge bg-success">Public</span>
-                                    @if (Model.IsApprovedPublic)
-                                    {
-                                        <span class="badge bg-success">Approved</span>
-                                    }
-                                    else if (Model.IsDeniedPublic)
-                                    {
-                                        <span class="badge bg-danger">Denied</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                    }
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Private</span>
-                                }
-                            </dd>
-
-                            @if (!string.IsNullOrWhiteSpace(Model.Url))
-                            {
-                                <dt class="col-sm-4">URL</dt>
-                                <dd class="col-sm-8">
-                                    <a href="@Model.Url" target="_blank" rel="noopener noreferrer">@Model.Url</a>
-                                </dd>
-                            }
-                        </dl>
-                    </div>
-
-                    @* === EDIT MODE (hidden by default) === *@
-                    @if (Model.CanEdit)
-                    {
-                        <form id="editMode" asp-action="Edit" asp-route-eventId="@Model.Id" method="post" enctype="multipart/form-data" style="display: none;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="Id" value="@Model.Id" />
-                            <input type="hidden" name="GroupId" value="@Model.GroupId" />
-                            <input type="hidden" name="IsModerator" value="true" />
-
-                            <partial name="_EventFormFields" model="editModel" />
-
-                            @* Danger zone *@
-                            <hr class="mt-4" />
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted">Danger Zone</span>
-                                <a asp-action="Delete" asp-route-eventId="@Model.Id" class="btn btn-outline-danger btn-sm">Delete Event</a>
-                            </div>
-                        </form>
-                    }
-                </div>
-
-                @* Card footer - toggles between view and edit mode buttons *@
-                <div class="card-footer d-flex justify-content-between" id="viewFooter">
-                    <a asp-action="Index" class="btn btn-secondary">Back to Events</a>
-                    @if (Model.CanEdit)
-                    {
-                        <button type="button" class="btn btn-primary" id="editBtn">Edit Event</button>
-                    }
-                </div>
-
-                @* Edit mode footer (hidden by default) *@
+    @* === PAGE HEADER (always visible) === *@
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">
+                @if (Model.IsCurrentUserMember)
+                {
+                    <a asp-controller="Groups" asp-action="Events" asp-route-groupId="@Model.GroupId" class="text-muted text-decoration-none">@Model.GroupName</a>
+                }
+                else
+                {
+                    @Model.GroupName
+                }
+            </p>
+            <h2 class="mb-0" id="viewTitle">@Model.Title</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            @* View mode footer *@
+            <div id="viewFooter" class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary">Back to Events</a>
                 @if (Model.CanEdit)
                 {
-                    <div class="card-footer d-flex justify-content-between" id="editFooter" style="display: none !important;">
-                        <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
-                        <button type="submit" form="editMode" class="btn btn-primary" id="saveBtn">Save Changes</button>
-                    </div>
+                    <button type="button" class="btn btn-primary" id="editBtn">Edit Event</button>
                 }
             </div>
+            @* Edit mode footer (hidden by default) *@
+            @if (Model.CanEdit)
+            {
+                <div id="editFooter" class="d-flex gap-2" style="display: none !important;">
+                    <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn">Cancel</button>
+                    <button type="submit" form="editForm" class="btn btn-primary" id="saveBtn">Save Changes</button>
+                </div>
+            }
         </div>
     </div>
+
+    @* === BANNER IMAGE === *@
+    <div id="bannerView">
+        @if (!string.IsNullOrEmpty(Model.BannerImageUrl))
+        {
+            <img src="@Model.BannerImageUrl" class="w-100 rounded" alt="Event banner" style="max-height: 320px; object-fit: cover;" />
+        }
+    </div>
+
+    @* === VIEW MODE (sidebar layout) === *@
+    <div id="viewMode" class="row g-3 align-items-start">
+
+        @* Left column: Description *@
+        <div class="col-12 col-md-8">
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="card h-100">
+                    <div class="card-header">About this event</div>
+                    <div class="card-body">
+                        @Html.Raw(Model.Description)
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No description provided.</p>
+            }
+        </div>
+
+        @* Right column: Metadata sidebar *@
+        <div class="col-12 col-md-4">
+            <div class="card">
+                <div class="card-body d-flex flex-column gap-3">
+
+                    @* Date *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Date</p>
+                        <span>@Model.DateOfEvent.ToString("dddd, MMMM d, yyyy")</span>
+                    </div>
+
+                    @* Time *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Time</p>
+                        <span>@timeLabel</span>
+                    </div>
+
+                    @* Group *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Group</p>
+                        @if (Model.IsCurrentUserMember)
+                        {
+                            <a asp-controller="Groups" asp-action="Events" asp-route-groupId="@Model.GroupId">@Model.GroupName</a>
+                        }
+                        else
+                        {
+                            <span>@Model.GroupName</span>
+                        }
+                    </div>
+
+                    @* Visibility *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Visibility</p>
+                        <div>
+                            @if (Model.IsPublic)
+                            {
+                                <span class="badge text-bg-success">Public</span>
+                                @if (Model.IsApprovedPublic)
+                                {
+                                    <span class="badge text-bg-success">Approved</span>
+                                }
+                                else if (Model.IsDeniedPublic)
+                                {
+                                    <span class="badge text-bg-danger">Denied</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-warning">Pending</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Private</span>
+                            }
+                        </div>
+                    </div>
+
+                    @* URL (if present) *@
+                    @if (!string.IsNullOrWhiteSpace(Model.Url))
+                    {
+                        <div>
+                            <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Link</p>
+                            <a href="@Model.Url" target="_blank" rel="noopener noreferrer" class="small text-break">@Model.Url</a>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    @* === EDIT MODE (hidden by default) === *@
+    @if (Model.CanEdit)
+    {
+        <div id="editMode" style="display: none;">
+            <div class="card">
+                <div class="card-body">
+                    <form id="editForm" asp-action="Edit" asp-route-eventId="@Model.Id" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@Model.Id" />
+                        <input type="hidden" name="GroupId" value="@Model.GroupId" />
+                        <input type="hidden" name="IsModerator" value="true" />
+
+                        <partial name="_EventFormFields" model="editModel" />
+
+                        @* Danger zone *@
+                        <hr class="mt-4" />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">Danger Zone</span>
+                            <a asp-action="Delete" asp-route-eventId="@Model.Id" class="btn btn-outline-danger btn-sm">Delete Event</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
 </div>
 
 @section Scripts {
@@ -173,6 +216,7 @@
                 var viewMode = document.getElementById('viewMode');
                 var editMode = document.getElementById('editMode');
                 var viewFooter = document.getElementById('viewFooter');
+                var editFooter = document.getElementById('editFooter');
                 var bannerView = document.getElementById('bannerView');
                 var quillEditor = null;
 
@@ -198,7 +242,6 @@
                     viewFooter.style.setProperty('display', 'none', 'important');
                     bannerView.style.display = 'none';
                     editMode.style.display = 'block';
-                    var editFooter = document.getElementById('editFooter');
                     if (editFooter) {
                         editFooter.style.setProperty('display', 'flex', 'important');
                     }
@@ -222,7 +265,7 @@
 
                         // Load existing description HTML into Quill
                         var descriptionHidden = document.getElementById('descriptionHidden');
-                        if (descriptionHidden.value) {
+                        if (descriptionHidden && descriptionHidden.value) {
                             quillEditor.root.innerHTML = descriptionHidden.value;
                         }
                     }
@@ -230,10 +273,9 @@
 
                 function exitEditMode() {
                     editMode.style.display = 'none';
-                    viewMode.style.display = 'block';
+                    viewMode.style.display = '';
                     viewFooter.style.setProperty('display', 'flex', 'important');
                     bannerView.style.display = 'block';
-                    var editFooter = document.getElementById('editFooter');
                     if (editFooter) {
                         editFooter.style.setProperty('display', 'none', 'important');
                     }
@@ -248,15 +290,19 @@
                 }
 
                 // Copy Quill content to hidden textarea before form submission
-                if (editMode) {
-                    editMode.addEventListener('submit', function () {
+                var editFormEl = document.getElementById('editForm');
+                if (editFormEl) {
+                    editFormEl.addEventListener('submit', function () {
                         if (quillEditor) {
                             var html = quillEditor.root.innerHTML;
                             // Quill sets empty content as <p><br></p>
                             if (html === '<p><br></p>') {
                                 html = '';
                             }
-                            document.getElementById('descriptionHidden').value = html;
+                            var descriptionHidden = document.getElementById('descriptionHidden');
+                            if (descriptionHidden) {
+                                descriptionHidden.value = html;
+                            }
                         }
                     });
                 }

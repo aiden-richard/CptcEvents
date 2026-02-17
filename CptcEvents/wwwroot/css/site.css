@@ -4,17 +4,20 @@ html {
 }
 
 :root {
-  --color-bg: #f7f9fc;
+  --color-bg: #f5f5f5;
   --color-surface: #ffffff;
   --color-primary: #4c7df0;
-  --color-primary-strong: #3f6adf;
-  --color-muted: #556278;
-  --color-border: #e9edf5;
-  --shadow-soft: 0 12px 32px rgba(17, 24, 39, 0.06);
-  --radius-lg: 18px;
-  --radius-md: 14px;
-  --radius-sm: 11px;
-  --fc-border-color: #e5e7eb;
+  --color-primary-strong: #3366cc;
+  --color-muted: #6b7280;
+  --color-border: #e2e2e2;
+  --shadow-soft: none;
+  --radius-lg: 8px;
+  --radius-md: 6px;
+  --radius-sm: 4px;
+  --fc-border-color: #e2e2e2;
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: #f8f8f8;
+  --fc-list-event-hover-bg-color: #f0f0f0;
 }
 
 @media (min-width: 768px) {
@@ -30,7 +33,7 @@ html {
 body {
   font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif;
   color: #0f172a;
-  background: radial-gradient(circle at 20% 20%, #fdfdff 0%, #f3f6fb 30%, #f7f9fc 60%, #f7f9fc 100%);
+  background: var(--color-bg);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -55,10 +58,9 @@ a:focus {
 }
 
 .app-navbar {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(233, 237, 245, 0.9);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
   padding: 0.85rem 1.25rem;
   backdrop-filter: blur(8px);
 }
@@ -104,8 +106,8 @@ a:focus {
 .app-footer {
   margin-top: auto;
   padding: 1.5rem 0;
-  background: rgba(255, 255, 255, 0.9);
-  border-top: 1px solid rgba(233, 237, 245, 0.9);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   color: var(--color-muted);
   text-align: center;
 }
@@ -122,7 +124,7 @@ a:focus {
 }
 
 .btn {
-  border-radius: 14px;
+  border-radius: 6px;
   font-weight: 700;
   letter-spacing: 0.01em;
   padding: 0.6rem 1.1rem;
@@ -131,7 +133,6 @@ a:focus {
 .btn-primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  box-shadow: 0 10px 24px rgba(76, 125, 240, 0.2);
 }
 
 .btn-primary:hover,
@@ -142,14 +143,14 @@ a:focus {
 
 .btn-outline-primary {
   color: var(--color-primary);
-  border-color: #cbd5e1;
-  background: rgba(37, 99, 235, 0.05);
+  border-color: var(--color-primary);
+  background: transparent;
 }
 
 .btn-outline-primary:hover,
 .btn-outline-primary:focus {
-  background: rgba(37, 99, 235, 0.12);
-  border-color: var(--color-primary);
+  background: rgba(76, 125, 240, 0.06);
+  border-color: var(--color-primary-strong);
   color: var(--color-primary-strong);
 }
 
@@ -165,11 +166,10 @@ a:focus {
 .card {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 26px rgba(17, 24, 39, 0.05);
 }
 
 .card-header {
-  background: #f8fafc;
+  background: #f8f8f8;
   border-bottom: 1px solid var(--color-border);
   font-weight: 700;
 }
@@ -179,8 +179,8 @@ a:focus {
 }
 
 .hero-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f8fbff 70%, #f0f4ff 100%);
-  border: 1px solid rgba(233, 237, 245, 0.85);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .calendar-card {
@@ -200,22 +200,21 @@ a:focus {
 }
 
 .event-card {
-  background: linear-gradient(160deg, #ffffff 0%, #f8fbff 60%, #f2f6ff 100%);
-  border: 1px solid rgba(233, 237, 245, 0.9);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: border-color 0.15s ease;
 }
 
 .event-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.08);
+  border-color: #b0b0b0;
 }
 
 .event-card .card-footer {
-  border-top: 1px solid rgba(233, 237, 245, 0.9);
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-sm {
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 0.45rem 0.75rem;
 }
 
@@ -234,7 +233,7 @@ a:focus {
 }
 
 .table-hover tbody tr:hover {
-  background: #eef2ff1a;
+  background: #f0f0f0;
 }
 
 .form-control,
@@ -295,12 +294,6 @@ label,
 }
 
 /* FullCalendar refinements */
-:root {
-  --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: #f8fafc;
-  --fc-list-event-hover-bg-color: #eef2ff;
-}
-
 .fc .fc-toolbar-title {
   font-weight: 700;
   color: #0f172a;

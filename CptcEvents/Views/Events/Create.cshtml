@@ -5,20 +5,22 @@
 
 @* Form to create a new event for a selected group *@
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    @TempData["Error"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
+<div class="page-shell">
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-            <h2>Create Event</h2>
-            <hr />
+    <div>
+        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Events</p>
+        <h2 class="mb-0">Create Event</h2>
+    </div>
 
+    <div class="card">
+        <div class="card-body">
             <form asp-action="Create" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
@@ -26,7 +28,7 @@
                 <partial name="_EventFormFields" model="Model" />
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">Create Event</button>
                 </div>
             </form>

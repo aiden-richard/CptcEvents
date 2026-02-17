@@ -15,10 +15,40 @@
         <div class="mb-2">
             <img src="@Model.BannerImageUrl" class="img-fluid rounded" alt="Current banner" style="max-height: 200px; object-fit: cover;" />
         </div>
+        <div class="form-check mb-2">
+            <input type="checkbox" class="form-check-input" id="clearBannerImage" name="ClearBannerImage" />
+            <label class="form-check-label" for="clearBannerImage">Remove banner image</label>
+        </div>
     }
-    <input type="file" asp-for="BannerImage" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp" />
-    <small class="text-muted">Max 5 MB. Accepts JPG, PNG, GIF, WebP.</small>
+    <div class="d-flex gap-2 align-items-end">
+        <div class="flex-grow-1">
+            <input type="file" asp-for="BannerImage" class="form-control" id="bannerImageInput" accept="image/jpeg,image/png,image/gif,image/webp" />
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearBannerInputBtn" style="display: none;">Clear</button>
+    </div>
+    <small class="text-muted d-block mt-1">Max 5 MB. Accepts JPG, PNG, GIF, WebP.</small>
 </div>
+
+<script>
+    (function () {
+        var bannerInput = document.getElementById('bannerImageInput');
+        var clearBtn = document.getElementById('clearBannerInputBtn');
+
+        if (bannerInput && clearBtn) {
+            // Show Clear button when a file is selected
+            bannerInput.addEventListener('change', function () {
+                clearBtn.style.display = this.files.length > 0 ? 'block' : 'none';
+            });
+
+            // Clear the file input and hide the button when Clear is clicked
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                bannerInput.value = '';
+                clearBtn.style.display = 'none';
+            });
+        }
+    })();
+</script>
 
 @* Title *@
 <div class="form-floating mb-3">
@@ -70,15 +100,15 @@ else
             {
                 @if (Model.IsDeniedPublic)
                 {
-                    <span class="badge bg-danger">Denied</span>
+                    <span class="badge text-bg-danger">Denied</span>
                 }
                 else if (Model.IsApprovedPublic)
                 {
-                    <span class="badge bg-success">Approved</span>
+                    <span class="badge text-bg-success">Approved</span>
                 }
                 else
                 {
-                    <span class="badge bg-warning text-dark">Pending</span>
+                    <span class="badge text-bg-warning">Pending</span>
                 }
             }
         </div>

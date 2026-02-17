@@ -235,11 +235,7 @@
                     
                     modalContent += '<div class="col-12"><div><strong>Date:</strong> ' + dateString + '</div></div>';
                     modalContent += '<div class="col-12"><div><strong>Time:</strong> ' + timeString + '</div></div>';
-                    
-                    if (event.description && event.description.trim()) {
-                        modalContent += '<div class="col-12"><div><strong>Description:</strong></div><div class="mt-1">' + event.description + '</div></div>';
-                    }
-                    
+
                     if (event.url && event.url.trim()) {
                         modalContent += '<div class="col-12"><div><strong>URL:</strong> <a href="' + escapeHtml(event.url) + '" target="_blank" rel="noopener">' + escapeHtml(event.url) + '</a></div></div>';
                     }

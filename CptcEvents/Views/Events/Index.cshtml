@@ -5,9 +5,12 @@
 
 @*This page displays a list of upcoming events for the current user. Events are pulled from the groups the user is a member of.*@
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>My Upcoming Events</h1>
+<div class="page-shell">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Calendar</p>
+            <h2 class="mb-0">My Upcoming Events</h2>
+        </div>
         <a asp-action="Index" asp-controller="Groups" class="btn btn-primary">My Groups</a>
     </div>
 
@@ -23,7 +26,7 @@
         <div id="eventsList" class="d-flex flex-column gap-3">
             @foreach (EventDetailsViewModel e in Model)
             {
-                <div class="card shadow-sm w-100">
+                <div class="card w-100">
                     <div class="card-body">
                         <div class="d-flex flex-column flex-md-row align-items-start gap-3">
                             <div class="flex-grow-1">
@@ -52,6 +55,9 @@
                                 <p class="text-muted small mt-3 mb-0">Group: @e.GroupName</p>
                             </div>
                         </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end">
+                        <a asp-action="Details" asp-route-eventId="@e.Id" class="btn btn-primary btn-sm">Details</a>
                     </div>
                 </div>
             }
