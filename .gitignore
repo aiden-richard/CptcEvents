@@ -367,5 +367,6 @@ FodyWeavers.xsd
 .vscode/*.local.json
 !.vscode/settings.json
 
-# Azurite local storage emulator database files
+# Azurite local storage emulator
 __azurite_db_*.json
+__blobstorage__/
