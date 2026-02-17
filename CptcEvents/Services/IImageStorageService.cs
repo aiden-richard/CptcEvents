@@ -20,4 +20,11 @@ public interface IImageStorageService
     /// </summary>
     /// <param name="imageUrl">The URL of the image to delete.</param>
     Task DeleteImageAsync(string imageUrl);
+
+    /// <summary>
+    /// Downloads an image stream from storage by its URL.
+    /// </summary>
+    /// <param name="imageUrl">The URL of the image to download.</param>
+    /// <returns>A tuple containing the stream and content type, or null if the image is not found.</returns>
+    Task<(Stream Content, string ContentType)?> GetImageStreamAsync(string imageUrl);
 }

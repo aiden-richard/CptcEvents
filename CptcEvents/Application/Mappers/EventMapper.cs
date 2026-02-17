@@ -26,7 +26,7 @@ public static class EventMapper
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
         Url = e.Url,
-        BannerImageUrl = e.BannerImageUrl,
+        BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = false
     };
 
@@ -50,7 +50,7 @@ public static class EventMapper
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
         Url = e.Url,
-        BannerImageUrl = e.BannerImageUrl,
+        BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = isCurrentUserMember
     };
 
@@ -72,7 +72,7 @@ public static class EventMapper
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
         Url = e.Url,
-        BannerImageUrl = e.BannerImageUrl,
+        BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = isCurrentUserMember,
         CanEdit = canEdit
     };

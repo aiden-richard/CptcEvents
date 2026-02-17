@@ -45,12 +45,10 @@ public class BlobImageStorageService : IImageStorageService
             throw new ArgumentException($"File type '{extension}' is not allowed. Allowed types: {string.Join(", ", AllowedExtensions)}");
 
         var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        // NOTE: The container is created with PublicAccessType.Blob so that uploaded images
-        // are publicly accessible without authentication. Do not use this service for
-        // sensitive or private images. If restricted access is required, configure the
-        // container with PublicAccessType.None and expose images via SAS tokens or other
-        // access-control mechanisms instead.
-        await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+        // NOTE: The container is created with PublicAccessType.None (private). Image access
+        // is controlled through the ImagesController proxy which enforces authorization rules
+        // based on event visibility and group membership.
+        await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
 
         var blobName = $"{Guid.NewGuid()}{extension.ToLowerInvariant()}";
         var blobClient = containerClient.GetBlobClient(blobName);
@@ -89,6 +87,42 @@ public class BlobImageStorageService : IImageStorageService
         catch (UriFormatException)
         {
             // Invalid URL, nothing to delete
+        }
+    }
+
+    public async Task<(Stream Content, string ContentType)?> GetImageStreamAsync(string imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl))
+            return null;
+
+        try
+        {
+            var uri = new Uri(imageUrl);
+            // Path segments: /{container}/{blobName}
+            var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length < 2)
+                return null;
+
+            var containerName = segments[0];
+            var blobName = string.Join('/', segments.Skip(1));
+
+            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            var blobClient = containerClient.GetBlobClient(blobName);
+
+            var response = await blobClient.DownloadContentAsync();
+            var contentType = response.Value.Details.ContentType ?? "application/octet-stream";
+
+            return (response.Value.Content.ToStream(), contentType);
+        }
+        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        {
+            // Blob not found
+            return null;
+        }
+        catch (UriFormatException)
+        {
+            // Invalid URL
+            return null;
         }
     }
 }
