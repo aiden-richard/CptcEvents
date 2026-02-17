@@ -19,76 +19,11 @@
             <h2>Create Event</h2>
             <hr />
 
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 
-                <div class="form-floating mb-3">
-                    <input asp-for="Title" class="form-control border-secondary-subtle bg-light" placeholder="Event Title" />
-                    <label asp-for="Title">Title</label>
-                    <span asp-validation-for="Title" class="text-danger"></span>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <textarea asp-for="Description" class="form-control border-secondary-subtle bg-light" placeholder="Description" style="height: 100px"></textarea>
-                    <label asp-for="Description">Description</label>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <select asp-for="GroupId" class="form-select border-secondary-subtle bg-light" asp-items="@(ViewData["Groups"] as SelectList)">
-                        <option value="">Select a group</option>
-                    </select>
-                    <label asp-for="GroupId">Group</label>
-                    <span asp-validation-for="GroupId" class="text-danger"></span>
-                </div>
-                
-                @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
-                {
-                    <div class="form-check mb-3">
-                        <input asp-for="IsPublic" class="form-check-input" />
-                        <label asp-for="IsPublic" class="form-check-label">Show on Homepage</label>
-                        <span asp-validation-for="IsPublic" class="text-danger"></span>
-                    </div>
-                }
-                else
-                {
-                        <input asp-for="IsPublic" type="hidden" value="false" />
-                }
-
-                <div class="form-check mb-3">
-                    <input asp-for="IsAllDay" class="form-check-input" id="IsAllDay" />
-                    <label asp-for="IsAllDay" class="form-check-label">All Day Event</label>
-                    <span asp-validation-for="IsAllDay" class="text-danger"></span>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <input asp-for="DateOfEvent" class="form-control border-secondary-subtle bg-light" type="date" />
-                    <label asp-for="DateOfEvent">Date of Event</label>
-                    <span asp-validation-for="DateOfEvent" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3 time-fields">
-                    <div class="form-floating">
-                        <input asp-for="StartTime" class="form-control border-secondary-subtle bg-light" type="time" />
-                        <label asp-for="StartTime">Start Time</label>
-                    </div>
-                    <span asp-validation-for="StartTime" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3 time-fields">
-                    <div class="form-floating">
-                        <input asp-for="EndTime" class="form-control border-secondary-subtle bg-light" type="time" />
-                        <label asp-for="EndTime">End Time</label>
-                    </div>
-                    <span asp-validation-for="EndTime" class="text-danger"></span>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <input asp-for="Url" class="form-control border-secondary-subtle bg-light" type="url" placeholder="https://example.com" />
-                    <label asp-for="Url">Url</label>
-                    <span asp-validation-for="Url" class="text-danger"></span>
-                </div>
+                <partial name="_EventFormFields" model="Model" />
 
                 <div class="d-flex justify-content-between mt-4">
                     <a asp-action="Index" class="btn btn-secondary">Cancel</a>
@@ -100,16 +35,46 @@
 </div>
 
 @section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
     <script>
         (function () {
-            const isAllDay = document.getElementById('IsAllDay');
-            const timeFieldWrappers = document.querySelectorAll('.time-fields');
+            // Initialize Quill editor
+            var quillEditor = new Quill('#quill-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        ['link', 'blockquote', 'code-block'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Copy Quill content to hidden textarea before form submission
+            var form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function () {
+                    var html = quillEditor.root.innerHTML;
+                    // Quill sets empty content as <p><br></p>
+                    if (html === '<p><br></p>') {
+                        html = '';
+                    }
+                    document.querySelector('textarea[asp-for="Description"]').value = html;
+                });
+            }
+
+            // All-day checkbox toggle for time fields
+            var isAllDay = document.getElementById('IsAllDay');
+            var timeFieldWrappers = document.querySelectorAll('.time-fields');
 
             function updateTimeFields() {
-                const hidden = isAllDay && isAllDay.checked;
-                timeFieldWrappers.forEach(w => {
-                    const inputs = w.querySelectorAll('input');
-                    inputs.forEach(i => i.disabled = hidden);
+                var hidden = isAllDay && isAllDay.checked;
+                timeFieldWrappers.forEach(function (w) {
+                    var inputs = w.querySelectorAll('input');
+                    inputs.forEach(function (i) { i.disabled = hidden; });
                     w.style.display = hidden ? 'none' : '';
                 });
             }
