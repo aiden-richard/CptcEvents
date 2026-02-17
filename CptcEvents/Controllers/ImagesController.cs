@@ -15,7 +15,7 @@ namespace CptcEvents.Controllers
         private readonly IEventService _eventService;
         private readonly IGroupAuthorizationService _groupAuthorization;
         private readonly IGroupService _groupService;
-        private readonly IImageStorageService _imageStorageService;
+        private readonly IImageStorageService? _imageStorageService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         /// <summary>
@@ -25,8 +25,8 @@ namespace CptcEvents.Controllers
             IEventService eventService,
             IGroupAuthorizationService groupAuthorization,
             IGroupService groupService,
-            IImageStorageService imageStorageService,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IImageStorageService? imageStorageService = null)
         {
             _eventService = eventService;
             _groupAuthorization = groupAuthorization;
@@ -46,6 +46,11 @@ namespace CptcEvents.Controllers
         [HttpGet("Images/Event/{eventId:int}")]
         public async Task<IActionResult> EventBanner(int eventId)
         {
+            if (_imageStorageService == null)
+            {
+                return NotFound();
+            }
+
             // Look up the event
             Event? eventItem = await _eventService.GetEventByIdAsync(eventId);
             if (eventItem == null || string.IsNullOrEmpty(eventItem.BannerImageUrl))
