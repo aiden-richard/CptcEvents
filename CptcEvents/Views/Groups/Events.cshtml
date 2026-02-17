@@ -52,7 +52,9 @@
                                 <div class="d-flex flex-column flex-md-row align-items-start gap-3">
                                     <div class="flex-grow-1">
                                         <div class="d-flex align-items-start gap-2 mb-1">
-                                            <h5 class="card-title mb-0">@evt.Title</h5>
+                                            <h5 class="card-title mb-0">
+                                                <a asp-controller="Events" asp-action="Details" asp-route-eventId="@evt.Id" class="text-decoration-none text-body">@evt.Title</a>
+                                            </h5>
                                             @if (!evt.IsPublic)
                                             {
                                                 <span class="badge rounded-pill text-bg-secondary">Private</span>
@@ -60,7 +62,7 @@
                                         </div>
                                         @if (!string.IsNullOrWhiteSpace(evt.Description))
                                         {
-                                            <p class="card-text text-muted mb-1">@evt.Description</p>
+                                            <p class="card-text text-muted mb-1">@Html.Raw(evt.Description)</p>
                                         }
                                     </div>
                                     <div class="d-flex flex-column align-items-md-end text-md-end h-100">

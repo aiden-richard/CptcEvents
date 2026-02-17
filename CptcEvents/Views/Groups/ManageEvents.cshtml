@@ -34,7 +34,7 @@
             @foreach (var evt in Model.Events.OrderByDescending(e => e.DateOfEvent).ThenBy(e => e.StartTime))
             {
                 <tr>
-                    <td>@evt.Title</td>
+                    <td><a asp-controller="Events" asp-action="Details" asp-route-eventId="@evt.Id" class="text-decoration-none">@evt.Title</a></td>
                     <td>@evt.DateOfEvent.ToString("yyyy-MM-dd")</td>
                     <td>
                         @if (evt.IsAllDay)
@@ -50,7 +50,7 @@
                     <td class="text-end">
                         @if (Model.UserIsOwner || evt.CreatedByUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
                         {
-                            <a asp-controller="Events" asp-action="Edit" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                            <a asp-controller="Events" asp-action="Details" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-primary me-1">Edit</a>
                             <a asp-controller="Events" asp-action="Delete" asp-route-eventId="@evt.Id" class="btn btn-sm btn-outline-danger">Delete</a>
                         }
                         else

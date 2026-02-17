@@ -16,7 +16,7 @@
                     <h5 class="card-title">@Model.Title</h5>
                     @if (!string.IsNullOrEmpty(Model.Description))
                     {
-                        <p class="text-muted">@Model.Description</p>
+                        <div class="text-muted">@Html.Raw(Model.Description)</div>
                     }
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Group</dt>
