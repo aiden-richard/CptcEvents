@@ -228,8 +228,17 @@ namespace CptcEvents.Controllers
                 model.Description = sanitizer.Sanitize(model.Description);
             }
 
-            // Handle banner image upload
-            if (model.BannerImage != null && model.BannerImage.Length > 0 && _imageStorageService != null)
+            // Handle banner image: clear, replace, or preserve
+            if (model.ClearBannerImage)
+            {
+                // User requested removal of the banner image
+                if (!string.IsNullOrEmpty(existingEvent.BannerImageUrl) && _imageStorageService != null)
+                {
+                    await _imageStorageService.DeleteImageAsync(existingEvent.BannerImageUrl);
+                }
+                model.BannerImageUrl = null;
+            }
+            else if (model.BannerImage != null && model.BannerImage.Length > 0 && _imageStorageService != null)
             {
                 // Delete old banner image if it exists
                 if (!string.IsNullOrEmpty(existingEvent.BannerImageUrl))
