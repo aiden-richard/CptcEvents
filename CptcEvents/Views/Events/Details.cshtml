@@ -292,7 +292,8 @@
                 // Copy Quill content to hidden textarea before form submission
                 var editFormEl = document.getElementById('editForm');
                 if (editFormEl) {
-                    editFormEl.addEventListener('submit', function () {
+                    editFormEl.addEventListener('submit', function (e) {
+                        e.preventDefault();
                         if (quillEditor) {
                             var html = quillEditor.root.innerHTML;
                             // Quill sets empty content as <p><br></p>
@@ -304,7 +305,9 @@
                                 descriptionHidden.value = html;
                             }
                         }
-                    });
+                        // Now submit the form after Quill content is synced
+                        editFormEl.submit();
+                    }, false);
                 }
             })();
         </script>
