@@ -23,6 +23,22 @@
 - Primary Actor: Authenticated User
 - Goal: Join a public group to view and interact with its events
 
+### UC4: Invite a user to a group
+- Primary Actor: Group Owner & Group Moderator (Depending on group privacy level)
+- Goal: Create group invites so that another user can join as a group member.
+
+### UC5: Redeem a group invite
+- Primary Actor: Authenticated User
+- Goal: Use an invite code to join a group
+
+### UC6: Create an event
+- Primary Actor: Group Moderator
+- Goal: Create a new event within a group
+
+### UC7: RSVP to an event
+- Primary Actor: Group Member
+- Goal: Indicate attendance status for an upcoming event
+
 ## Use Case Traceability
 
 | Use Case | Feature(s) |
