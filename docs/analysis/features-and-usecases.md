@@ -1,8 +1,9 @@
 # Features and Use Cases
 
 ## Features
-- Feature 1
-- Feature 2
+- Create event
+- Create account
+- Create group invite
 - Feature 3
 ...
 
