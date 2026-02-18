@@ -72,6 +72,5 @@
 | UC11: Manage instructor registration codes | Register and Login, Admin dashboard |
 
 ## Use Case Diagram
-Include your diagram image below.
 
 ![Use Case Diagram](use-case-diagram.png)
