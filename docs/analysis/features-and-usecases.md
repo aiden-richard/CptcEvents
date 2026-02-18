@@ -59,9 +59,17 @@
 
 | Use Case | Feature(s) |
 |---|---|
-| UC1: <Title> | Feature 1, Feature 3 |
-| UC2: <Title> | Feature 2 |
-...
+| UC1: Register for an account | Register and Login |
+| UC2: Create a group | Group management |
+| UC3: Join a group | Group management |
+| UC4: Invite a user to a group | Group invite system |
+| UC5: Redeem a group invite | Group invite system, Group management |
+| UC6: Manage group members | Group management |
+| UC7: Create an event | Event management |
+| UC8: RSVP to an event | Event RSVP tracking |
+| UC9: Request public event visibility | Event management, Public event approval workflow |
+| UC10: Approve or deny a public event | Public event approval workflow, Admin dashboard |
+| UC11: Manage instructor registration codes | Register and Login, Admin dashboard |
 
 ## Use Case Diagram
 Include your diagram image below.
