@@ -31,13 +31,29 @@
 - Primary Actor: Authenticated User
 - Goal: Use an invite code to join a group
 
-### UC6: Create an event
+### UC6: Manage group members
+- Primary Actor: Group Owner
+- Goal: Change member roles or remove members
+
+### UC7: Create an event
 - Primary Actor: Group Moderator
 - Goal: Create a new event within a group
 
-### UC7: RSVP to an event
+### UC8: RSVP to an event
 - Primary Actor: Group Member
 - Goal: Indicate attendance status for an upcoming event
+
+### UC9: Request public event visibility
+- Primary Actor: Instructor
+- Goal: Flag an event as public so it can appear on the homepage after admin approval
+
+### UC10: Approve or deny a public event
+- Primary Actor: Admin
+- Goal: Review pending public events and approve or deny them for homepage display
+
+### UC11: Manage instructor registration codes
+- Primary Actor: Admin
+- Goal: Create or delete instructor codes so that instructors can register with the correct role
 
 ## Use Case Traceability
 
