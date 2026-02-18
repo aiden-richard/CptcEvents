@@ -1,11 +1,13 @@
 # Features and Use Cases
 
 ## Features
-- Create event
-- Create account
-- Create group invite
-- Feature 3
-...
+- Register and Login
+- Event management
+- Event RSVP tracking
+- Group management
+- Group invite system
+- Public event approval workflow
+- Admin dashboard
 
 ## Brief Use Cases
 
