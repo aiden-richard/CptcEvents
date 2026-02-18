@@ -73,4 +73,4 @@
 
 ## Use Case Diagram
 
-![Use Case Diagram](use-case-diagram.png)
+<img src="use-case-diagram.png" alt="Use Case Diagram" width="750" />
