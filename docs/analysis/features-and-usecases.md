@@ -11,15 +11,17 @@
 
 ## Brief Use Cases
 
-### UC1: <Title>
-- Primary Actor: <Actor>
-- Goal: <Goal>
+### UC1: Register for an account
+- Primary Actor: Unregistered User
+- Goal: Create a new student or instructor account
 
-### UC2: <Title>
-- Primary Actor: <Actor>
-- Goal: <Goal>
+### UC2: Create a group
+- Primary Actor: Authenticated User
+- Goal: Create a new group to track events
 
-...
+### UC3: Join a group
+- Primary Actor: Authenticated User
+- Goal: Join a public group to view and interact with its events
 
 ## Use Case Traceability
 
