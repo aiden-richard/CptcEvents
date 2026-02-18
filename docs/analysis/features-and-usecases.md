@@ -25,7 +25,7 @@
 
 ### UC4: Invite a user to a group
 - Primary Actor: Group Owner & Group Moderator (Depending on group privacy level)
-- Goal: Create group invites so that another user can join as a group member.
+- Goal: Create group invites so that another user can join as a group member
 
 ### UC5: Redeem a group invite
 - Primary Actor: Authenticated User
