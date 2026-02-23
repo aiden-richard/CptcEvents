@@ -15,7 +15,7 @@ namespace CptcEvents.Controllers
 {
     /// <summary>
     /// Controller for managing event operations including CRUD operations and calendar views.
-    /// Requires authentication for all actions.
+    /// Most management actions require authentication; some read-only views (such as public event details or listings) are accessible to anonymous users.
     /// </summary>
     public class EventsController : Controller
     {
