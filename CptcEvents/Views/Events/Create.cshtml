@@ -28,7 +28,7 @@
                 <partial name="_EventFormFields" model="Model" />
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    <a id="cancel-btn" href="@Url.Action("Index", "Events")" class="btn btn-outline-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">Create Event</button>
                 </div>
             </form>
@@ -87,6 +87,21 @@
             if (isAllDay) {
                 isAllDay.addEventListener('change', updateTimeFields);
                 updateTimeFields();
+            }
+
+            // Update cancel button href based on selected group
+            var cancelBtn = document.getElementById('cancel-btn');
+            var groupSelect = document.getElementById('GroupId');
+            var fallbackUrl = '@Url.Action("Index", "Events")';
+
+            function updateCancelUrl() {
+                var groupId = groupSelect ? groupSelect.value : '';
+                cancelBtn.href = groupId ? '/Groups/' + groupId : fallbackUrl;
+            }
+
+            if (groupSelect) {
+                groupSelect.addEventListener('change', updateCancelUrl);
+                updateCancelUrl();
             }
         })();
     </script>
