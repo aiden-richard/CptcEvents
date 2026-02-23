@@ -108,19 +108,6 @@
         <div class="col-12 col-md-4">
             <div class="card">
                 <div class="card-body d-flex flex-column gap-3">
-
-                    @* Date *@
-                    <div>
-                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Date</p>
-                        <span>@Model.DateOfEvent.ToString("dddd, MMMM d, yyyy")</span>
-                    </div>
-
-                    @* Time *@
-                    <div>
-                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Time</p>
-                        <span>@timeLabel</span>
-                    </div>
-
                     @* Group *@
                     <div>
                         <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Group</p>
@@ -132,6 +119,18 @@
                         {
                             <span>@Model.GroupName</span>
                         }
+                    </div>
+
+                    @* Date *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Date</p>
+                        <span>@Model.DateOfEvent.ToString("dddd, MMMM d, yyyy")</span>
+                    </div>
+
+                    @* Time *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Time</p>
+                        <span>@timeLabel</span>
                     </div>
 
                     @* Visibility *@
