@@ -42,7 +42,7 @@
     }
 
     @* === PAGE HEADER (always visible) === *@
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2">
         <div>
             <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">
                 @if (Model.IsCurrentUserMember)
@@ -57,18 +57,17 @@
             <h2 class="mb-0" id="viewTitle">@Model.Title</h2>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            @* View mode footer *@
-            <div id="viewFooter" class="d-flex gap-2">
-                <a asp-action="Index" class="btn btn-outline-secondary">Back to Events</a>
+            @* View mode buttons *@
+            <div id="viewActions" class="d-flex gap-2">
                 @if (Model.CanEdit)
                 {
                     <button type="button" class="btn btn-primary" id="editBtn">Edit Event</button>
                 }
             </div>
-            @* Edit mode footer (hidden by default) *@
+            @* Edit mode actions (hidden by default) *@
             @if (Model.CanEdit)
             {
-                <div id="editFooter" class="d-flex gap-2" style="display: none !important;">
+                <div id="editActions" class="d-flex gap-2" style="display: none !important;">
                     <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn">Cancel</button>
                     <button type="submit" form="editForm" class="btn btn-primary" id="saveBtn">Save Changes</button>
                 </div>
@@ -189,6 +188,8 @@
 
                         <partial name="_EventFormFields" model="editModel" />
 
+                        <button type="submit" form="editForm" class="btn btn-primary" id="saveBtn">Save Changes</button>
+
                         @* Danger zone *@
                         <hr class="mt-4" />
                         <div class="d-flex justify-content-between align-items-center">
@@ -214,8 +215,8 @@
                 var cancelEditBtn = document.getElementById('cancelEditBtn');
                 var viewMode = document.getElementById('viewMode');
                 var editMode = document.getElementById('editMode');
-                var viewFooter = document.getElementById('viewFooter');
-                var editFooter = document.getElementById('editFooter');
+                var viewActions = document.getElementById('viewActions');
+                var editActions = document.getElementById('editActions');
                 var bannerView = document.getElementById('bannerView');
                 var quillEditor = null;
 
@@ -238,11 +239,11 @@
 
                 function enterEditMode() {
                     viewMode.style.display = 'none';
-                    viewFooter.style.setProperty('display', 'none', 'important');
+                    viewActions.style.setProperty('display', 'none', 'important');
                     bannerView.style.display = 'none';
                     editMode.style.display = 'block';
-                    if (editFooter) {
-                        editFooter.style.setProperty('display', 'flex', 'important');
+                    if (editActions) {
+                        editActions.style.setProperty('display', 'flex', 'important');
                     }
 
                     updateTimeFields();
@@ -273,10 +274,10 @@
                 function exitEditMode() {
                     editMode.style.display = 'none';
                     viewMode.style.display = '';
-                    viewFooter.style.setProperty('display', 'flex', 'important');
+                    viewActions.style.setProperty('display', 'flex', 'important');
                     bannerView.style.display = 'block';
-                    if (editFooter) {
-                        editFooter.style.setProperty('display', 'none', 'important');
+                    if (editActions) {
+                        editActions.style.setProperty('display', 'none', 'important');
                     }
                 }
 
