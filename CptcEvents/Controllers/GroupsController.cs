@@ -11,7 +11,7 @@ namespace CptcEvents.Controllers
     /// <summary>
     /// Controller for managing group operations including creation, membership, and invitations.
     /// Provides functionality for group CRUD operations, member management, and group invites.
-    /// Requires authentication for all actions except where explicitly marked otherwise.
+    /// Requires authentication for all actions.
     /// </summary>
     [Authorize]
     public class GroupsController : Controller
@@ -884,7 +884,6 @@ namespace CptcEvents.Controllers
             return RedirectToAction(nameof(ManageInvites), new { groupId = newInvite.GroupId });
         }
 
-        /// <summary>
         /// <summary>
         /// Edit an existing invite.
         /// GET /Groups/{groupId}/Invites/{inviteId}/Edit
