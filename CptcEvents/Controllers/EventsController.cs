@@ -331,7 +331,7 @@ namespace CptcEvents.Controllers
         /// </summary>
         /// <param name="eventId">The ID of the event to retrieve.</param>
         /// <returns>JSON or View with event details, or NotFound/Forbid if inaccessible.</returns>
-        public async Task<IActionResult> Details(int eventId)
+        public async Task<IActionResult> Details(int eventId, [FromQuery] bool edit = false)
         {
             Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
             if (eventItem == null)
@@ -381,6 +381,8 @@ namespace CptcEvents.Controllers
             }
 
             var eventDetails = EventMapper.ToDetails(eventItem, canAccessGroup, canEdit);
+
+            ViewData["OpenInEditMode"] = edit && canEdit;
 
             // Content negotiation: return JSON for AJAX requests, View for browsers
             if (Request.Headers.Accept.Any(h => h != null && h.Contains("application/json")))
