@@ -109,10 +109,10 @@ public class BlobImageStorageService : IImageStorageService
             var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             var blobClient = containerClient.GetBlobClient(blobName);
 
-            var response = await blobClient.DownloadContentAsync();
+            var response = await blobClient.DownloadStreamingAsync();
             var contentType = response.Value.Details.ContentType ?? "application/octet-stream";
 
-            return (response.Value.Content.ToStream(), contentType);
+            return (response.Value.Content, contentType);
         }
         catch (Azure.RequestFailedException ex) when (ex.Status == 404)
         {
