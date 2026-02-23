@@ -646,7 +646,7 @@ namespace CptcEvents.Controllers
         [ActionName("Events")]
         [Authorize(Policy = "GroupMember")]
         /// <summary>
-        /// Displays upcoming events for a specific group.
+        /// Displays main view for a specific group.
         /// GET /Groups/{groupId}
         /// </summary>
         /// <param name="groupId">The ID of the group whose events to display.</param>
