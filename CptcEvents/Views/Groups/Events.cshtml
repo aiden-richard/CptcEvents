@@ -24,6 +24,10 @@
                     <h5 class="mb-1">Calendar</h5>
                     <p class="text-muted small mb-0">View all scheduled events for this group.</p>
                 </div>
+                <div>
+                    <a class="btn btn-outline-primary" href="@Url.Action("ManageEvents", "Groups", new { groupId = Model.Group.Id })">Manage events</a>
+                    <a class="btn btn-outline-secondary" href="@Url.Action("Create", "Events", new { groupId = Model.Group.Id })">Create event</a>
+                </div>
             </div>
             @await Component.InvokeAsync("Calendar", new { 
                 eventsUrl = Url.Action("GetGroupEvents", "Events", new { groupId = Model.Group.Id }), 
