@@ -143,7 +143,22 @@ namespace CptcEvents.Controllers
             // Handle banner image upload
             if (model.BannerImage != null && model.BannerImage.Length > 0 && _imageStorageService != null)
             {
-                model.BannerImageUrl = await _imageStorageService.UploadImageAsync(model.BannerImage, "event-banners");
+                try
+                {
+                    model.BannerImageUrl = await _imageStorageService.UploadImageAsync(model.BannerImage, "event-banners");
+                }
+                catch (ArgumentException ex)
+                {
+                    ModelState.AddModelError("BannerImage", ex.Message);
+                    await PopulateGroupsSelectListAsync(model.GroupId);
+                    return View(model);
+                }
+                catch (Exception)
+                {
+                    ModelState.AddModelError("BannerImage", "Failed to upload banner image. Please try again.");
+                    await PopulateGroupsSelectListAsync(model.GroupId);
+                    return View(model);
+                }
             }
 
             Event newEvent = EventMapper.ToEntity(model);
@@ -240,13 +255,26 @@ namespace CptcEvents.Controllers
             }
             else if (model.BannerImage != null && model.BannerImage.Length > 0 && _imageStorageService != null)
             {
-                // Delete old banner image if it exists
-                if (!string.IsNullOrEmpty(existingEvent.BannerImageUrl))
+                try
                 {
-                    await _imageStorageService.DeleteImageAsync(existingEvent.BannerImageUrl);
-                }
+                    // Delete old banner image if it exists
+                    if (!string.IsNullOrEmpty(existingEvent.BannerImageUrl))
+                    {
+                        await _imageStorageService.DeleteImageAsync(existingEvent.BannerImageUrl);
+                    }
 
-                model.BannerImageUrl = await _imageStorageService.UploadImageAsync(model.BannerImage, "event-banners");
+                    model.BannerImageUrl = await _imageStorageService.UploadImageAsync(model.BannerImage, "event-banners");
+                }
+                catch (ArgumentException ex)
+                {
+                    TempData["Error"] = ex.Message;
+                    return RedirectToAction(nameof(Details), new { eventId });
+                }
+                catch (Exception)
+                {
+                    TempData["Error"] = "Failed to upload banner image. Please try again.";
+                    return RedirectToAction(nameof(Details), new { eventId });
+                }
             }
             else
             {
