@@ -5,6 +5,21 @@ using Microsoft.AspNetCore.Http;
 namespace CptcEvents.Services;
 
 /// <summary>
+/// Magic byte signatures for image file format validation.
+/// </summary>
+internal static class ImageMagicBytes
+{
+    public static readonly Dictionary<string, byte[][]> Signatures = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { ".jpg", new[] { new byte[] { 0xFF, 0xD8, 0xFF } } },
+        { ".jpeg", new[] { new byte[] { 0xFF, 0xD8, 0xFF } } },
+        { ".png", new[] { new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A } } },
+        { ".gif", new[] { new byte[] { 0x47, 0x49, 0x46, 0x38 } } },
+        { ".webp", new[] { new byte[] { 0x52, 0x49, 0x46, 0x46 } } }
+    };
+}
+
+/// <summary>
 /// Azure Blob Storage implementation for image upload and deletion.
 /// </summary>
 public class BlobImageStorageService : IImageStorageService
@@ -43,6 +58,10 @@ public class BlobImageStorageService : IImageStorageService
         var extension = Path.GetExtension(file.FileName);
         if (string.IsNullOrEmpty(extension) || !AllowedExtensions.Contains(extension))
             throw new ArgumentException($"File type '{extension}' is not allowed. Allowed types: {string.Join(", ", AllowedExtensions)}");
+
+        // Validate actual file content using magic bytes
+        if (!await IsValidImageFileAsync(file, extension))
+            throw new ArgumentException("File content does not match the declared image format or is not a valid image.");
 
         var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
         // NOTE: The container is created with PublicAccessType.None (private). Image access
@@ -123,6 +142,26 @@ public class BlobImageStorageService : IImageStorageService
         {
             // Invalid URL
             return null;
+        }
+    }
+
+    private async Task<bool> IsValidImageFileAsync(IFormFile file, string extension)
+    {
+        if (!ImageMagicBytes.Signatures.TryGetValue(extension, out var validSignatures))
+            return false;
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var buffer = new byte[8]; // Maximum signature length
+            await stream.ReadExactlyAsync(buffer, 0, buffer.Length);
+
+            return validSignatures.Any(signature =>
+                buffer.Take(signature.Length).SequenceEqual(signature));
+        }
+        catch
+        {
+            return false;
         }
     }
 }
