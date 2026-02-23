@@ -9,6 +9,8 @@
 
     var isStaffOrAdmin = User.IsInRole("Staff") || User.IsInRole("Admin");
 
+    var hasBanner = !string.IsNullOrEmpty(Model.BannerImageUrl);
+
     // Build EventFormViewModel from EventDetailsViewModel for use in the shared form partial
     var editModel = new EventFormViewModel
     {
@@ -42,46 +44,26 @@
         </div>
     }
 
-    @* === PAGE HEADER (always visible) === *@
-    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2">
-        <div>
-            <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">
+    @* === HERO BANNER === *@
+    <div id="bannerView" class="event-hero @(!hasBanner ? "event-hero--placeholder" : "")">
+        @if (hasBanner)
+        {
+            <img src="@Model.BannerImageUrl" class="event-hero__img" alt="Event banner" />
+            <div class="event-hero__overlay"></div>
+        }
+        <div class="event-hero__content">
+            <p class="event-hero__group">
                 @if (Model.IsCurrentUserMember)
                 {
-                    <a asp-controller="Groups" asp-action="Events" asp-route-groupId="@Model.GroupId" class="text-muted text-decoration-none">@Model.GroupName</a>
+                    <a asp-controller="Groups" asp-action="Events" asp-route-groupId="@Model.GroupId">@Model.GroupName</a>
                 }
                 else
                 {
                     @Model.GroupName
                 }
             </p>
-            <h2 class="mb-0" id="viewTitle">@Model.Title</h2>
+            <h2 class="event-hero__title" id="viewTitle">@Model.Title</h2>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-            @* View mode buttons *@
-            <div id="viewActions" class="d-flex gap-2">
-                @if (Model.CanEdit)
-                {
-                    <button type="button" class="btn btn-primary" id="editBtn">Edit Event</button>
-                }
-            </div>
-            @* Edit mode actions (hidden by default) *@
-            @if (Model.CanEdit)
-            {
-                <div id="editActions" class="d-flex gap-2" style="display: none !important;">
-                    <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn">Cancel</button>
-                    <button type="submit" form="editForm" class="btn btn-primary" id="saveBtn">Save Changes</button>
-                </div>
-            }
-        </div>
-    </div>
-
-    @* === BANNER IMAGE === *@
-    <div id="bannerView">
-        @if (!string.IsNullOrEmpty(Model.BannerImageUrl))
-        {
-            <img src="@Model.BannerImageUrl" class="w-100 rounded" alt="Event banner" style="max-height: 320px; object-fit: cover;" />
-        }
     </div>
 
     @* === VIEW MODE (sidebar layout) === *@
@@ -251,6 +233,19 @@
 
     </div>
 
+    @if (Model.CanEdit)
+    {
+        <div class="d-flex justify-content-end gap-2">
+            <div id="viewActions">
+                <button type="button" class="btn btn-primary" id="editBtn">Edit Event</button>
+            </div>
+            <div id="editActions" class="d-flex gap-2" style="display: none !important;">
+                <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn">Cancel</button>
+                <button type="submit" form="editForm" class="btn btn-primary" id="saveBtn">Save Changes</button>
+            </div>
+        </div>
+    }
+
     @* === EDIT MODE (hidden by default) === *@
     @if (Model.CanEdit)
     {
@@ -362,7 +357,7 @@
                     editMode.style.display = 'none';
                     viewMode.style.display = '';
                     viewActions.style.setProperty('display', 'flex', 'important');
-                    bannerView.style.display = 'block';
+                    bannerView.style.display = 'flex';
                     if (editActions) {
                         editActions.style.setProperty('display', 'none', 'important');
                     }
