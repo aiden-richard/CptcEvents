@@ -25,6 +25,7 @@ public static class EventMapper
         IsPublic = e.IsPublic,
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
+        IsRsvpEnabled = e.IsRsvpEnabled,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = false
@@ -49,6 +50,7 @@ public static class EventMapper
         IsPublic = e.IsPublic,
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
+        IsRsvpEnabled = e.IsRsvpEnabled,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = isCurrentUserMember
@@ -71,6 +73,7 @@ public static class EventMapper
         IsPublic = e.IsPublic,
         IsApprovedPublic = e.IsApprovedPublic,
         IsDeniedPublic = e.IsDeniedPublic,
+        IsRsvpEnabled = e.IsRsvpEnabled,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = isCurrentUserMember,
@@ -106,6 +109,7 @@ public static class EventMapper
         Description = model.Description,
         GroupId = model.GroupId,
         IsPublic = model.IsPublic,
+        IsRsvpEnabled = model.IsRsvpEnabled,
         IsAllDay = model.IsAllDay,
         DateOfEvent = model.DateOfEvent,
         StartTime = model.StartTime,
@@ -124,6 +128,7 @@ public static class EventMapper
         target.Title = model.Title;
         target.Description = model.Description;
         target.IsPublic = model.IsPublic;
+        target.IsRsvpEnabled = model.IsRsvpEnabled;
         target.IsAllDay = model.IsAllDay;
         target.DateOfEvent = model.DateOfEvent;
         target.StartTime = model.StartTime;
