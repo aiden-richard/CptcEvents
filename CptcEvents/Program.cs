@@ -48,6 +48,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IInviteService, InviteService>();
+builder.Services.AddScoped<IRsvpService, RsvpService>();
 builder.Services.AddScoped<IInstructorCodeService, InstructorCodeService>();
 builder.Services.AddScoped<IGroupAuthorizationService, GroupAuthorizationService>();
 
