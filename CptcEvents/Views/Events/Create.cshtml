@@ -65,7 +65,10 @@
                     if (html === '<p><br></p>') {
                         html = '';
                     }
-                    document.querySelector('textarea[asp-for="Description"]').value = html;
+                    var descriptionHidden = document.getElementById('descriptionHidden') || document.querySelector('textarea[name="Description"]');
+                    if (descriptionHidden) {
+                        descriptionHidden.value = html;
+                    }
                     // Now submit the form after Quill content is synced
                     form.submit();
                 }, false);
