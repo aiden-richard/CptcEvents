@@ -1,5 +1,5 @@
 {
-  "dependencies": {
+  "devDependencies": {
     "azurite": "^3.35.0"
   }
 }
