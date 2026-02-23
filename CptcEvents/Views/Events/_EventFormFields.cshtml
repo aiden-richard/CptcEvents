@@ -139,6 +139,13 @@ else
     <input asp-for="IsPublic" type="hidden" value="false" />
 }
 
+@* Enable RSVP *@
+<div class="form-check mb-3">
+    <input asp-for="IsRsvpEnabled" class="form-check-input" />
+    <label asp-for="IsRsvpEnabled" class="form-check-label">Enable RSVP</label>
+    <small class="text-muted d-block">Allow users to respond Going, Maybe, or Not Going.</small>
+</div>
+
 @* IsAllDay, Date, Time, URL Fields *@
 @if (Model != null && Model.Id.HasValue)
 {

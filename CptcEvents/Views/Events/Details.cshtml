@@ -25,7 +25,8 @@
         StartTime = Model.StartTime,
         EndTime = Model.EndTime,
         Url = Model.Url,
-        BannerImageUrl = Model.BannerImageUrl
+        BannerImageUrl = Model.BannerImageUrl,
+        IsRsvpEnabled = Model.IsRsvpEnabled
     };
 }
 
@@ -168,8 +169,84 @@
                         </div>
                     }
 
+                    @* RSVP counts (only when RSVP is enabled) *@
+                    @if (Model.IsRsvpEnabled)
+                    {
+                        <div>
+                            <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">RSVPs</p>
+                            <div class="d-flex gap-3">
+                                <span class="badge text-bg-success">@Model.GoingCount Going</span>
+                                <span class="badge text-bg-warning">@Model.MaybeCount Maybe</span>
+                                <span class="badge text-bg-secondary">@Model.NotGoingCount Not Going</span>
+                            </div>
+                        </div>
+                    }
+
                 </div>
             </div>
+
+            @* RSVP Action Card (only when RSVP is enabled) *@
+            @if (Model.IsRsvpEnabled && User.Identity?.IsAuthenticated == true)
+            {
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <p class="text-muted small mb-2 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Your Response</p>
+
+                        @if (Model.CurrentUserRsvpStatus.HasValue)
+                        {
+                            <p class="mb-2">
+                                You responded:
+                                @switch (Model.CurrentUserRsvpStatus.Value)
+                                {
+                                    case RsvpStatus.Going:
+                                        <span class="badge text-bg-success">Going</span>
+                                        break;
+                                    case RsvpStatus.Maybe:
+                                        <span class="badge text-bg-warning">Maybe</span>
+                                        break;
+                                    case RsvpStatus.NotGoing:
+                                        <span class="badge text-bg-secondary">Not Going</span>
+                                        break;
+                                }
+                            </p>
+                        }
+
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="status" value="@RsvpStatus.Going" />
+                                <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.Going ? "btn-success" : "btn-outline-success")">
+                                    Going
+                                </button>
+                            </form>
+                            <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="status" value="@RsvpStatus.Maybe" />
+                                <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.Maybe ? "btn-warning" : "btn-outline-warning")">
+                                    Maybe
+                                </button>
+                            </form>
+                            <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="status" value="@RsvpStatus.NotGoing" />
+                                <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.NotGoing ? "btn-secondary" : "btn-outline-secondary")">
+                                    Not Going
+                                </button>
+                            </form>
+
+                            @if (Model.CurrentUserRsvpStatus.HasValue)
+                            {
+                                <form asp-action="RemoveRsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Remove RSVP
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
 
     </div>
@@ -194,10 +271,18 @@
 
                         @* Danger zone *@
                         <hr class="mt-3" />
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex flex-column gap-2">
                             <span class="text-muted small">Danger Zone</span>
-                            <a asp-action="Delete" asp-route-eventId="@Model.Id" class="btn btn-outline-danger btn-sm">Delete Event</a>
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="clearAllRsvpsBtn">Clear All RSVPs</button>
+                                <a asp-action="Delete" asp-route-eventId="@Model.Id" class="btn btn-outline-danger btn-sm">Delete Event</a>
+                            </div>
                         </div>
+                    </form>
+
+                    @* Clear RSVPs form sits outside the edit form to avoid nested-form issues *@
+                    <form id="clearRsvpsForm" asp-action="ClearAllRsvps" asp-route-eventId="@Model.Id" method="post" style="display:none;">
+                        @Html.AntiForgeryToken()
                     </form>
                 </div>
             </div>
@@ -316,6 +401,17 @@
                 var openInEditMode = @Json.Serialize(ViewData["OpenInEditMode"]);
                 if (openInEditMode) {
                     enterEditMode();
+                }
+
+                // Clear All RSVPs button → confirm then submit the separate form
+                var clearBtn = document.getElementById('clearAllRsvpsBtn');
+                var clearForm = document.getElementById('clearRsvpsForm');
+                if (clearBtn && clearForm) {
+                    clearBtn.addEventListener('click', function () {
+                        if (confirm('Are you sure you want to remove all RSVPs for this event? This cannot be undone.')) {
+                            clearForm.submit();
+                        }
+                    });
                 }
             })();
         </script>
