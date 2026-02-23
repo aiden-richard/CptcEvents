@@ -16,7 +16,6 @@ namespace CptcEvents.Controllers
         private readonly IGroupAuthorizationService _groupAuthorization;
         private readonly IGroupService _groupService;
         private readonly IImageStorageService? _imageStorageService;
-        private readonly UserManager<ApplicationUser> _userManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImagesController"/> class.
@@ -32,7 +31,6 @@ namespace CptcEvents.Controllers
             _groupAuthorization = groupAuthorization;
             _groupService = groupService;
             _imageStorageService = imageStorageService;
-            _userManager = userManager;
         }
 
         /// <summary>
