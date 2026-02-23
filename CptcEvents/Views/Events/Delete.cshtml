@@ -51,7 +51,7 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-between">
-                    <a asp-action="ManageEvents" asp-controller="Groups" asp-route-groupId="@Model.GroupId" class="btn btn-secondary">Cancel</a>
+                    <a asp-controller="Events" asp-action="Details" asp-route-eventId="@Model.Id" class="btn btn-secondary">Cancel</a>
                     <form asp-action="Delete" asp-route-eventId="@Model.Id" method="post">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-danger">Delete Event</button>
