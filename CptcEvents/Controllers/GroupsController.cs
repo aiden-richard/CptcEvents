@@ -33,16 +33,15 @@ namespace CptcEvents.Controllers
 
         #region Groups
 
-        // GET: Groups or Groups/{groupId}
-        [HttpGet("Groups/{groupId?}")]
+        // GET: Groups
+        [HttpGet("Groups")]
         /// <summary>
-        /// Displays groups for the authenticated user or redirects to a specific group's events.
+        /// Displays groups for the authenticated user.
         /// Admins see all groups, regular users see only groups they're members of.
-        /// GET /Groups or /Groups/{groupId}
+        /// GET /Groups
         /// </summary>
-        /// <param name="groupId">Optional group ID. If provided, verifies membership and redirects to that group's events.</param>
-        /// <returns>View with user's groups, or redirects to group events or Index if group not found or user not member.</returns>
-        public async Task<IActionResult> Index(int? groupId)
+        /// <returns>View with user's groups.</returns>
+        public async Task<IActionResult> Index()
         {
             string? userId = _userManager.GetUserId(User);
             if (userId == null)
@@ -51,24 +50,6 @@ namespace CptcEvents.Controllers
             }
 
             bool isAdmin = User.IsInRole("Admin");
-
-            if (groupId != null)
-            {
-                Group? group = await _groupService.GetGroupByIdAsync(groupId.Value);
-                if (group == null)
-                {
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Admins can access any group, regular users need membership
-                bool isMember = await _groupService.IsUserMemberAsync(groupId.Value, userId);
-                if (!isAdmin && !isMember)
-                {
-                    return RedirectToAction(nameof(Index));
-                }
-
-                return RedirectToAction(nameof(Events), new { groupId = groupId.Value });
-            }
 
             IEnumerable<Group> groups = await _groupService.GetGroupsForUserAsync(userId, isAdmin);
 
@@ -660,13 +641,13 @@ namespace CptcEvents.Controllers
 
         #region Event Operations
 
-        // GET: Groups/5/Events
-        [HttpGet("Groups/{groupId}/Events")]
+        // GET: Groups/5
+        [HttpGet("Groups/{groupId:int}")]
         [ActionName("Events")]
         [Authorize(Policy = "GroupMember")]
         /// <summary>
         /// Displays upcoming events for a specific group.
-        /// GET /Groups/{groupId}/Events
+        /// GET /Groups/{groupId}
         /// </summary>
         /// <param name="groupId">The ID of the group whose events to display.</param>
         /// <returns>View with upcoming events for the group, or redirects if group not found or user not member.</returns>
@@ -712,12 +693,12 @@ namespace CptcEvents.Controllers
             return View(viewModel);
         }
 
-        // GET: Groups/{groupId}/ManageEvents
-        [HttpGet("Groups/{groupId}/ManageEvents")]
+        // GET: Groups/{groupId}/Events
+        [HttpGet("Groups/{groupId}/Events")]
         [Authorize(Policy = "GroupModerator")]
         /// <summary>
         /// Displays the event management page for group moderators and owners.
-        /// GET /Groups/{groupId}/ManageEvents
+        /// GET /Groups/{groupId}/Events
         /// </summary>
         /// <param name="groupId">The ID of the group whose events to manage.</param>
         /// <returns>Event management view, or redirects if group not found or user not moderator.</returns>
