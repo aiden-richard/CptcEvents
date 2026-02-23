@@ -75,4 +75,11 @@ public interface IRsvpService
     /// <param name="userId">The ID of the user.</param>
     /// <returns>True if the user has an RSVP for the event, false otherwise.</returns>
     Task<bool> HasUserRsvpedAsync(int eventId, string userId);
+
+    /// <summary>
+    /// Deletes all RSVPs for a specific event.
+    /// </summary>
+    /// <param name="eventId">The ID of the event.</param>
+    /// <returns>The number of RSVPs that were deleted.</returns>
+    Task<int> ClearAllRsvpsAsync(int eventId);
 }

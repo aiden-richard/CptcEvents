@@ -17,16 +17,38 @@ public class RsvpService : IRsvpService
     }
 
     /// <summary>
-    /// Creates a new RSVP for an event.
+    /// Creates a new RSVP for an event. If the user already has an RSVP, returns null.
     /// </summary>
     public async Task<EventRsvp?> CreateRsvpAsync(int eventId, string userId, RsvpStatus status)
     {
-        // TODO: Implement RSVP creation logic
-        // - Check if event exists
-        // - Check if user already has an RSVP for this event
-        // - Create new EventRsvp entity
-        // - Save to database
-        throw new NotImplementedException();
+        // Check if event exists
+        bool eventExists = await _context.Events.AnyAsync(e => e.Id == eventId);
+        if (!eventExists)
+        {
+            return null;
+        }
+
+        // Check if user already has an RSVP for this event
+        bool alreadyRsvped = await _context.EventRsvps
+            .AnyAsync(r => r.EventId == eventId && r.UserId == userId);
+        if (alreadyRsvped)
+        {
+            return null;
+        }
+
+        var rsvp = new EventRsvp
+        {
+            EventId = eventId,
+            UserId = userId,
+            Status = status,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.EventRsvps.Add(rsvp);
+        await _context.SaveChangesAsync();
+
+        return rsvp;
     }
 
     /// <summary>
@@ -34,11 +56,17 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<EventRsvp?> UpdateRsvpAsync(int rsvpId, RsvpStatus newStatus)
     {
-        // TODO: Implement RSVP update logic
-        // - Find existing RSVP by ID
-        // - Update status and UpdatedAt timestamp
-        // - Save changes to database
-        throw new NotImplementedException();
+        EventRsvp? rsvp = await _context.EventRsvps.FindAsync(rsvpId);
+        if (rsvp == null)
+        {
+            return null;
+        }
+
+        rsvp.Status = newStatus;
+        rsvp.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return rsvp;
     }
 
     /// <summary>
@@ -46,11 +74,15 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<bool> DeleteRsvpAsync(int rsvpId)
     {
-        // TODO: Implement RSVP deletion logic
-        // - Find RSVP by ID
-        // - Remove from database
-        // - Return success status
-        throw new NotImplementedException();
+        EventRsvp? rsvp = await _context.EventRsvps.FindAsync(rsvpId);
+        if (rsvp == null)
+        {
+            return false;
+        }
+
+        _context.EventRsvps.Remove(rsvp);
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     /// <summary>
@@ -58,10 +90,10 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<EventRsvp?> GetRsvpByIdAsync(int rsvpId)
     {
-        // TODO: Implement RSVP retrieval by ID
-        // - Query database for RSVP with given ID
-        // - Include Event and User navigation properties if needed
-        throw new NotImplementedException();
+        return await _context.EventRsvps
+            .Include(r => r.Event)
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.Id == rsvpId);
     }
 
     /// <summary>
@@ -69,9 +101,8 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<EventRsvp?> GetUserRsvpForEventAsync(int eventId, string userId)
     {
-        // TODO: Implement user RSVP retrieval for specific event
-        // - Query for RSVP matching both eventId and userId
-        throw new NotImplementedException();
+        return await _context.EventRsvps
+            .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId);
     }
 
     /// <summary>
@@ -79,10 +110,11 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<List<EventRsvp>> GetRsvpsForEventAsync(int eventId)
     {
-        // TODO: Implement retrieval of all RSVPs for an event
-        // - Query all RSVPs for the given eventId
-        // - Include User navigation property for display
-        throw new NotImplementedException();
+        return await _context.EventRsvps
+            .Include(r => r.User)
+            .Where(r => r.EventId == eventId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -90,10 +122,11 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<List<EventRsvp>> GetRsvpsByUserAsync(string userId)
     {
-        // TODO: Implement retrieval of all RSVPs by a user
-        // - Query all RSVPs for the given userId
-        // - Include Event navigation property for display
-        throw new NotImplementedException();
+        return await _context.EventRsvps
+            .Include(r => r.Event)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -101,11 +134,10 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<Dictionary<RsvpStatus, int>> GetRsvpCountsByStatusAsync(int eventId)
     {
-        // TODO: Implement RSVP count aggregation by status
-        // - Query all RSVPs for the event
-        // - Group by Status and count
-        // - Return dictionary with counts for each status
-        throw new NotImplementedException();
+        return await _context.EventRsvps
+            .Where(r => r.EventId == eventId)
+            .GroupBy(r => r.Status)
+            .ToDictionaryAsync(g => g.Key, g => g.Count());
     }
 
     /// <summary>
@@ -113,8 +145,26 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<bool> HasUserRsvpedAsync(int eventId, string userId)
     {
-        // TODO: Implement RSVP existence check
-        // - Query if any RSVP exists for the given eventId and userId combination
-        throw new NotImplementedException();
+        return await _context.EventRsvps
+            .AnyAsync(r => r.EventId == eventId && r.UserId == userId);
+    }
+
+    /// <summary>
+    /// Deletes all RSVPs for a specific event.
+    /// </summary>
+    public async Task<int> ClearAllRsvpsAsync(int eventId)
+    {
+        var rsvps = await _context.EventRsvps
+            .Where(r => r.EventId == eventId)
+            .ToListAsync();
+
+        if (rsvps.Count == 0)
+        {
+            return 0;
+        }
+
+        _context.EventRsvps.RemoveRange(rsvps);
+        await _context.SaveChangesAsync();
+        return rsvps.Count;
     }
 }
