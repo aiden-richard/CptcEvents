@@ -62,6 +62,7 @@ jobs:
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
           SQL_CONNECTION_STRING: ${{ secrets.SQL_CONNECTION_STRING }}
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+          AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
         run: |
           # Check for presence of required secrets
           missing=""
@@ -71,6 +72,7 @@ jobs:
           [ -z "$SENDGRID_API_KEY" ] && missing="$missing SENDGRID_API_KEY"
           [ -z "$SQL_CONNECTION_STRING" ] && missing="$missing SQL_CONNECTION_STRING"
           [ -z "$ACR_PASSWORD" ] && missing="$missing ACR_PASSWORD"
+          [ -z "$AZURE_BLOB_CONNECTION_STRING" ] && missing="$missing AZURE_BLOB_CONNECTION_STRING"
           
           if [ -n "$missing" ]; then
             echo "ERROR: Missing required GitHub secrets: $missing"
@@ -87,6 +89,7 @@ jobs:
           ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+          AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
         run: |
           echo "::add-mask::$ACR_PASSWORD"
           az containerapp up \
@@ -106,4 +109,5 @@ jobs:
               SendGrid__ApiKey="$SENDGRID_API_KEY" \
               AdminUser__Email="$ADMIN_EMAIL" \
               AdminUser__UserName="$ADMIN_USERNAME" \
-              AdminUser__Password="$ADMIN_PASSWORD"
+              AdminUser__Password="$ADMIN_PASSWORD" \
+              AzureBlobStorage__ConnectionString="$AZURE_BLOB_CONNECTION_STRING"

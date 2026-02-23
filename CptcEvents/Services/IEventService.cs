@@ -228,6 +228,7 @@ public class EventService : IEventService
         existingEvent.StartTime = updatedEvent.StartTime;
         existingEvent.EndTime = updatedEvent.EndTime;
         existingEvent.Url = updatedEvent.Url;
+        existingEvent.BannerImageUrl = updatedEvent.BannerImageUrl;
         // Note: GroupId should not be changed after creation
 
         await _context.SaveChangesAsync();

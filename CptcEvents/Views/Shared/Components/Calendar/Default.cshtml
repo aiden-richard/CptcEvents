@@ -25,6 +25,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="eventModalViewDetails" class="btn btn-outline-primary" href="#" style="display: none;">View Details</a>
                 <a id="eventModalViewGroup" class="btn btn-primary" href="#" style="display: none;">View Group</a>
             </div>
         </div>
@@ -181,17 +182,21 @@
             var modalBody = document.getElementById('eventModalBody');
             var modalTitle = document.getElementById('eventModalLabel');
             var viewGroupBtn = document.getElementById('eventModalViewGroup');
+            var viewDetailsBtn = document.getElementById('eventModalViewDetails');
 
             // Reset modal content
             modalTitle.textContent = 'Event Details';
             modalBody.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
             viewGroupBtn.style.display = 'none';
+            viewDetailsBtn.style.display = 'none';
 
             // Show modal
             modal.show();
 
-            // Fetch event details
-            fetch('/Events/Details/' + eventId)
+            // Fetch event details (with Accept header for content negotiation)
+            fetch('/Events/Details/' + eventId, {
+                headers: { 'Accept': 'application/json' }
+            })
                 .then(function (response) {
                     if (!response.ok) {
                         throw new Error('Failed to fetch event details');
@@ -230,11 +235,7 @@
                     
                     modalContent += '<div class="col-12"><div><strong>Date:</strong> ' + dateString + '</div></div>';
                     modalContent += '<div class="col-12"><div><strong>Time:</strong> ' + timeString + '</div></div>';
-                    
-                    if (event.description && event.description.trim()) {
-                        modalContent += '<div class="col-12"><div><strong>Description:</strong></div><div class="mt-1">' + escapeHtml(event.description).replace(/\n/g, '<br>') + '</div></div>';
-                    }
-                    
+
                     if (event.url && event.url.trim()) {
                         modalContent += '<div class="col-12"><div><strong>URL:</strong> <a href="' + escapeHtml(event.url) + '" target="_blank" rel="noopener">' + escapeHtml(event.url) + '</a></div></div>';
                     }
@@ -247,9 +248,13 @@
 
                     modalBody.innerHTML = modalContent;
 
+                    // Setup View Details button (always shown)
+                    viewDetailsBtn.href = '/Events/Details/' + eventId;
+                    viewDetailsBtn.style.display = 'inline-block';
+
                     // Setup View Group button - only show if user is a member of the group
                     if (event.groupId && event.isCurrentUserMember) {
-                        viewGroupBtn.href = '/Groups/' + event.groupId + '/Events';
+                        viewGroupBtn.href = '/Groups/' + event.groupId;
                         viewGroupBtn.style.display = 'inline-block';
                     }
                 })

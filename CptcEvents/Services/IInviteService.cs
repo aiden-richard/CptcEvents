@@ -138,7 +138,7 @@ public class InviteService : IInviteService
 		if (string.IsNullOrWhiteSpace(userId)) return new List<GroupInvite>();
 		return await _context.GroupInvites
 			.Include(i => i.Group)
-			.Include(i => i.CreatedBy)
+			.Include(i => i.CreatedByUser)
 			.Where(i => i.CreatedById == userId)
 			.ToListAsync();
 	}
@@ -148,7 +148,7 @@ public class InviteService : IInviteService
 	{
 		return await _context.GroupInvites
 			.Include(i => i.Group)
-			.Include(i => i.CreatedBy)
+			.Include(i => i.CreatedByUser)
 			.Include(i => i.InvitedUser)
 			.Where(i => i.GroupId == groupId)
 			.OrderByDescending(i => i.CreatedAt)

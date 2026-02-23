@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# VS Code
+.vscode/extensions/
+.vscode/*.local.json
+.vscode/settings.json
+
+# Azurite local storage emulator
+__azurite_db_*.json
+__blobstorage__/

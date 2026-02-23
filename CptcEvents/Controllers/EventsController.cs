@@ -3,6 +3,7 @@ using CptcEvents.Authorization;
 using CptcEvents.Data;
 using CptcEvents.Models;
 using CptcEvents.Services;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,22 +15,23 @@ namespace CptcEvents.Controllers
 {
     /// <summary>
     /// Controller for managing event operations including CRUD operations and calendar views.
-    /// Requires authentication for all actions.
+    /// Most management actions require authentication; some read-only views (such as public event details or listings) are accessible to anonymous users.
     /// </summary>
-    [Authorize]
     public class EventsController : Controller
     {
         private readonly IEventService _eventsService;
         private readonly IGroupService _groupService;
         private readonly IGroupAuthorizationService _groupAuthorization;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IImageStorageService? _imageStorageService;
 
-        public EventsController(IEventService eventsService, IGroupService groupService, IGroupAuthorizationService groupAuthorization, UserManager<ApplicationUser> userManager)
+        public EventsController(IEventService eventsService, IGroupService groupService, IGroupAuthorizationService groupAuthorization, UserManager<ApplicationUser> userManager, IImageStorageService? imageStorageService = null)
         {
             _eventsService = eventsService;
             _groupService = groupService;
             _groupAuthorization = groupAuthorization;
             _userManager = userManager;
+            _imageStorageService = imageStorageService;
         }
 
         #region Event CRUD Operations
@@ -41,6 +43,7 @@ namespace CptcEvents.Controllers
         /// </summary>
         /// <param name="eventId">Optional event ID parameter (not currently used).</param>
         /// <returns>View with list of active events for the user.</returns>
+        [Authorize]
         public async Task<IActionResult> Index(int? eventId)
         {
             string? userId = await _groupAuthorization.GetUserIdAsync(User);
@@ -59,6 +62,7 @@ namespace CptcEvents.Controllers
 
         // GET: Events/Create
         [HttpGet("Events/Create")]
+        [Authorize]
         /// <summary>
         /// Displays the event creation form, optionally filtered to a specific group.
         /// GET /Events/Create?groupId={groupId}
@@ -99,8 +103,10 @@ namespace CptcEvents.Controllers
         // POST: Events/Create
         [HttpPost("Events/Create")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         /// <summary>
         /// Processes event creation with validation and authorization checks.
+        /// Handles image upload and sanitization for rich text descriptions.
         /// POST /Events/Create
         /// </summary>
         /// <param name="model">The event form data to create.</param>
@@ -127,8 +133,36 @@ namespace CptcEvents.Controllers
                 return View(model);
             }
 
+            // Sanitize description HTML to prevent XSS
+            if (!string.IsNullOrEmpty(model.Description))
+            {
+                var sanitizer = new HtmlSanitizer();
+                model.Description = sanitizer.Sanitize(model.Description);
+            }
+
+            // Handle banner image upload
+            if (model.BannerImage != null && model.BannerImage.Length > 0 && _imageStorageService != null)
+            {
+                try
+                {
+                    model.BannerImageUrl = await _imageStorageService.UploadImageAsync(model.BannerImage, "event-banners");
+                }
+                catch (ArgumentException ex)
+                {
+                    ModelState.AddModelError("BannerImage", ex.Message);
+                    await PopulateGroupsSelectListAsync(model.GroupId);
+                    return View(model);
+                }
+                catch (Exception)
+                {
+                    ModelState.AddModelError("BannerImage", "Failed to upload banner image. Please try again.");
+                    await PopulateGroupsSelectListAsync(model.GroupId);
+                    return View(model);
+                }
+            }
+
             Event newEvent = EventMapper.ToEntity(model);
-            
+
             // Set the user who created the event
             string? userId = await _groupAuthorization.GetUserIdAsync(User);
             if (userId == null)
@@ -142,66 +176,18 @@ namespace CptcEvents.Controllers
             return RedirectToAction(nameof(GroupsController.ManageEvents), "Groups", new { groupId = created.GroupId });
         }
 
-        // GET: Events/Edit/5
-        [HttpGet("Events/Edit/{eventId}")]
-        /// <summary>
-        /// Displays the event editing form for a specific event.
-        /// GET /Events/Edit/{eventId}
-        /// </summary>
-        /// <param name="eventId">The ID of the event to edit.</param>
-        /// <returns>Event editing form view, or redirects if event not found or user lacks permissions.</returns>
-        public async Task<IActionResult> Edit(int eventId)
-        {
-            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
-            if (eventItem == null)
-            {
-                return RedirectToAction(nameof(Index));
-            }
-
-            // Prevent students from editing staff/admin events
-            var user = await _userManager.GetUserAsync(User);
-            if (User.IsInRole("Student") && !await CanStudentEditEventAsync(eventItem, user))
-            {
-                return Forbid();
-            }
-
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(eventItem.GroupId, User);
-            if (!moderatorCheck.Succeeded)
-            {
-                return moderatorCheck.ToActionResult(this);
-            }
-
-            var viewModel = new EventFormViewModel
-            {
-                Id = eventItem.Id,
-                Title = eventItem.Title,
-                Description = eventItem.Description,
-                GroupId = eventItem.GroupId,
-                GroupName = eventItem.Group?.Name,
-                IsPublic = eventItem.IsPublic,
-                IsApprovedPublic = eventItem.IsApprovedPublic,
-                IsDeniedPublic = eventItem.IsDeniedPublic,
-                IsAllDay = eventItem.IsAllDay,
-                DateOfEvent = eventItem.DateOfEvent,
-                StartTime = eventItem.StartTime,
-                EndTime = eventItem.EndTime,
-                Url = eventItem.Url,
-                IsModerator = true
-            };
-
-            return View(viewModel);
-        }
-
         // POST: Events/Edit/5
         [HttpPost("Events/Edit/{eventId}")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         /// <summary>
         /// Processes event updates with validation and authorization checks.
+        /// Handles image upload and HTML sanitization for rich text descriptions.
         /// POST /Events/Edit/{eventId}
         /// </summary>
         /// <param name="eventId">The ID of the event to update.</param>
         /// <param name="model">The updated event form data.</param>
-        /// <returns>Redirects to ManageEvents on success, or form with validation errors on failure.</returns>
+        /// <returns>Redirects to Details on success, or redirects back with error on failure.</returns>
         public async Task<IActionResult> Edit(int eventId, EventFormViewModel model)
         {
             if (eventId != model.Id)
@@ -227,10 +213,8 @@ namespace CptcEvents.Controllers
             var eventCreator = await _userManager.FindByIdAsync(existingEvent.CreatedByUserId);
             if (eventCreator != null && await _userManager.IsInRoleAsync(eventCreator, "Student") && model.IsPublic)
             {
-                ModelState.AddModelError(string.Empty, "Events created by students cannot be made public.");
-                model.IsModerator = true;
-                model.GroupName = existingEvent.Group?.Name;
-                return View(model);
+                TempData["Error"] = "Events created by students cannot be made public.";
+                return RedirectToAction(nameof(Details), new { eventId });
             }
 
             GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(existingEvent.GroupId, User);
@@ -242,17 +226,60 @@ namespace CptcEvents.Controllers
             // Only Staff and Admin roles can make events public
             if (model.IsPublic && !User.IsInRole("Staff") && !User.IsInRole("Admin"))
             {
-                ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
-                model.IsModerator = true;
-                model.GroupName = existingEvent.Group?.Name;
-                return View(model);
+                TempData["Error"] = "Only staff members can create public events.";
+                return RedirectToAction(nameof(Details), new { eventId });
             }
 
             if (!ModelState.IsValid)
             {
-                model.IsModerator = true;
-                model.GroupName = existingEvent.Group?.Name;
-                return View(model);
+                TempData["Error"] = "Please fix the validation errors and try again.";
+                return RedirectToAction(nameof(Details), new { eventId });
+            }
+
+            // Sanitize description HTML to prevent XSS
+            if (!string.IsNullOrEmpty(model.Description))
+            {
+                var sanitizer = new HtmlSanitizer();
+                model.Description = sanitizer.Sanitize(model.Description);
+            }
+
+            // Handle banner image: clear, replace, or preserve
+            if (model.ClearBannerImage)
+            {
+                // User requested removal of the banner image
+                if (!string.IsNullOrEmpty(existingEvent.BannerImageUrl) && _imageStorageService != null)
+                {
+                    await _imageStorageService.DeleteImageAsync(existingEvent.BannerImageUrl);
+                }
+                model.BannerImageUrl = null;
+            }
+            else if (model.BannerImage != null && model.BannerImage.Length > 0 && _imageStorageService != null)
+            {
+                try
+                {
+                    // Delete old banner image if it exists
+                    if (!string.IsNullOrEmpty(existingEvent.BannerImageUrl))
+                    {
+                        await _imageStorageService.DeleteImageAsync(existingEvent.BannerImageUrl);
+                    }
+
+                    model.BannerImageUrl = await _imageStorageService.UploadImageAsync(model.BannerImage, "event-banners");
+                }
+                catch (ArgumentException ex)
+                {
+                    TempData["Error"] = ex.Message;
+                    return RedirectToAction(nameof(Details), new { eventId });
+                }
+                catch (Exception)
+                {
+                    TempData["Error"] = "Failed to upload banner image. Please try again.";
+                    return RedirectToAction(nameof(Details), new { eventId });
+                }
+            }
+            else
+            {
+                // Preserve existing banner image URL if no new image was uploaded
+                model.BannerImageUrl = existingEvent.BannerImageUrl;
             }
 
             var updatedEvent = new Event();
@@ -261,16 +288,16 @@ namespace CptcEvents.Controllers
             Event? result = await _eventsService.UpdateEventAsync(existingEvent.Id, updatedEvent);
             if (result == null)
             {
-                ModelState.AddModelError(string.Empty, "Failed to update event.");
-                model.IsModerator = true;
-                return View(model);
+                TempData["Error"] = "Failed to update event.";
+                return RedirectToAction(nameof(Details), new { eventId });
             }
 
-            return RedirectToAction(nameof(GroupsController.ManageEvents), "Groups", new { groupId = result.GroupId });
+            return RedirectToAction(nameof(Details), new { eventId });
         }
 
         // GET: Events/Delete/5
         [HttpGet("Events/Delete/{eventId}")]
+        [Authorize]
         /// <summary>
         /// Displays the event deletion confirmation page.
         /// GET /Events/Delete/{eventId}
@@ -297,6 +324,7 @@ namespace CptcEvents.Controllers
         // POST: Events/Delete/5
         [HttpPost("Events/Delete/{eventId}"), ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         /// <summary>
         /// Processes event deletion with authorization checks.
         /// POST /Events/Delete/{eventId}
@@ -325,12 +353,13 @@ namespace CptcEvents.Controllers
         // GET: Events/Details/5
         [HttpGet("Events/Details/{eventId}")]
         /// <summary>
-        /// Returns JSON data for a single event to display in a modal.
+        /// Returns event details as JSON (for modal AJAX) or as an HTML view (for direct navigation).
+        /// Uses content negotiation: requests with Accept: application/json get JSON, others get the view.
         /// GET /Events/Details/{eventId}
         /// </summary>
         /// <param name="eventId">The ID of the event to retrieve.</param>
-        /// <returns>JSON with event details or NotFound if event doesn't exist or user lacks access.</returns>
-        public async Task<IActionResult> Details(int eventId)
+        /// <returns>JSON or View with event details, or NotFound/Forbid if inaccessible.</returns>
+        public async Task<IActionResult> Details(int eventId, [FromQuery] bool edit = false)
         {
             Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
             if (eventItem == null)
@@ -338,16 +367,16 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            // Check if user has access to this event (either public, or user is member of the group)
-            string? userId = await _groupAuthorization.GetUserIdAsync(User);
-            if (userId == null)
-            {
-                return Challenge();
-            }
-
             // Check if user is member of the group (needed for both access control and UI display)
-            bool isAdmin = User.IsInRole("Admin");
-            bool isUserMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+            bool isAdmin = false;
+            bool isUserMember = false;
+
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+            if (userId != null)
+            {
+                isAdmin = User.IsInRole("Admin");
+                isUserMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+            }
 
             // If event is not public, check if user is member of the group (admins can access all events)
             if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
@@ -360,8 +389,36 @@ namespace CptcEvents.Controllers
 
             // For UI purposes, treat admins as members (so they can see the "View Group" button)
             bool canAccessGroup = isAdmin || isUserMember;
-            var eventDetails = EventMapper.ToDetails(eventItem, canAccessGroup);
-            return Json(eventDetails);
+
+            // Determine if the current user can edit this event
+            bool canEdit = false;
+            if (userId != null)
+            {
+                GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(eventItem.GroupId, User);
+                if (moderatorCheck.Succeeded)
+                {
+                    canEdit = true;
+
+                    // Students have additional restrictions on editing staff/admin events
+                    if (User.IsInRole("Student"))
+                    {
+                        var currentUser = await _userManager.GetUserAsync(User);
+                        canEdit = await CanStudentEditEventAsync(eventItem, currentUser);
+                    }
+                }
+            }
+
+            var eventDetails = EventMapper.ToDetails(eventItem, canAccessGroup, canEdit);
+
+            ViewData["OpenInEditMode"] = edit && canEdit;
+
+            // Content negotiation: return JSON for AJAX requests, View for browsers
+            if (Request.Headers.Accept.Any(h => h != null && h.Contains("application/json")))
+            {
+                return Json(eventDetails);
+            }
+
+            return View(eventDetails);
         }
 
         #endregion
@@ -372,6 +429,7 @@ namespace CptcEvents.Controllers
         /// Determines if a student user can edit the given event.
         /// Students can only edit events they created or events created by other students.
         /// </summary>
+        [Authorize]
         private async Task<bool> CanStudentEditEventAsync(Event eventItem, ApplicationUser? currentUser)
         {
             if (currentUser == null)
@@ -391,6 +449,7 @@ namespace CptcEvents.Controllers
         }
 
         // Helper that populates ViewData["Groups"] with groups available to the current user.
+        [Authorize]
         private async Task PopulateGroupsSelectListAsync(int? selectedGroupId = null)
         {
             var groups = new List<Group>();
@@ -427,6 +486,7 @@ namespace CptcEvents.Controllers
         /// <param name="groupId">The group whose events should be returned.</param>
         /// <returns>JSON array of FullCalendar-compatible event objects.</returns>
         [HttpGet("Events/Group/{groupId}/Events")]
+        [Authorize]
         public async Task<IActionResult> GetGroupEvents(int groupId)
         {
             string? userId = User?.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
@@ -465,7 +525,6 @@ namespace CptcEvents.Controllers
         /// formatted for the FullCalendar JavaScript library. The returned list will be empty if no events are
         /// found. Only events marked as both IsPublic and IsApprovedPublic are included for non-admin users.</remarks>
         /// <returns>A JSON result containing a list of event objects formatted for FullCalendar.</returns>
-        [AllowAnonymous]
         public async Task<IActionResult> GetEvents()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -509,7 +568,7 @@ namespace CptcEvents.Controllers
         /// <param name="end">The end date (inclusive) in yyyy-MM-dd format.</param>
         /// <returns>JSON array of FullCalendar-compatible event objects within the date range.</returns>
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> GetEventsInRange([FromQuery] DateOnly start, [FromQuery] DateOnly end)
         {
             if (end < start)

@@ -1,0 +1,226 @@
+@model CptcEvents.Models.EventFormViewModel
+
+@* Shared form fields for creating and editing events.
+    This partial is used by both Create.cshtml (create mode) and Details.cshtml (edit mode).
+    Mode is detected by checking if Model.Id has a value:
+    - Create mode: Model.Id == null → show group dropdown, no ID/group hidden fields
+    - Edit mode: Model.Id != null → show disabled group display
+*@
+
+@* Banner Image Section *@
+<div class="mb-3">
+    <label class="form-label fw-semibold">Banner Image</label>
+    @if (Model != null && !string.IsNullOrEmpty(Model.BannerImageUrl))
+    {
+        <div class="mb-2">
+            <input type="hidden" id="clearBannerImage" name="ClearBannerImage" value="false" />
+            <button type="button" class="btn btn-outline-danger btn-sm mb-2" id="removeExistingBannerBtn" title="Delete the current banner image">Remove Current</button>
+            <div>
+                <img src="@Model.BannerImageUrl" class="img-fluid rounded" alt="Current banner" style="max-height: 200px; object-fit: cover;" />
+            </div>
+        </div>
+    }
+    <div class="d-flex gap-2 align-items-end">
+        <div class="flex-grow-1">
+            <input type="file" asp-for="BannerImage" class="form-control" id="bannerImageInput" accept="image/jpeg,image/png,image/gif,image/webp" />
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearBannerInputBtn" style="display: none;" title="Cancel the new file selection">Clear File</button>
+    </div>
+    <span asp-validation-for="BannerImage" class="text-danger"></span>
+    <small class="text-muted d-block mt-1">Max 5 MB. Accepts JPG, PNG, GIF, WebP.</small>
+</div>
+
+<script>
+    (function () {
+        var bannerInput = document.getElementById('bannerImageInput');
+        var clearBtn = document.getElementById('clearBannerInputBtn');
+        var removeBtn = document.getElementById('removeExistingBannerBtn');
+        var clearCheckbox = document.getElementById('clearBannerImage');
+        var currentImageDiv = document.querySelector('[style*="max-height: 200px"]')?.parentElement;
+
+        if (bannerInput && clearBtn) {
+            // Show Clear button when a file is selected
+            bannerInput.addEventListener('change', function () {
+                clearBtn.style.display = this.files.length > 0 ? 'block' : 'none';
+            });
+
+            // Clear the file input and hide the button when Clear is clicked
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                bannerInput.value = '';
+                clearBtn.style.display = 'none';
+            });
+        }
+
+        if (removeBtn && clearCheckbox) {
+            // Remove the existing banner image
+            removeBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                clearCheckbox.value = 'true';
+                if (currentImageDiv) {
+                    currentImageDiv.style.display = 'none';
+                }
+                bannerInput.value = '';
+                clearBtn.style.display = 'none';
+                removeBtn.parentElement.style.display = 'none';
+            });
+        }
+    })();
+</script>
+
+@* Title *@
+<div class="form-floating mb-3">
+    <input asp-for="Title" class="form-control border-secondary-subtle bg-light" placeholder="Event Title" />
+    <label asp-for="Title">Title</label>
+    <span asp-validation-for="Title" class="text-danger"></span>
+</div>
+
+@* Description (Quill Rich Text Editor) *@
+<div class="mb-3">
+    <label class="form-label fw-semibold">Description</label>
+    <div id="quill-editor" style="min-height: 200px;"></div>
+    <textarea asp-for="Description" id="descriptionHidden" style="display: none;"></textarea>
+</div>
+
+@* Group Section *@
+@if (Model == null || !Model.Id.HasValue)
+{
+    @* Create mode: Show group dropdown *@
+    <div class="form-floating mb-3">
+        <select asp-for="GroupId" class="form-select border-secondary-subtle bg-light" asp-items="@(ViewData["Groups"] as SelectList)">
+            <option value="">Select a group</option>
+        </select>
+        <label asp-for="GroupId">Group</label>
+        <span asp-validation-for="GroupId" class="text-danger"></span>
+    </div>
+}
+else
+{
+    @* Edit mode: Show group name as disabled, cannot change *@
+    <div class="form-floating mb-3">
+        <input type="text" class="form-control" value="@Model.GroupName" disabled />
+        <label>Group</label>
+        <small class="text-muted">Group cannot be changed after creation.</small>
+    </div>
+}
+
+@* IsPublic (Role-based visibility) *@
+@if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+{
+    <div class="form-check mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <div>
+                <input asp-for="IsPublic" class="form-check-input" />
+                <label asp-for="IsPublic" class="form-check-label">Show on Homepage</label>
+            </div>
+            @* In edit mode, show approval status badge *@
+            @if (Model != null && Model.Id.HasValue && Model.IsPublic)
+            {
+                @if (Model.IsDeniedPublic)
+                {
+                    <span class="badge text-bg-danger">Denied</span>
+                }
+                else if (Model.IsApprovedPublic)
+                {
+                    <span class="badge text-bg-success">Approved</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-warning">Pending</span>
+                }
+            }
+        </div>
+        <span asp-validation-for="IsPublic" class="text-danger"></span>
+    </div>
+}
+else
+{
+    @* Non-staff users cannot make events public *@
+    <input asp-for="IsPublic" type="hidden" value="false" />
+}
+
+@* IsAllDay, Date, Time, URL Fields *@
+@if (Model != null && Model.Id.HasValue)
+{
+    @* Edit mode: Wrap in collapsible "Event Settings" card *@
+    <div class="card mb-3">
+        <div class="card-header p-2">
+            <button class="btn btn-sm btn-link text-decoration-none w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#eventSettings">
+                Event Settings
+            </button>
+        </div>
+        <div class="collapse show" id="eventSettings">
+            <div class="card-body">
+                <div class="form-check mb-3">
+                    <input type="checkbox" asp-for="IsAllDay" class="form-check-input" id="editIsAllDay" />
+                    <label for="editIsAllDay" class="form-check-label">All Day Event</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="date" asp-for="DateOfEvent" class="form-control" id="editDate" />
+                    <label for="editDate">Date of Event</label>
+                    <span asp-validation-for="DateOfEvent" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 time-fields">
+                    <div class="form-floating">
+                        <input type="time" asp-for="StartTime" class="form-control" id="editStartTime" />
+                        <label for="editStartTime">Start Time</label>
+                    </div>
+                    <span asp-validation-for="StartTime" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 time-fields">
+                    <div class="form-floating">
+                        <input type="time" asp-for="EndTime" class="form-control" id="editEndTime" />
+                        <label for="editEndTime">End Time</label>
+                    </div>
+                    <span asp-validation-for="EndTime" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="url" asp-for="Url" class="form-control" id="editUrl" placeholder="https://example.com" />
+                    <label for="editUrl">URL</label>
+                    <span asp-validation-for="Url" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    @* Create mode: No collapsible card, just render the fields *@
+    <div class="form-check mb-3">
+        <input asp-for="IsAllDay" class="form-check-input" id="IsAllDay" />
+        <label asp-for="IsAllDay" class="form-check-label">All Day Event</label>
+        <span asp-validation-for="IsAllDay" class="text-danger"></span>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="DateOfEvent" class="form-control border-secondary-subtle bg-light" type="date" />
+        <label asp-for="DateOfEvent">Date of Event</label>
+        <span asp-validation-for="DateOfEvent" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 time-fields">
+        <div class="form-floating">
+            <input asp-for="StartTime" class="form-control border-secondary-subtle bg-light" type="time" />
+            <label asp-for="StartTime">Start Time</label>
+        </div>
+        <span asp-validation-for="StartTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 time-fields">
+        <div class="form-floating">
+            <input asp-for="EndTime" class="form-control border-secondary-subtle bg-light" type="time" />
+            <label asp-for="EndTime">End Time</label>
+        </div>
+        <span asp-validation-for="EndTime" class="text-danger"></span>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="Url" class="form-control border-secondary-subtle bg-light" type="url" placeholder="https://example.com" />
+        <label asp-for="Url">Url</label>
+        <span asp-validation-for="Url" class="text-danger"></span>
+    </div>
+}

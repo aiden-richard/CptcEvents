@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace CptcEvents.Models;
 
@@ -23,7 +24,7 @@ public class EventFormViewModel : IValidatableObject
     /// <summary>
     /// Optional description of the event.
     /// </summary>
-    [StringLength(1000)]
+    [StringLength(10000)]
     public string? Description { get; set; } = null;
 
     /// <summary>
@@ -84,6 +85,22 @@ public class EventFormViewModel : IValidatableObject
     [DataType(DataType.Url)]
     [Url]
     public string? Url { get; set; }
+
+    /// <summary>
+    /// URL for the banner image stored in Azure Blob Storage.
+    /// </summary>
+    [StringLength(500)]
+    public string? BannerImageUrl { get; set; }
+
+    /// <summary>
+    /// Banner image file upload (not persisted directly).
+    /// </summary>
+    public IFormFile? BannerImage { get; set; }
+
+    /// <summary>
+    /// When true, the existing banner image should be removed.
+    /// </summary>
+    public bool ClearBannerImage { get; set; }
 
     /// <summary>
     /// Indicates whether the current user is at least a moderator of the group (for UI permissions).

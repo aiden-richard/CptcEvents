@@ -4,6 +4,7 @@ using CptcEvents.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CptcEvents.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260213155628_AddEventBannerImageAndExpandDescription")]
+    partial class AddEventBannerImageAndExpandDescription
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -552,7 +555,7 @@ namespace CptcEvents.Migrations
 
             modelBuilder.Entity("CptcEvents.Models.GroupInvite", b =>
                 {
-                    b.HasOne("CptcEvents.Models.ApplicationUser", "CreatedByUser")
+                    b.HasOne("CptcEvents.Models.ApplicationUser", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -569,7 +572,7 @@ namespace CptcEvents.Migrations
                         .HasForeignKey("InvitedUserId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("CreatedBy");
 
                     b.Navigation("Group");
 

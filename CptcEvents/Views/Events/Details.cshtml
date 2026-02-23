@@ -1,0 +1,323 @@
+@model CptcEvents.Models.EventDetailsViewModel
+@using CptcEvents.Models
+@{
+    ViewData["Title"] = Model.Title;
+
+    var timeLabel = Model.IsAllDay
+        ? "All Day"
+        : $"{Model.StartTime:h:mm tt} - {Model.EndTime:h:mm tt}";
+
+    var isStaffOrAdmin = User.IsInRole("Staff") || User.IsInRole("Admin");
+
+    // Build EventFormViewModel from EventDetailsViewModel for use in the shared form partial
+    var editModel = new EventFormViewModel
+    {
+        Id = Model.Id,
+        Title = Model.Title,
+        Description = Model.Description,
+        GroupId = Model.GroupId,
+        GroupName = Model.GroupName,
+        IsPublic = Model.IsPublic,
+        IsApprovedPublic = Model.IsApprovedPublic,
+        IsDeniedPublic = Model.IsDeniedPublic,
+        IsAllDay = Model.IsAllDay,
+        DateOfEvent = Model.DateOfEvent,
+        StartTime = Model.StartTime,
+        EndTime = Model.EndTime,
+        Url = Model.Url,
+        BannerImageUrl = Model.BannerImageUrl
+    };
+}
+
+@* Event detail page with sidebar layout and inline editing support *@
+
+<div class="page-shell">
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @* === PAGE HEADER (always visible) === *@
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2">
+        <div>
+            <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">
+                @if (Model.IsCurrentUserMember)
+                {
+                    <a asp-controller="Groups" asp-action="Events" asp-route-groupId="@Model.GroupId" class="text-muted text-decoration-none">@Model.GroupName</a>
+                }
+                else
+                {
+                    @Model.GroupName
+                }
+            </p>
+            <h2 class="mb-0" id="viewTitle">@Model.Title</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            @* View mode buttons *@
+            <div id="viewActions" class="d-flex gap-2">
+                @if (Model.CanEdit)
+                {
+                    <button type="button" class="btn btn-primary" id="editBtn">Edit Event</button>
+                }
+            </div>
+            @* Edit mode actions (hidden by default) *@
+            @if (Model.CanEdit)
+            {
+                <div id="editActions" class="d-flex gap-2" style="display: none !important;">
+                    <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn">Cancel</button>
+                    <button type="submit" form="editForm" class="btn btn-primary" id="saveBtn">Save Changes</button>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* === BANNER IMAGE === *@
+    <div id="bannerView">
+        @if (!string.IsNullOrEmpty(Model.BannerImageUrl))
+        {
+            <img src="@Model.BannerImageUrl" class="w-100 rounded" alt="Event banner" style="max-height: 320px; object-fit: cover;" />
+        }
+    </div>
+
+    @* === VIEW MODE (sidebar layout) === *@
+    <div id="viewMode" class="row g-3 align-items-start">
+
+        @* Left column: Description *@
+        <div class="col-12 col-md-8">
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="card h-100">
+                    <div class="card-header">About this event</div>
+                    <div class="card-body">
+                        @Html.Raw(Model.Description)
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No description provided.</p>
+            }
+        </div>
+
+        @* Right column: Metadata sidebar *@
+        <div class="col-12 col-md-4">
+            <div class="card">
+                <div class="card-body d-flex flex-column gap-3">
+                    @* Group *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Group</p>
+                        @if (Model.IsCurrentUserMember)
+                        {
+                            <a asp-controller="Groups" asp-action="Events" asp-route-groupId="@Model.GroupId">@Model.GroupName</a>
+                        }
+                        else
+                        {
+                            <span>@Model.GroupName</span>
+                        }
+                    </div>
+
+                    @* Date *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Date</p>
+                        <span>@Model.DateOfEvent.ToString("dddd, MMMM d, yyyy")</span>
+                    </div>
+
+                    @* Time *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Time</p>
+                        <span>@timeLabel</span>
+                    </div>
+
+                    @* Visibility *@
+                    <div>
+                        <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Visibility</p>
+                        <div>
+                            @if (Model.IsPublic)
+                            {
+                                <span class="badge text-bg-success">Public</span>
+                                @if (Model.IsApprovedPublic)
+                                {
+                                    <span class="badge text-bg-success">Approved</span>
+                                }
+                                else if (Model.IsDeniedPublic)
+                                {
+                                    <span class="badge text-bg-danger">Denied</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-warning">Pending</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Private</span>
+                            }
+                        </div>
+                    </div>
+
+                    @* URL (if present) *@
+                    @if (!string.IsNullOrWhiteSpace(Model.Url))
+                    {
+                        <div>
+                            <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Link</p>
+                            <a href="@Model.Url" target="_blank" rel="noopener noreferrer" class="small text-break">@Model.Url</a>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    @* === EDIT MODE (hidden by default) === *@
+    @if (Model.CanEdit)
+    {
+        <div id="editMode" style="display: none;">
+            <div class="card">
+                <div class="card-body">
+                    <form id="editForm" asp-action="Edit" asp-route-eventId="@Model.Id" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@Model.Id" />
+                        <input type="hidden" name="GroupId" value="@Model.GroupId" />
+                        <input type="hidden" name="IsModerator" value="true" />
+
+                        <partial name="_EventFormFields" model="editModel" />
+
+                        <div class="d-flex justify-content-center gap-2 mt-4">
+                            <button type="submit" form="editForm" class="btn btn-primary" id="saveBtn">Save Changes</button>
+                        </div>
+
+                        @* Danger zone *@
+                        <hr class="mt-3" />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">Danger Zone</span>
+                            <a asp-action="Delete" asp-route-eventId="@Model.Id" class="btn btn-outline-danger btn-sm">Delete Event</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    @if (Model.CanEdit)
+    {
+        <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+        <script>
+            (function () {
+                var editBtn = document.getElementById('editBtn');
+                var cancelEditBtn = document.getElementById('cancelEditBtn');
+                var viewMode = document.getElementById('viewMode');
+                var editMode = document.getElementById('editMode');
+                var viewActions = document.getElementById('viewActions');
+                var editActions = document.getElementById('editActions');
+                var bannerView = document.getElementById('bannerView');
+                var quillEditor = null;
+
+                // All-day checkbox toggle for time fields
+                var isAllDayCheckbox = document.getElementById('editIsAllDay');
+                var timeFieldWrappers = document.querySelectorAll('.time-fields');
+
+                function updateTimeFields() {
+                    var hidden = isAllDayCheckbox && isAllDayCheckbox.checked;
+                    timeFieldWrappers.forEach(function (w) {
+                        var inputs = w.querySelectorAll('input');
+                        inputs.forEach(function (i) { i.disabled = hidden; });
+                        w.style.display = hidden ? 'none' : '';
+                    });
+                }
+
+                if (isAllDayCheckbox) {
+                    isAllDayCheckbox.addEventListener('change', updateTimeFields);
+                }
+
+                function enterEditMode() {
+                    viewMode.style.display = 'none';
+                    viewActions.style.setProperty('display', 'none', 'important');
+                    bannerView.style.display = 'none';
+                    editMode.style.display = 'block';
+                    if (editActions) {
+                        editActions.style.setProperty('display', 'flex', 'important');
+                    }
+
+                    updateTimeFields();
+
+                    // Initialize Quill editor if not already done
+                    if (!quillEditor) {
+                        quillEditor = new Quill('#quill-editor', {
+                            theme: 'snow',
+                            modules: {
+                                toolbar: [
+                                    [{ 'header': [1, 2, 3, false] }],
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                    ['link', 'blockquote', 'code-block'],
+                                    ['clean']
+                                ]
+                            }
+                        });
+
+                        // Load existing description HTML into Quill
+                        var descriptionHidden = document.getElementById('descriptionHidden');
+                        if (descriptionHidden && descriptionHidden.value) {
+                            quillEditor.root.innerHTML = descriptionHidden.value;
+                        }
+                    }
+                }
+
+                function exitEditMode() {
+                    editMode.style.display = 'none';
+                    viewMode.style.display = '';
+                    viewActions.style.setProperty('display', 'flex', 'important');
+                    bannerView.style.display = 'block';
+                    if (editActions) {
+                        editActions.style.setProperty('display', 'none', 'important');
+                    }
+                }
+
+                if (editBtn) {
+                    editBtn.addEventListener('click', enterEditMode);
+                }
+
+                if (cancelEditBtn) {
+                    cancelEditBtn.addEventListener('click', exitEditMode);
+                }
+
+                // Copy Quill content to hidden textarea before form submission
+                var editFormEl = document.getElementById('editForm');
+                if (editFormEl) {
+                    editFormEl.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        if (quillEditor) {
+                            var html = quillEditor.root.innerHTML;
+                            // Quill sets empty content as <p><br></p>
+                            if (html === '<p><br></p>') {
+                                html = '';
+                            }
+                            var descriptionHidden = document.getElementById('descriptionHidden');
+                            if (descriptionHidden) {
+                                descriptionHidden.value = html;
+                            }
+                        }
+                        // Now submit the form after Quill content is synced
+                        editFormEl.submit();
+                    }, false);
+                }
+
+                // Auto-enter edit mode if requested via query parameter
+                var openInEditMode = @Json.Serialize(ViewData["OpenInEditMode"]);
+                if (openInEditMode) {
+                    enterEditMode();
+                }
+            })();
+        </script>
+    }
+}
