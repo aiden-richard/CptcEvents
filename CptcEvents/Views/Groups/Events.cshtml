@@ -5,14 +5,14 @@
 <div class="page-shell">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
-            <p class="text-muted small mb-1">Group events</p>
+            <p class="text-muted small mb-1">Group Details</p>
             <h2 class="mb-0">@Model.Group.Name</h2>
         </div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex justify-content-end flex-wrap gap-2 ms-auto align-self-end">
             <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Groups")">Back to My Groups</a>
             @if (Model.UserIsModerator)
             {
-                <a class="btn btn-primary" href="@Url.Action("ManageGroup", "Groups", new { groupId = Model.Group.Id })">Manage Group</a>
+            <a class="btn btn-outline-primary" href="@Url.Action("ManageGroup", "Groups", new { groupId = Model.Group.Id })">Manage Group</a>
             }
         </div>
     </div>
@@ -26,7 +26,7 @@
                 </div>
                 <div>
                     <a class="btn btn-outline-primary" href="@Url.Action("ManageEvents", "Groups", new { groupId = Model.Group.Id })">Manage events</a>
-                    <a class="btn btn-outline-secondary" href="@Url.Action("Create", "Events", new { groupId = Model.Group.Id })">Create event</a>
+                    <a class="btn btn-primary" href="@Url.Action("Create", "Events", new { groupId = Model.Group.Id })">Create event</a>
                 </div>
             </div>
             @await Component.InvokeAsync("Calendar", new { 
@@ -44,37 +44,49 @@
             </div>
             @if (Model.UpcomingEvents.Any())
             {
-                <div class="d-flex flex-column gap-3">
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+                <div class="d-flex flex-column gap-1">
                     @foreach (var evt in Model.UpcomingEvents)
                     {
-                        var timeLabel = evt.IsAllDay
-                            ? "All day"
-                            : $"{evt.StartTime:hh\\:mm tt} - {evt.EndTime:hh\\:mm tt}";
+                        var daysUntil = evt.DateOfEvent.DayNumber - today.DayNumber;
+                        var dateHint = daysUntil switch
+                        {
+                            0 => "Today",
+                            1 => "Tomorrow",
+                            <= 7 => $"In {daysUntil} days",
+                            _ => (string?)null
+                        };
 
-                        <div class="card shadow-soft w-100">
-                            <div class="card-body">
-                                <div class="d-flex flex-column flex-md-row align-items-start gap-3">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-start gap-2 mb-1">
-                                            <h5 class="card-title mb-0">
-                                                <a asp-controller="Events" asp-action="Details" asp-route-eventId="@evt.Id" class="text-decoration-none text-body">@evt.Title</a>
-                                            </h5>
-                                            @if (!evt.IsPublic)
+                        <div class="card w-100">
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-2">
+                                    <div class="d-flex align-items-baseline gap-2 flex-grow-1">
+                                        <div class="flex-shrink-0 text-center" style="min-width: 4.5rem;">
+                                            <div class="fw-semibold small">@evt.DateOfEvent.ToString("MMM d")</div>
+                                            @if (dateHint != null)
                                             {
-                                                <span class="badge rounded-pill text-bg-secondary">Private</span>
+                                                <div class="text-muted" style="font-size: 0.7rem;">@dateHint</div>
                                             }
                                         </div>
-                                        @if (!string.IsNullOrWhiteSpace(evt.Description))
-                                        {
-                                            <p class="card-text text-muted mb-1">@Html.Raw(evt.Description)</p>
-                                        }
+                                        <div>
+                                            <h6 class="mb-0">
+                                                <a asp-controller="Events" asp-action="Details" asp-route-eventId="@evt.Id" class="text-decoration-none text-body">@evt.Title</a>
+                                            </h6>
+                                            @if (!evt.IsPublic)
+                                            {
+                                                <span class="badge rounded-pill text-bg-secondary" style="font-size: 0.65rem;">Private</span>
+                                            }
+                                        </div>
                                     </div>
-                                    <div class="d-flex flex-column align-items-md-end text-md-end h-100">
-                                        <div class="fw-semibold">@evt.DateOfEvent.ToString("MMM d, yyyy")</div>
-                                        <div class="text-muted">@timeLabel</div>
-                                        @if (!string.IsNullOrWhiteSpace(evt.Url))
+                                    <div class="flex-shrink-0 text-md-end">
+                                        @if (evt.IsAllDay)
                                         {
-                                            <div class="mt-1"><a class="small" href="@evt.Url" target="_blank" rel="noopener noreferrer">@evt.Url</a></div>
+                                            <span class="text-muted small">All day</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">@evt.StartTime.ToString("h:mm tt") &ndash; @evt.EndTime.ToString("h:mm tt")</span>
                                         }
                                     </div>
                                 </div>

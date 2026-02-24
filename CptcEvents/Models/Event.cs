@@ -46,6 +46,11 @@ public class Event : IValidatableObject
     public bool IsDeniedPublic { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets a value indicating whether RSVP is enabled for this event.
+    /// </summary>
+    public bool IsRsvpEnabled { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets a value indicating whether this event spans the entire day (has no specific start/end times).
     /// </summary>
     public bool IsAllDay { get; set; } = false;

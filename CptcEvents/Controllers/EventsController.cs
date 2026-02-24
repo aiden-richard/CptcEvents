@@ -24,13 +24,15 @@ namespace CptcEvents.Controllers
         private readonly IGroupAuthorizationService _groupAuthorization;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IImageStorageService? _imageStorageService;
+        private readonly IRsvpService _rsvpService;
 
-        public EventsController(IEventService eventsService, IGroupService groupService, IGroupAuthorizationService groupAuthorization, UserManager<ApplicationUser> userManager, IImageStorageService? imageStorageService = null)
+        public EventsController(IEventService eventsService, IGroupService groupService, IGroupAuthorizationService groupAuthorization, UserManager<ApplicationUser> userManager, IRsvpService rsvpService, IImageStorageService? imageStorageService = null)
         {
             _eventsService = eventsService;
             _groupService = groupService;
             _groupAuthorization = groupAuthorization;
             _userManager = userManager;
+            _rsvpService = rsvpService;
             _imageStorageService = imageStorageService;
         }
 
@@ -55,7 +57,9 @@ namespace CptcEvents.Controllers
             bool isAdmin = User.IsInRole("Admin");
             IEnumerable<Event> events = await _eventsService.GetActiveEventsForUserAsync(userId, isAdmin);
 
-            List<EventDetailsViewModel> viewModel = events.Select(EventMapper.ToDetails).ToList();
+            List<EventDetailsViewModel> viewModel = events
+                .Select(e => EventMapper.ToDetails(e))
+                .ToList();
 
             return View(viewModel);
         }
@@ -410,6 +414,23 @@ namespace CptcEvents.Controllers
 
             var eventDetails = EventMapper.ToDetails(eventItem, canAccessGroup, canEdit);
 
+            // Load RSVP data for the event
+            Dictionary<RsvpStatus, int> rsvpCounts = await _rsvpService.GetRsvpCountsByStatusAsync(eventId);
+            EventRsvp? userRsvp = null;
+            if (userId != null)
+            {
+                userRsvp = await _rsvpService.GetUserRsvpForEventAsync(eventId, userId);
+            }
+
+            eventDetails = eventDetails with
+            {
+                CurrentUserRsvpStatus = userRsvp?.Status,
+                CurrentUserRsvpId = userRsvp?.Id,
+                GoingCount = rsvpCounts.GetValueOrDefault(RsvpStatus.Going),
+                MaybeCount = rsvpCounts.GetValueOrDefault(RsvpStatus.Maybe),
+                NotGoingCount = rsvpCounts.GetValueOrDefault(RsvpStatus.NotGoing)
+            };
+
             ViewData["OpenInEditMode"] = edit && canEdit;
 
             // Content negotiation: return JSON for AJAX requests, View for browsers
@@ -419,6 +440,145 @@ namespace CptcEvents.Controllers
             }
 
             return View(eventDetails);
+        }
+
+        #endregion
+
+        #region RSVP Operations
+
+        /// <summary>
+        /// Creates or updates the current user's RSVP for an event.
+        /// POST /Events/{eventId}/Rsvp
+        /// </summary>
+        [HttpPost("Events/{eventId}/Rsvp")]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> Rsvp(int eventId, [FromForm] RsvpStatus status)
+        {
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            // Verify event exists
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            // Verify RSVP is enabled for this event
+            if (!eventItem.IsRsvpEnabled)
+            {
+                TempData["Error"] = "RSVP is not enabled for this event.";
+                return RedirectToAction(nameof(Details), new { eventId });
+            }
+
+            // Verify user can access this event (member of group, or event is approved public)
+            bool isAdmin = User.IsInRole("Admin");
+            bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+
+            if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
+            {
+                if (!isAdmin && !isMember)
+                {
+                    return Forbid();
+                }
+            }
+
+            // Check if user already has an RSVP for this event
+            EventRsvp? existingRsvp = await _rsvpService.GetUserRsvpForEventAsync(eventId, userId);
+
+            if (existingRsvp != null)
+            {
+                // Update existing RSVP
+                await _rsvpService.UpdateRsvpAsync(existingRsvp.Id, status);
+            }
+            else
+            {
+                // Create new RSVP
+                await _rsvpService.CreateRsvpAsync(eventId, userId, status);
+            }
+
+            return RedirectToAction(nameof(Details), new { eventId });
+        }
+
+        /// <summary>
+        /// Removes the current user's RSVP for an event.
+        /// POST /Events/{eventId}/RemoveRsvp
+        /// </summary>
+        [HttpPost("Events/{eventId}/RemoveRsvp")]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> RemoveRsvp(int eventId)
+        {
+            string? userId = await _groupAuthorization.GetUserIdAsync(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            // Verify event exists
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            // Verify RSVP is enabled for this event
+            if (!eventItem.IsRsvpEnabled)
+            {
+                TempData["Error"] = "RSVP is not enabled for this event.";
+                return RedirectToAction(nameof(Details), new { eventId });
+            }
+
+            // Verify user can access this event (member of group, or event is approved public)
+            bool isAdmin = User.IsInRole("Admin");
+            bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+
+            if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
+            {
+                if (!isAdmin && !isMember)
+                {
+                    return Forbid();
+                }
+            }
+
+            EventRsvp? existingRsvp = await _rsvpService.GetUserRsvpForEventAsync(eventId, userId);
+            if (existingRsvp != null)
+            {
+                await _rsvpService.DeleteRsvpAsync(existingRsvp.Id);
+            }
+
+            return RedirectToAction(nameof(Details), new { eventId });
+        }
+
+        /// <summary>
+        /// Clears all RSVPs for an event. Only available to moderators of the event's group.
+        /// POST /Events/{eventId}/ClearAllRsvps
+        /// </summary>
+        [HttpPost("Events/{eventId}/ClearAllRsvps")]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> ClearAllRsvps(int eventId)
+        {
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(eventItem.GroupId, User);
+            if (!moderatorCheck.Succeeded)
+            {
+                return moderatorCheck.ToActionResult(this);
+            }
+
+            int cleared = await _rsvpService.ClearAllRsvpsAsync(eventId);
+            TempData["Success"] = $"Cleared {cleared} RSVP(s) for this event.";
+
+            return RedirectToAction(nameof(Details), new { eventId });
         }
 
         #endregion

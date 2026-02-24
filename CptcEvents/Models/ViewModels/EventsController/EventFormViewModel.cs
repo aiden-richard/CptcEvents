@@ -55,6 +55,12 @@ public class EventFormViewModel : IValidatableObject
     public bool IsDeniedPublic { get; set; }
 
     /// <summary>
+    /// Whether RSVP is enabled for this event.
+    /// </summary>
+    [Display(Name = "Enable RSVP")]
+    public bool IsRsvpEnabled { get; set; }
+
+    /// <summary>
     /// Whether the event is an all-day event.
     /// </summary>
     public bool IsAllDay { get; set; }

@@ -223,6 +223,7 @@ public class EventService : IEventService
         existingEvent.Title = updatedEvent.Title;
         existingEvent.Description = updatedEvent.Description;
         existingEvent.IsPublic = updatedEvent.IsPublic;
+        existingEvent.IsRsvpEnabled = updatedEvent.IsRsvpEnabled;
         existingEvent.IsAllDay = updatedEvent.IsAllDay;
         existingEvent.DateOfEvent = updatedEvent.DateOfEvent;
         existingEvent.StartTime = updatedEvent.StartTime;
