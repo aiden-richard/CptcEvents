@@ -678,7 +678,7 @@ namespace CptcEvents.Controllers
                 .Where(e => e.DateOfEvent >= today)
                 .OrderBy(e => e.DateOfEvent)
                 .ThenBy(e => e.IsAllDay ? TimeOnly.MinValue : e.StartTime)
-                .Take(10)
+                .Take(5)
                 .ToList();
 
             var viewModel = new GroupEventsViewModel
