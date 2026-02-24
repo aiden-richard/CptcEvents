@@ -57,26 +57,9 @@ namespace CptcEvents.Controllers
             bool isAdmin = User.IsInRole("Admin");
             IEnumerable<Event> events = await _eventsService.GetActiveEventsForUserAsync(userId, isAdmin);
 
-            // Batch-load all RSVP data in two queries instead of 2N queries
-            var eventIds = events.Select(e => e.Id).ToList();
-            var allUserRsvps = await _rsvpService.GetUserRsvpsForEventsAsync(eventIds, userId);
-            var allRsvpCounts = await _rsvpService.GetRsvpCountsByStatusForEventsAsync(eventIds);
-
-            List<EventDetailsViewModel> viewModel = new();
-            foreach (Event e in events)
-            {
-                allUserRsvps.TryGetValue(e.Id, out EventRsvp? userRsvp);
-                var rsvpCounts = allRsvpCounts.GetValueOrDefault(e.Id, new Dictionary<RsvpStatus, int>());
-                var details = EventMapper.ToDetails(e);
-                viewModel.Add(details with
-                {
-                    CurrentUserRsvpStatus = userRsvp?.Status,
-                    CurrentUserRsvpId = userRsvp?.Id,
-                    GoingCount = rsvpCounts.GetValueOrDefault(RsvpStatus.Going),
-                    MaybeCount = rsvpCounts.GetValueOrDefault(RsvpStatus.Maybe),
-                    NotGoingCount = rsvpCounts.GetValueOrDefault(RsvpStatus.NotGoing)
-                });
-            }
+            List<EventDetailsViewModel> viewModel = events
+                .Select(e => EventMapper.ToDetails(e))
+                .ToList();
 
             return View(viewModel);
         }

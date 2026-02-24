@@ -48,27 +48,6 @@
                                 {
                                     <div class="text-muted small">@e.StartTime.ToString("h:mm tt") - @e.EndTime.ToString("h:mm tt")</div>
                                 }
-                                <div class="d-flex gap-1 mt-1">
-                                    @if (e.IsRsvpEnabled && e.CurrentUserRsvpStatus.HasValue)
-                                    {
-                                        @switch (e.CurrentUserRsvpStatus.Value)
-                                        {
-                                            case RsvpStatus.Going:
-                                                <span class="badge text-bg-success" style="font-size: 0.65rem;">Going</span>
-                                                break;
-                                            case RsvpStatus.Maybe:
-                                                <span class="badge text-bg-warning" style="font-size: 0.65rem;">Maybe</span>
-                                                break;
-                                            case RsvpStatus.NotGoing:
-                                                <span class="badge text-bg-secondary" style="font-size: 0.65rem;">Not Going</span>
-                                                break;
-                                        }
-                                    }
-                                    @if (e.IsRsvpEnabled && e.GoingCount > 0)
-                                    {
-                                        <span class="text-muted" style="font-size: 0.7rem;">@e.GoingCount going</span>
-                                    }
-                                </div>
                                 <a asp-action="Details" asp-route-eventId="@e.Id" class="btn btn-outline-primary btn-sm mt-2">Details</a>
                             </div>
                         </div>
