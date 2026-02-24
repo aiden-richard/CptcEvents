@@ -218,8 +218,8 @@
 
                     var timeString = '';
                     if (!event.isAllDay && event.startTime && event.endTime) {
-                        var startTime = new Date('2000-01-01T' + event.startTime + ':00');
-                        var endTime = new Date('2000-01-01T' + event.endTime + ':00');
+                        var startTime = new Date('2000-01-01T' + event.startTime);
+                        var endTime = new Date('2000-01-01T' + event.endTime);
                         timeString = startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + 
                                    ' - ' + endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                     } else {
