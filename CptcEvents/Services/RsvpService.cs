@@ -150,21 +150,43 @@ public class RsvpService : IRsvpService
     }
 
     /// <summary>
-    /// Deletes all RSVPs for a specific event.
+    /// Deletes all RSVPs for a specific event using a single DELETE command.
     /// </summary>
     public async Task<int> ClearAllRsvpsAsync(int eventId)
     {
-        var rsvps = await _context.EventRsvps
+        return await _context.EventRsvps
             .Where(r => r.EventId == eventId)
+            .ExecuteDeleteAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Dictionary<int, EventRsvp>> GetUserRsvpsForEventsAsync(IEnumerable<int> eventIds, string userId)
+    {
+        var ids = eventIds.ToList();
+        return await _context.EventRsvps
+            .Where(r => ids.Contains(r.EventId) && r.UserId == userId)
+            .ToDictionaryAsync(r => r.EventId);
+    }
+
+    /// <inheritdoc/>
+    public async Task<Dictionary<int, Dictionary<RsvpStatus, int>>> GetRsvpCountsByStatusForEventsAsync(IEnumerable<int> eventIds)
+    {
+        var ids = eventIds.ToList();
+        var grouped = await _context.EventRsvps
+            .Where(r => ids.Contains(r.EventId))
+            .GroupBy(r => new { r.EventId, r.Status })
+            .Select(g => new { g.Key.EventId, g.Key.Status, Count = g.Count() })
             .ToListAsync();
 
-        if (rsvps.Count == 0)
+        var result = new Dictionary<int, Dictionary<RsvpStatus, int>>();
+        foreach (var item in grouped)
         {
-            return 0;
+            if (!result.ContainsKey(item.EventId))
+            {
+                result[item.EventId] = new Dictionary<RsvpStatus, int>();
+            }
+            result[item.EventId][item.Status] = item.Count;
         }
-
-        _context.EventRsvps.RemoveRange(rsvps);
-        await _context.SaveChangesAsync();
-        return rsvps.Count;
+        return result;
     }
 }

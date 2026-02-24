@@ -57,11 +57,16 @@ namespace CptcEvents.Controllers
             bool isAdmin = User.IsInRole("Admin");
             IEnumerable<Event> events = await _eventsService.GetActiveEventsForUserAsync(userId, isAdmin);
 
+            // Batch-load all RSVP data in two queries instead of 2N queries
+            var eventIds = events.Select(e => e.Id).ToList();
+            var allUserRsvps = await _rsvpService.GetUserRsvpsForEventsAsync(eventIds, userId);
+            var allRsvpCounts = await _rsvpService.GetRsvpCountsByStatusForEventsAsync(eventIds);
+
             List<EventDetailsViewModel> viewModel = new();
             foreach (Event e in events)
             {
-                EventRsvp? userRsvp = await _rsvpService.GetUserRsvpForEventAsync(e.Id, userId);
-                Dictionary<RsvpStatus, int> rsvpCounts = await _rsvpService.GetRsvpCountsByStatusAsync(e.Id);
+                allUserRsvps.TryGetValue(e.Id, out EventRsvp? userRsvp);
+                var rsvpCounts = allRsvpCounts.GetValueOrDefault(e.Id, new Dictionary<RsvpStatus, int>());
                 var details = EventMapper.ToDetails(e);
                 viewModel.Add(details with
                 {
@@ -529,6 +534,32 @@ namespace CptcEvents.Controllers
             if (userId == null)
             {
                 return Challenge();
+            }
+
+            // Verify event exists
+            Event? eventItem = await _eventsService.GetEventByIdAsync(eventId);
+            if (eventItem == null)
+            {
+                return NotFound();
+            }
+
+            // Verify RSVP is enabled for this event
+            if (!eventItem.IsRsvpEnabled)
+            {
+                TempData["Error"] = "RSVP is not enabled for this event.";
+                return RedirectToAction(nameof(Details), new { eventId });
+            }
+
+            // Verify user can access this event (member of group, or event is approved public)
+            bool isAdmin = User.IsInRole("Admin");
+            bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+
+            if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
+            {
+                if (!isAdmin && !isMember)
+                {
+                    return Forbid();
+                }
             }
 
             EventRsvp? existingRsvp = await _rsvpService.GetUserRsvpForEventAsync(eventId, userId);
