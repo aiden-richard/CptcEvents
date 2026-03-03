@@ -17,8 +17,7 @@ jobs:
       - name: Ensure SQL Server is running
         env:
           SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
-        working-directory: ./SqlDevServer
-        run: docker compose up -d
+        run: docker ps -q -f name=sqlserver || docker-compose -f ./SqlServer/docker-compose.yml up -d
 
       # Step 3: Build Docker Image
       - name: Build Docker Image
