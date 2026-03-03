@@ -1,4 +1,4 @@
-name: Deploy to Azure
+name: Deploy to Self-Hosted Runner
 
 on:
   push:
@@ -6,108 +6,76 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       # Step 1: Checkout main branch
       - name: Checkout main
         uses: actions/checkout@v4
 
-      # Step 2: Install .NET 10 Preview manually
-      - name: Install .NET 10 Preview SDK
-        run: |
-          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
-          chmod +x dotnet-install.sh
-          ./dotnet-install.sh --version 10.0.100-rc.2.25502.107
-          echo "DOTNET_ROOT=$HOME/.dotnet" >> $GITHUB_ENV
-          echo "$HOME/.dotnet:$HOME/.dotnet/tools" >> $GITHUB_PATH
+      # Step 2: Ensure SQL Server container is running
+      - name: Ensure SQL Server is running
+        env:
+          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
+        working-directory: ./SqlDevServer
+        run: docker compose up -d
 
-      # Step 3: Verify .NET version
-      - name: Verify .NET version
-        run: dotnet --info
-
-      # Step 4: Restore dependencies
-      - name: Restore dependencies
-        run: dotnet restore
-
-      # Step 5: Build
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      # Step 6: Login to Azure
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      # Step 7: Login to ACR
-      - name: Login to Azure Container Registry
-        run: az acr login --name cptcevents
-
-      # Step 8: Build and Push Docker Image
-      - name: Build and Push Docker Image
+      # Step 3: Build Docker Image
+      - name: Build Docker Image
         working-directory: ./CptcEvents
         run: |
-          docker build -t cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:${{ github.sha }} \
-                       -t cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest .
-          docker push cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:${{ github.sha }}
-          docker push cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest
+          docker build -t cptcevents:${{ github.sha }} -t cptcevents:latest .
 
-      # Step 9: Validate required deployment secrets
+      # Step 4: Stop and remove existing container
+      - name: Stop existing container
+        run: |
+          docker stop cptcevents-app || true
+          docker rm cptcevents-app || true
+
+      # Step 5: Validate required deployment secrets
       - name: Validate required secrets
         env:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-          SQL_CONNECTION_STRING: ${{ secrets.SQL_CONNECTION_STRING }}
-          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
           AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
         run: |
-          # Check for presence of required secrets
           missing=""
           [ -z "$ADMIN_EMAIL" ] && missing="$missing ADMIN_EMAIL"
           [ -z "$ADMIN_USERNAME" ] && missing="$missing ADMIN_USERNAME"
           [ -z "$ADMIN_PASSWORD" ] && missing="$missing ADMIN_PASSWORD"
           [ -z "$SENDGRID_API_KEY" ] && missing="$missing SENDGRID_API_KEY"
-          [ -z "$SQL_CONNECTION_STRING" ] && missing="$missing SQL_CONNECTION_STRING"
-          [ -z "$ACR_PASSWORD" ] && missing="$missing ACR_PASSWORD"
+          [ -z "$SA_PASSWORD" ] && missing="$missing SA_PASSWORD"
           [ -z "$AZURE_BLOB_CONNECTION_STRING" ] && missing="$missing AZURE_BLOB_CONNECTION_STRING"
-          
+
           if [ -n "$missing" ]; then
             echo "ERROR: Missing required GitHub secrets: $missing"
             echo "Set the missing secrets in repository settings before deploying."
             exit 1
           fi
 
-      # Step 10: Deploy to Azure Container Apps
-      - name: Deploy to Container Apps
+      # Step 6: Run new container on the same Docker network as SQL Server
+      - name: Run new container
         env:
-          SQL_CONNECTION_STRING: ${{ secrets.SQL_CONNECTION_STRING }}
+          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
           AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
         run: |
-          echo "::add-mask::$ACR_PASSWORD"
-          az containerapp up \
+          docker run -d \
             --name cptcevents-app \
-            --resource-group CptcEventsResourceGroup \
-            --location westus2 \
-            --environment cptcevents-env \
-            --image cptcevents-fbh7bqh0f6a6hpgt.azurecr.io/cptcevents:latest \
-            --target-port 8080 \
-            --ingress external \
-            --registry-server cptcevents-fbh7bqh0f6a6hpgt.azurecr.io \
-            --registry-username cptcevents \
-            --registry-password "$ACR_PASSWORD" \
-            --env-vars \
-              ASPNETCORE_ENVIRONMENT=Production \
-              ConnectionStrings__DefaultConnection="$SQL_CONNECTION_STRING" \
-              SendGrid__ApiKey="$SENDGRID_API_KEY" \
-              AdminUser__Email="$ADMIN_EMAIL" \
-              AdminUser__UserName="$ADMIN_USERNAME" \
-              AdminUser__Password="$ADMIN_PASSWORD" \
-              AzureBlobStorage__ConnectionString="$AZURE_BLOB_CONNECTION_STRING"
+            --restart unless-stopped \
+            --network CptcEventsNetwork \
+            -p 8080:8080 \
+            -e ASPNETCORE_ENVIRONMENT=Production \
+            -e "ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CptcEvents;User Id=sa;Password=$SA_PASSWORD;TrustServerCertificate=True" \
+            -e "SendGrid__ApiKey=$SENDGRID_API_KEY" \
+            -e "AdminUser__Email=$ADMIN_EMAIL" \
+            -e "AdminUser__UserName=$ADMIN_USERNAME" \
+            -e "AdminUser__Password=$ADMIN_PASSWORD" \
+            -e "AzureBlobStorage__ConnectionString=$AZURE_BLOB_CONNECTION_STRING" \
+            cptcevents:latest
