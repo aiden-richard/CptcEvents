@@ -116,7 +116,6 @@ namespace CptcEvents.Controllers
         /// <returns>View listing pending, approved, and denied public events.</returns>
         public async Task<IActionResult> ApprovePublicEvents()
         {
-            var publicEvents = await _eventService.GetPublicEventsAsync();
             IEnumerable<Event> pendingEvents = await _eventService.GetEventsPendingPublicApproval();
             IEnumerable<Event> approvedEvents = await _eventService.GetApprovedPublicEventsAsync();
             IEnumerable<Event> deniedEvents = await _eventService.GetDeniedPublicEventsAsync();
