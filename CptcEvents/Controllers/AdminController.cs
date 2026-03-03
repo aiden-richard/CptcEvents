@@ -138,19 +138,19 @@ namespace CptcEvents.Controllers
         /// <returns>Redirects to ApprovePublicEvents.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApproveEvent(int eventId)
+        public async Task<IActionResult> ApproveEvent(int eventId, string? returnUrl = null)
         {
-            // Update the event to mark it as approved
-            Event? existingEvent = await _eventService.GetEventByIdAsync(eventId);
-            if (existingEvent == null)
+            if (!await _eventService.ApproveEventAsync(eventId))
             {
+                TempData["Error"] = "Event not found.";
                 return RedirectToAction(nameof(ApprovePublicEvents));
             }
 
-            existingEvent.IsApprovedPublic = true;
-            await _eventService.UpdateEventAsync(eventId, existingEvent);
-
-            TempData["Success"] = $"Event '{existingEvent.Title}' has been approved for display on the homepage.";
+            TempData["Success"] = "Event approved successfully.";
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
             return RedirectToAction(nameof(ApprovePublicEvents));
         }
 
@@ -162,24 +162,19 @@ namespace CptcEvents.Controllers
         /// <returns>Redirects to ApprovePublicEvents.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RevokeApproval(int eventId)
+        public async Task<IActionResult> RevokeApproval(int eventId, string? returnUrl = null)
         {
-            var eventItem = await _eventService.GetEventByIdAsync(eventId);
-            if (eventItem == null)
+            if (!await _eventService.RevokeApprovalDecisionAsync(eventId))
             {
+                TempData["Error"] = "Event not found.";
                 return RedirectToAction(nameof(ApprovePublicEvents));
             }
 
-            // Update the event to revoke approval
-            Event? existingEvent = await _eventService.GetEventByIdAsync(eventId);
-            if (existingEvent == null)
+            TempData["Success"] = "Approval decision revoked. Event is now pending review.";
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
-                return RedirectToAction(nameof(ApprovePublicEvents));
+                return Redirect(returnUrl);
             }
-            existingEvent.IsApprovedPublic = false;
-            await _eventService.UpdateEventAsync(eventId, existingEvent);
-
-            TempData["Success"] = $"Approval revoked for event '{existingEvent.Title}'.";
             return RedirectToAction(nameof(ApprovePublicEvents));
         }
 
@@ -191,54 +186,19 @@ namespace CptcEvents.Controllers
         /// <returns>Redirects to ApprovePublicEvents.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DenyEvent(int eventId)
+        public async Task<IActionResult> DenyEvent(int eventId, string? returnUrl = null)
         {
-            var eventItem = await _eventService.GetEventByIdAsync(eventId);
-            if (eventItem == null)
+            if (!await _eventService.DenyEventAsync(eventId))
             {
+                TempData["Error"] = "Event not found.";
                 return RedirectToAction(nameof(ApprovePublicEvents));
             }
 
-            // Update the event to mark it as denied
-            var existingEvent = await _eventService.GetEventByIdAsync(eventId);
-            if (existingEvent == null)
+            TempData["Success"] = "Event denied successfully.";
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
-                return RedirectToAction(nameof(ApprovePublicEvents));
+                return Redirect(returnUrl);
             }
-            existingEvent.IsDeniedPublic = true;
-            existingEvent.IsApprovedPublic = false;
-            await _eventService.UpdateEventAsync(eventId, existingEvent);
-
-            TempData["Success"] = $"Event '{existingEvent.Title}' has been denied.";
-            return RedirectToAction(nameof(ApprovePublicEvents));
-        }
-
-        /// <summary>
-        /// Restores a denied event back to pending approval.
-        /// POST /Admin/RestoreEvent/{eventId}
-        /// </summary>
-        /// <param name="eventId">The ID of the event to restore.</param>
-        /// <returns>Redirects to ApprovePublicEvents.</returns>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RestoreEvent(int eventId)
-        {
-            var eventItem = await _eventService.GetEventByIdAsync(eventId);
-            if (eventItem == null)
-            {
-                return RedirectToAction(nameof(ApprovePublicEvents));
-            }
-
-            // Update the event to restore it to pending
-            var existingEvent = await _eventService.GetEventByIdAsync(eventId);
-            if (existingEvent == null)
-            {
-                return RedirectToAction(nameof(ApprovePublicEvents));
-            }
-            existingEvent.IsDeniedPublic = false;
-            await _eventService.UpdateEventAsync(eventId, existingEvent);
-
-            TempData["Success"] = $"Event '{eventItem.Title}' has been restored to pending.";
             return RedirectToAction(nameof(ApprovePublicEvents));
         }
 
