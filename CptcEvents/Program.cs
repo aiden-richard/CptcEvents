@@ -1,7 +1,8 @@
 using Azure.Storage.Blobs;
 using CptcEvents.Authorization.Handlers;
 using CptcEvents.Authorization.Requirements;
-using CptcEvents.Authorization;
+using CptcEvents.Authorization.EventAuthorizationService;
+using CptcEvents.Authorization.GroupAuthorizationService;
 using CptcEvents.Data;
 using CptcEvents.Models;
 using CptcEvents.Services;
@@ -16,10 +17,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor | 
-        ForwardedHeaders.XForwardedProto | 
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto |
         ForwardedHeaders.XForwardedHost;
-    
+
     // Clear KnownProxies and KnownNetworks to trust all proxies.
     // This is safe because the app runs in a private network (Docker/container)
     // that is ONLY accessible through our reverse proxy - there is no direct
@@ -34,7 +35,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(connectionString);
     // Suppress the PendingModelChangesWarning to allow migrations with non-deterministic seed data
-    options.ConfigureWarnings(w => 
+    options.ConfigureWarnings(w =>
         w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -51,6 +52,7 @@ builder.Services.AddScoped<IInviteService, InviteService>();
 builder.Services.AddScoped<IRsvpService, RsvpService>();
 builder.Services.AddScoped<IInstructorCodeService, InstructorCodeService>();
 builder.Services.AddScoped<IGroupAuthorizationService, GroupAuthorizationService>();
+builder.Services.AddScoped<IEventAuthorizationService, EventAuthorizationService>();
 
 // Azure Blob Storage for image uploads
 var blobConnectionString = builder.Configuration["AzureBlobStorage:ConnectionString"];
@@ -188,9 +190,9 @@ async Task SeedDB(WebApplication app)
         return;
     }
 
-        // Ensure required roles exist
-        var requiredRoles = new[] { "Admin", "Staff", "Student" };
-        foreach (var roleName in requiredRoles)
+    // Ensure required roles exist
+    var requiredRoles = new[] { "Admin", "Staff", "Student" };
+    foreach (var roleName in requiredRoles)
     {
         if (!await roleManager.RoleExistsAsync(roleName))
         {
@@ -272,7 +274,7 @@ async Task SeedDB(WebApplication app)
     {
         var logger = app.Services.GetService<ILogger<Program>>();
         logger?.LogInformation("Creating default 'System Events' group.");
-        
+
         systemEventsGroup = new Group
         {
             Name = "System Events",
@@ -332,6 +334,6 @@ async Task SeedDB(WebApplication app)
             }
         }
     }
-  
+
     #endregion
 }

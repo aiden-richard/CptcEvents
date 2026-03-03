@@ -1,5 +1,6 @@
 ﻿using CptcEvents.Application.Mappers;
 using CptcEvents.Authorization;
+using CptcEvents.Authorization.GroupAuthorizationService;
 using CptcEvents.Models;
 using CptcEvents.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -43,15 +44,7 @@ namespace CptcEvents.Controllers
         /// <returns>View with user's groups.</returns>
         public async Task<IActionResult> Index()
         {
-            string? userId = _userManager.GetUserId(User);
-            if (userId == null)
-            {
-                return Challenge();
-            }
-
-            bool isAdmin = User.IsInRole("Admin");
-
-            IEnumerable<Group> groups = await _groupService.GetGroupsForUserAsync(userId, isAdmin);
+            IEnumerable<Group> groups = await _groupAuthorization.GetVisibleGroupsForUserAsync(User);
 
             return View(groups);
         }
@@ -128,8 +121,7 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            bool isAdmin = User.IsInRole("Admin");
-            bool isOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, userId);
+            bool isOwner = await _groupAuthorization.IsEffectiveOwnerAsync(groupId, User);
 
             var viewModel = new GroupFormViewModel
             {
@@ -170,8 +162,7 @@ namespace CptcEvents.Controllers
 
             if (!ModelState.IsValid)
             {
-                bool isAdmin = User.IsInRole("Admin");
-                model.IsOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, userId);
+                model.IsOwner = await _groupAuthorization.IsEffectiveOwnerAsync(groupId, User);
                 return View(model);
             }
 
@@ -191,8 +182,7 @@ namespace CptcEvents.Controllers
             if (result == null)
             {
                 ModelState.AddModelError(string.Empty, "Failed to update group. You may not have permission to make these changes.");
-                bool isAdmin = User.IsInRole("Admin");
-                model.IsOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, userId);
+                model.IsOwner = await _groupAuthorization.IsEffectiveOwnerAsync(groupId, User);
                 return View(model);
             }
 
@@ -251,7 +241,7 @@ namespace CptcEvents.Controllers
         [Authorize(Policy = "GroupModerator")]
         public async Task<IActionResult> ManageGroup(int groupId)
         {
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            ServicesAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
             if (!moderatorCheck.Succeeded)
             {
                 return moderatorCheck.ToActionResult(this);
@@ -264,8 +254,7 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            bool isAdmin = User.IsInRole("Admin");
-            bool isOwner = isAdmin || (userId != null && await _groupService.IsUserOwnerAsync(groupId, userId));
+            bool isOwner = await _groupAuthorization.IsEffectiveOwnerAsync(groupId, User);
             bool moderatorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate;
 
             List<Event> events = (await _eventService.GetEventsForGroupAsync(groupId)).ToList();
@@ -403,7 +392,7 @@ namespace CptcEvents.Controllers
         /// <returns>Leave confirmation view, or redirects to Index if group not found or user not member.</returns>
         public async Task<IActionResult> Leave(int groupId)
         {
-            GroupAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
+            ServicesAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
             if (!memberCheck.Succeeded)
             {
                 return memberCheck.ToActionResult(this);
@@ -421,9 +410,7 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            bool isAdmin = User.IsInRole("Admin");
-            bool isOwner = isAdmin || await _groupService.IsUserOwnerAsync(groupId, userId);
-            ViewBag.IsOwner = isOwner;
+            ViewBag.IsOwner = await _groupAuthorization.IsEffectiveOwnerAsync(groupId, User);
 
             return View(group);
         }
@@ -441,7 +428,7 @@ namespace CptcEvents.Controllers
         /// <returns>Redirects to Index on success, or shows error if user is group owner.</returns>
         public async Task<IActionResult> LeaveConfirmed(int groupId)
         {
-            GroupAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
+            ServicesAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
             if (!memberCheck.Succeeded)
             {
                 return memberCheck.ToActionResult(this);
@@ -484,7 +471,7 @@ namespace CptcEvents.Controllers
         /// <returns>Member management view, or redirects to Index if group not found or user not owner.</returns>
         public async Task<IActionResult> ManageMembers(int groupId)
         {
-            GroupAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
+            ServicesAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
             if (!ownerCheck.Succeeded)
             {
                 return ownerCheck.ToActionResult(this);
@@ -544,7 +531,7 @@ namespace CptcEvents.Controllers
         /// <returns>Redirects to ManageMembers with status message.</returns>
         public async Task<IActionResult> UpdateMemberRole(int groupId, string userId, RoleType newRole)
         {
-            GroupAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
+            ServicesAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
             if (!ownerCheck.Succeeded)
             {
                 return ownerCheck.ToActionResult(this);
@@ -594,7 +581,7 @@ namespace CptcEvents.Controllers
         /// <returns>Redirects to ManageMembers with status message.</returns>
         public async Task<IActionResult> RemoveMember(int groupId, string userId)
         {
-            GroupAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
+            ServicesAuthorizationResult ownerCheck = await _groupAuthorization.EnsureOwnerAsync(groupId, User);
             if (!ownerCheck.Succeeded)
             {
                 return ownerCheck.ToActionResult(this);
@@ -653,7 +640,7 @@ namespace CptcEvents.Controllers
         /// <returns>View with upcoming events for the group, or redirects if group not found or user not member.</returns>
         public async Task<IActionResult> Events(int groupId)
         {
-            GroupAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
+            ServicesAuthorizationResult memberCheck = await _groupAuthorization.EnsureMemberAsync(groupId, User);
             if (!memberCheck.Succeeded)
             {
                 return memberCheck.ToActionResult(this);
@@ -704,7 +691,7 @@ namespace CptcEvents.Controllers
         /// <returns>Event management view, or redirects if group not found or user not moderator.</returns>
         public async Task<IActionResult> ManageEvents(int groupId)
         {
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            ServicesAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
             if (!moderatorCheck.Succeeded)
             {
                 return moderatorCheck.ToActionResult(this);
@@ -753,7 +740,7 @@ namespace CptcEvents.Controllers
         [Authorize(Policy = "GroupModerator")]
         public async Task<IActionResult> ManageInvites(int groupId)
         {
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            ServicesAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
             if (!moderatorCheck.Succeeded)
             {
                 return moderatorCheck.ToActionResult(this);
@@ -895,7 +882,7 @@ namespace CptcEvents.Controllers
         [Authorize(Policy = "GroupModerator")]
         public async Task<IActionResult> EditInvite(int groupId, int inviteId)
         {
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            ServicesAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
             if (!moderatorCheck.Succeeded)
             {
                 return moderatorCheck.ToActionResult(this);
@@ -945,7 +932,7 @@ namespace CptcEvents.Controllers
         [Authorize(Policy = "GroupModerator")]
         public async Task<IActionResult> EditInvite(int groupId, int inviteId, GroupInviteEditViewModel model)
         {
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            ServicesAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
             if (!moderatorCheck.Succeeded)
             {
                 return moderatorCheck.ToActionResult(this);
@@ -1007,7 +994,7 @@ namespace CptcEvents.Controllers
         [Authorize(Policy = "GroupModerator")]
         public async Task<IActionResult> DeleteInvite(int groupId, int inviteId)
         {
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
+            ServicesAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId, User);
             if (!moderatorCheck.Succeeded)
             {
                 return moderatorCheck.ToActionResult(this);
