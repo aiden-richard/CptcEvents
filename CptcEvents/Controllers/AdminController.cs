@@ -13,9 +13,9 @@ namespace CptcEvents.Controllers
         private readonly IInstructorCodeService _instructorCodeService;
         private readonly IEventService _eventService;
         private readonly IGroupService _groupService;
-        private readonly UserManager<Models.ApplicationUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AdminController(IInstructorCodeService instructorCodeService, IEventService eventService, IGroupService groupService, UserManager<Models.ApplicationUser> userManager)
+        public AdminController(IInstructorCodeService instructorCodeService, IEventService eventService, IGroupService groupService, UserManager<ApplicationUser> userManager)
         {
             _instructorCodeService = instructorCodeService;
             _eventService = eventService;
@@ -32,6 +32,8 @@ namespace CptcEvents.Controllers
         {
             return View();
         }
+
+        #region Instructor Code Management
 
         /// <summary>
         /// Dashboard for managing instructor codes.
@@ -103,6 +105,10 @@ namespace CptcEvents.Controllers
             return RedirectToAction(nameof(ManageInstructorCodes));
         }
 
+        #endregion
+
+        #region Event Approval Management
+
         /// <summary>
         /// Displays all public events pending approval, approved events, and denied events.
         /// GET /Admin/ApprovePublicEvents
@@ -114,14 +120,14 @@ namespace CptcEvents.Controllers
             var pendingEvents = publicEvents.Where(e => !e.IsApprovedPublic && !e.IsDeniedPublic).OrderByDescending(e => e.DateOfEvent).ThenBy(e => e.StartTime).ToList();
             var approvedEvents = publicEvents.Where(e => e.IsApprovedPublic).OrderByDescending(e => e.DateOfEvent).ThenBy(e => e.StartTime).ToList();
             var deniedEvents = publicEvents.Where(e => e.IsDeniedPublic).OrderByDescending(e => e.DateOfEvent).ThenBy(e => e.StartTime).ToList();
-            
+
             var viewModel = new ApprovePublicEventsViewModel
             {
                 PendingEvents = pendingEvents,
                 ApprovedEvents = approvedEvents,
                 DeniedEvents = deniedEvents
             };
-            
+
             return View(viewModel);
         }
 
@@ -135,22 +141,17 @@ namespace CptcEvents.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveEvent(int eventId)
         {
-            var eventItem = await _eventService.GetEventByIdAsync(eventId);
-            if (eventItem == null)
-            {
-                return RedirectToAction(nameof(ApprovePublicEvents));
-            }
-
             // Update the event to mark it as approved
             Event? existingEvent = await _eventService.GetEventByIdAsync(eventId);
             if (existingEvent == null)
             {
                 return RedirectToAction(nameof(ApprovePublicEvents));
             }
+
             existingEvent.IsApprovedPublic = true;
             await _eventService.UpdateEventAsync(eventId, existingEvent);
 
-            TempData["Success"] = $"Event '{eventItem.Title}' has been approved for display on the homepage.";
+            TempData["Success"] = $"Event '{existingEvent.Title}' has been approved for display on the homepage.";
             return RedirectToAction(nameof(ApprovePublicEvents));
         }
 
@@ -179,7 +180,7 @@ namespace CptcEvents.Controllers
             existingEvent.IsApprovedPublic = false;
             await _eventService.UpdateEventAsync(eventId, existingEvent);
 
-            TempData["Success"] = $"Approval revoked for event '{eventItem.Title}'.";
+            TempData["Success"] = $"Approval revoked for event '{existingEvent.Title}'.";
             return RedirectToAction(nameof(ApprovePublicEvents));
         }
 
@@ -209,7 +210,7 @@ namespace CptcEvents.Controllers
             existingEvent.IsApprovedPublic = false;
             await _eventService.UpdateEventAsync(eventId, existingEvent);
 
-            TempData["Success"] = $"Event '{eventItem.Title}' has been denied.";
+            TempData["Success"] = $"Event '{existingEvent.Title}' has been denied.";
             return RedirectToAction(nameof(ApprovePublicEvents));
         }
 
@@ -242,6 +243,10 @@ namespace CptcEvents.Controllers
             return RedirectToAction(nameof(ApprovePublicEvents));
         }
 
+        #endregion
+
+        #region Group and Event Management
+
         /// <summary>
         /// Displays all groups in the system for admin management.
         /// GET /Admin/ManageGroups
@@ -263,5 +268,7 @@ namespace CptcEvents.Controllers
             var events = await _eventService.GetAllEventsAsync();
             return View(events);
         }
+
+        #endregion
     }
 }
