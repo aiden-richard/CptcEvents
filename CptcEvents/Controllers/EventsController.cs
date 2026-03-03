@@ -118,11 +118,15 @@ namespace CptcEvents.Controllers
             }
 
             // Only Staff and Admin roles can make events public
-            if (model.IsPublic && !User.IsInRole("Staff") && !User.IsInRole("Admin"))
+            if (model.IsPublic)
             {
-                ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
-                await PopulateGroupsSelectListAsync();
-                return View(model);
+                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(null, User);
+                if (!publicCheck.Succeeded)
+                {
+                    ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
+                    await PopulateGroupsSelectListAsync();
+                    return View(model);
+                }
             }
 
             if (!ModelState.IsValid)
@@ -193,25 +197,23 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Prevent student created events from being made public
-            var eventCreator = await _userManager.FindByIdAsync(existingEvent.CreatedByUserId);
-            if (eventCreator != null && await _userManager.IsInRoleAsync(eventCreator, "Student") && model.IsPublic)
-            {
-                TempData["Error"] = "Events created by students cannot be made public.";
-                return RedirectToAction(nameof(Details), new { eventId });
-            }
-
             ServicesAuthorizationResult editCheck = await _eventAuthorization.CanEditEventAsync(existingEvent, User);
             if (!editCheck.Succeeded)
             {
                 return editCheck.ToActionResult(this);
             }
 
-            // Only Staff and Admin roles can make events public
-            if (model.IsPublic && !User.IsInRole("Staff") && !User.IsInRole("Admin"))
+            // Only Staff and Admin roles can make events public; student-created events can never be made public
+            if (model.IsPublic)
             {
-                TempData["Error"] = "Only staff members can create public events.";
-                return RedirectToAction(nameof(Details), new { eventId });
+                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(existingEvent, User);
+                if (!publicCheck.Succeeded)
+                {
+                    TempData["Error"] = publicCheck.Failure == CptcEvents.Authorization.AuthorizationFailure.CreatorIsStudent
+                        ? "Events created by students cannot be made public."
+                        : "Only staff members can make events public.";
+                    return RedirectToAction(nameof(Details), new { eventId });
+                }
             }
 
             if (!ModelState.IsValid)
