@@ -237,6 +237,56 @@
                     </div>
                 </div>
             }
+
+            @* Admin Approval Card (only for public events, only for admins) *@
+            @if (Model.IsPublic && User.IsInRole("Admin"))
+            {
+                <div class="card mt-3 border-warning">
+                    <div class="card-header text-bg-warning fw-semibold">Admin: Public Approval</div>
+                    <div class="card-body d-flex flex-column gap-2">
+                        <p class="mb-1 small">
+                            Status:
+                            @if (Model.IsApprovedPublic)
+                            {
+                                <span class="badge text-bg-success">Approved</span>
+                            }
+                            else if (Model.IsDeniedPublic)
+                            {
+                                <span class="badge text-bg-danger">Denied</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-warning">Pending</span>
+                            }
+                        </p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if (!Model.IsApprovedPublic && !Model.IsDeniedPublic)
+                            {
+                                @* Pending: allow approve or deny *@
+                                <form asp-controller="Admin" asp-action="ApproveEvent" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form asp-controller="Admin" asp-action="DenyEvent" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Deny</button>
+                                </form>
+                            }
+                            else
+                            {
+                                @* Decision made: only allow revoking back to pending *@
+                                <form asp-controller="Admin" asp-action="RevokeApproval" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Revoke Decision</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
 
     </div>
