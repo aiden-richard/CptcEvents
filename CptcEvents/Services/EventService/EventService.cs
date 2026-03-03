@@ -50,6 +50,28 @@ public class EventService : IEventService
     }
 
     /// <inheritdoc/>
+    public async Task<IEnumerable<Event>> GetEventsPendingPublicApproval()
+    {
+        return await _context.Events
+            .Include(e => e.Group)
+            .Where(e => e.IsPublic && !e.IsApprovedPublic && !e.IsDeniedPublic)
+            .OrderBy(e => e.DateOfEvent)
+            .ThenBy(e => e.StartTime)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<Event>> GetDeniedPublicEventsAsync()
+    {
+        return await _context.Events
+            .Include(e => e.Group)
+            .Where(e => e.IsPublic && e.IsDeniedPublic)
+            .OrderBy(e => e.DateOfEvent)
+            .ThenBy(e => e.StartTime)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc/>
     public async Task<IEnumerable<Event>> GetEventsForGroupAsync(int groupId)
     {
         return await _context.Events

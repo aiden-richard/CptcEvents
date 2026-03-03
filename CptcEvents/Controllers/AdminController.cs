@@ -117,9 +117,9 @@ namespace CptcEvents.Controllers
         public async Task<IActionResult> ApprovePublicEvents()
         {
             var publicEvents = await _eventService.GetPublicEventsAsync();
-            var pendingEvents = publicEvents.Where(e => !e.IsApprovedPublic && !e.IsDeniedPublic).OrderByDescending(e => e.DateOfEvent).ThenBy(e => e.StartTime).ToList();
-            var approvedEvents = publicEvents.Where(e => e.IsApprovedPublic).OrderByDescending(e => e.DateOfEvent).ThenBy(e => e.StartTime).ToList();
-            var deniedEvents = publicEvents.Where(e => e.IsDeniedPublic).OrderByDescending(e => e.DateOfEvent).ThenBy(e => e.StartTime).ToList();
+            IEnumerable<Event> pendingEvents = await _eventService.GetEventsPendingPublicApproval();
+            IEnumerable<Event> approvedEvents = await _eventService.GetApprovedPublicEventsAsync();
+            IEnumerable<Event> deniedEvents = await _eventService.GetDeniedPublicEventsAsync();
 
             var viewModel = new ApprovePublicEventsViewModel
             {

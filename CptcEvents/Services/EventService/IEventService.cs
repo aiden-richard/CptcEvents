@@ -10,6 +10,8 @@ namespace CptcEvents.Services;
 /// </summary>
 public interface IEventService
 {
+    #region Event Retrieval Methods
+
     /// <summary>
     /// Retrieves all events in the system.
     /// </summary>
@@ -27,6 +29,18 @@ public interface IEventService
     /// </summary>
     /// <returns>A collection of events where <see cref="Event.IsPublic"/> and <see cref="Event.IsApprovedPublic"/> are both true.</returns>
     Task<IEnumerable<Event>> GetApprovedPublicEventsAsync();
+
+    /// <summary>
+    /// Retrieves all public events that are pending approval for admin review.
+    /// </summary>
+    /// <returns>A collection of events where <see cref="Event.IsPublic"/> is true and <see cref="Event.IsApprovedPublic"/> is false.</returns>
+    Task<IEnumerable<Event>> GetEventsPendingPublicApproval();
+
+    /// <summary>
+    /// Retrieves all public events that have been denied for admin review.
+    /// </summary>
+    /// <returns>A collection of events where <see cref="Event.IsPublic"/> is true and <see cref="Event.IsDeniedPublic"/> is true.</returns>
+    Task<IEnumerable<Event>> GetDeniedPublicEventsAsync();
 
     /// <summary>
     /// Retrieves all events belonging to a specific group.
@@ -74,6 +88,10 @@ public interface IEventService
     /// <returns>The event if found; otherwise, null.</returns>
     Task<Event?> GetEventByIdAsync(int id);
 
+    #endregion
+
+    #region Event Management Methods
+
     /// <summary>
     /// Creates a new event and persists it to the database.
     /// </summary>
@@ -104,4 +122,6 @@ public interface IEventService
     /// <param name="end">The end date of the range (inclusive).</param>
     /// <returns>A collection of events occurring within the specified date range.</returns>
     Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end);
+
+    #endregion
 }
