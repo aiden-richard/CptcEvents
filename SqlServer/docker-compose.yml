@@ -14,6 +14,12 @@ services:
       - ./entrypoint.sh:/entrypoint.sh
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
     restart: unless-stopped
+    networks:
+      - CptcEventsNetwork
 
 volumes:
   sqlserver-data:
+
+networks:
+  CptcEventsNetwork:
+    external: true
