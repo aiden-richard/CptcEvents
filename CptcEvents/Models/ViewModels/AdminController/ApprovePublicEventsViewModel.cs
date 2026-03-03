@@ -9,15 +9,15 @@ public class ApprovePublicEventsViewModel
     /// <summary>
     /// Public events that are pending approval (IsPublic = true, IsApprovedPublic = false, IsDeniedPublic = false).
     /// </summary>
-    public List<Event> PendingEvents { get; set; } = new();
+    public IEnumerable<Event> PendingEvents { get; set; } = new List<Event>();
 
     /// <summary>
     /// Public events that have been approved (IsPublic = true, IsApprovedPublic = true).
     /// </summary>
-    public List<Event> ApprovedEvents { get; set; } = new();
+    public IEnumerable<Event> ApprovedEvents { get; set; } = new List<Event>();
 
     /// <summary>
     /// Public events that have been denied (IsPublic = true, IsDeniedPublic = true).
     /// </summary>
-    public List<Event> DeniedEvents { get; set; } = new();
+    public IEnumerable<Event> DeniedEvents { get; set; } = new List<Event>();
 }

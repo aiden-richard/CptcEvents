@@ -145,6 +145,25 @@ public class BlobImageStorageService : IImageStorageService
         }
     }
 
+    public async Task<string?> ReplaceImageAsync(string? existingUrl, IFormFile? newFile, bool clear, string containerName)
+    {
+        if (clear)
+        {
+            if (!string.IsNullOrEmpty(existingUrl))
+                await DeleteImageAsync(existingUrl);
+            return null;
+        }
+
+        if (newFile != null && newFile.Length > 0)
+        {
+            if (!string.IsNullOrEmpty(existingUrl))
+                await DeleteImageAsync(existingUrl);
+            return await UploadImageAsync(newFile, containerName);
+        }
+
+        return existingUrl;
+    }
+
     private async Task<bool> IsValidImageFileAsync(IFormFile file, string extension)
     {
         if (!ImageMagicBytes.Signatures.TryGetValue(extension, out var validSignatures))

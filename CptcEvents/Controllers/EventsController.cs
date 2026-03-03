@@ -1,15 +1,14 @@
 ﻿using CptcEvents.Application.Mappers;
 using CptcEvents.Authorization;
-using CptcEvents.Data;
+using CptcEvents.Authorization.EventAuthorizationService;
+using CptcEvents.Authorization.GroupAuthorizationService;
 using CptcEvents.Models;
 using CptcEvents.Services;
-using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
+
 
 namespace CptcEvents.Controllers
 {
@@ -22,15 +21,17 @@ namespace CptcEvents.Controllers
         private readonly IEventService _eventsService;
         private readonly IGroupService _groupService;
         private readonly IGroupAuthorizationService _groupAuthorization;
+        private readonly IEventAuthorizationService _eventAuthorization;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IImageStorageService? _imageStorageService;
         private readonly IRsvpService _rsvpService;
 
-        public EventsController(IEventService eventsService, IGroupService groupService, IGroupAuthorizationService groupAuthorization, UserManager<ApplicationUser> userManager, IRsvpService rsvpService, IImageStorageService? imageStorageService = null)
+        public EventsController(IEventService eventsService, IGroupService groupService, IGroupAuthorizationService groupAuthorization, IEventAuthorizationService eventAuthorization, UserManager<ApplicationUser> userManager, IRsvpService rsvpService, IImageStorageService? imageStorageService = null)
         {
             _eventsService = eventsService;
             _groupService = groupService;
             _groupAuthorization = groupAuthorization;
+            _eventAuthorization = eventAuthorization;
             _userManager = userManager;
             _rsvpService = rsvpService;
             _imageStorageService = imageStorageService;
@@ -48,14 +49,7 @@ namespace CptcEvents.Controllers
         [Authorize]
         public async Task<IActionResult> Index(int? eventId)
         {
-            string? userId = await _groupAuthorization.GetUserIdAsync(User);
-            if (userId == null)
-            {
-                return Challenge();
-            }
-
-            bool isAdmin = User.IsInRole("Admin");
-            IEnumerable<Event> events = await _eventsService.GetActiveEventsForUserAsync(userId, isAdmin);
+            IEnumerable<Event> events = await _eventAuthorization.GetActiveVisibleEventsForUserAsync(User);
 
             List<EventDetailsViewModel> viewModel = events
                 .Select(e => EventMapper.ToDetails(e))
@@ -95,7 +89,7 @@ namespace CptcEvents.Controllers
 
             if (groupId.HasValue)
             {
-                GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId.Value, User);
+                ServicesAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(groupId.Value, User);
                 if (!moderatorCheck.Succeeded)
                 {
                     return RedirectToAction(nameof(Index));
@@ -117,18 +111,22 @@ namespace CptcEvents.Controllers
         /// <returns>Redirects to ManageEvents on success, or form with validation errors on failure.</returns>
         public async Task<IActionResult> Create(EventFormViewModel model)
         {
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(model.GroupId, User);
+            ServicesAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(model.GroupId, User);
             if (!moderatorCheck.Succeeded)
             {
                 return moderatorCheck.ToActionResult(this);
             }
 
             // Only Staff and Admin roles can make events public
-            if (model.IsPublic && !User.IsInRole("Staff") && !User.IsInRole("Admin"))
+            if (model.IsPublic)
             {
-                ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
-                await PopulateGroupsSelectListAsync();
-                return View(model);
+                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(null, User);
+                if (!publicCheck.Succeeded)
+                {
+                    ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
+                    await PopulateGroupsSelectListAsync();
+                    return View(model);
+                }
             }
 
             if (!ModelState.IsValid)
@@ -137,19 +135,12 @@ namespace CptcEvents.Controllers
                 return View(model);
             }
 
-            // Sanitize description HTML to prevent XSS
-            if (!string.IsNullOrEmpty(model.Description))
-            {
-                var sanitizer = new HtmlSanitizer();
-                model.Description = sanitizer.Sanitize(model.Description);
-            }
-
             // Handle banner image upload
-            if (model.BannerImage != null && model.BannerImage.Length > 0 && _imageStorageService != null)
+            if (_imageStorageService != null)
             {
                 try
                 {
-                    model.BannerImageUrl = await _imageStorageService.UploadImageAsync(model.BannerImage, "event-banners");
+                    model.BannerImageUrl = await _imageStorageService.ReplaceImageAsync(null, model.BannerImage, clear: false, "event-banners");
                 }
                 catch (ArgumentException ex)
                 {
@@ -206,32 +197,23 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Prevent students from editing staff/admin events
-            var user = await _userManager.GetUserAsync(User);
-            if (User.IsInRole("Student") && !await CanStudentEditEventAsync(existingEvent, user))
+            ServicesAuthorizationResult editCheck = await _eventAuthorization.CanEditEventAsync(existingEvent, User);
+            if (!editCheck.Succeeded)
             {
-                return Forbid();
+                return editCheck.ToActionResult(this);
             }
 
-            // Prevent student created events from being made public
-            var eventCreator = await _userManager.FindByIdAsync(existingEvent.CreatedByUserId);
-            if (eventCreator != null && await _userManager.IsInRoleAsync(eventCreator, "Student") && model.IsPublic)
+            // Only Staff and Admin roles can make events public; student-created events can never be made public
+            if (model.IsPublic)
             {
-                TempData["Error"] = "Events created by students cannot be made public.";
-                return RedirectToAction(nameof(Details), new { eventId });
-            }
-
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(existingEvent.GroupId, User);
-            if (!moderatorCheck.Succeeded)
-            {
-                return moderatorCheck.ToActionResult(this);
-            }
-
-            // Only Staff and Admin roles can make events public
-            if (model.IsPublic && !User.IsInRole("Staff") && !User.IsInRole("Admin"))
-            {
-                TempData["Error"] = "Only staff members can create public events.";
-                return RedirectToAction(nameof(Details), new { eventId });
+                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(existingEvent, User);
+                if (!publicCheck.Succeeded)
+                {
+                    TempData["Error"] = publicCheck.Failure == CptcEvents.Authorization.AuthorizationFailure.CreatorIsStudent
+                        ? "Events created by students cannot be made public."
+                        : "Only staff members can make events public.";
+                    return RedirectToAction(nameof(Details), new { eventId });
+                }
             }
 
             if (!ModelState.IsValid)
@@ -240,34 +222,12 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Details), new { eventId });
             }
 
-            // Sanitize description HTML to prevent XSS
-            if (!string.IsNullOrEmpty(model.Description))
-            {
-                var sanitizer = new HtmlSanitizer();
-                model.Description = sanitizer.Sanitize(model.Description);
-            }
-
             // Handle banner image: clear, replace, or preserve
-            if (model.ClearBannerImage)
-            {
-                // User requested removal of the banner image
-                if (!string.IsNullOrEmpty(existingEvent.BannerImageUrl) && _imageStorageService != null)
-                {
-                    await _imageStorageService.DeleteImageAsync(existingEvent.BannerImageUrl);
-                }
-                model.BannerImageUrl = null;
-            }
-            else if (model.BannerImage != null && model.BannerImage.Length > 0 && _imageStorageService != null)
+            if (_imageStorageService != null)
             {
                 try
                 {
-                    // Delete old banner image if it exists
-                    if (!string.IsNullOrEmpty(existingEvent.BannerImageUrl))
-                    {
-                        await _imageStorageService.DeleteImageAsync(existingEvent.BannerImageUrl);
-                    }
-
-                    model.BannerImageUrl = await _imageStorageService.UploadImageAsync(model.BannerImage, "event-banners");
+                    model.BannerImageUrl = await _imageStorageService.ReplaceImageAsync(existingEvent.BannerImageUrl, model.BannerImage, model.ClearBannerImage, "event-banners");
                 }
                 catch (ArgumentException ex)
                 {
@@ -282,7 +242,6 @@ namespace CptcEvents.Controllers
             }
             else
             {
-                // Preserve existing banner image URL if no new image was uploaded
                 model.BannerImageUrl = existingEvent.BannerImageUrl;
             }
 
@@ -316,10 +275,10 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(eventItem.GroupId, User);
-            if (!moderatorCheck.Succeeded)
+            ServicesAuthorizationResult editCheck = await _eventAuthorization.CanEditEventAsync(eventItem, User);
+            if (!editCheck.Succeeded)
             {
-                return moderatorCheck.ToActionResult(this);
+                return editCheck.ToActionResult(this);
             }
 
             return View(EventMapper.ToDetails(eventItem));
@@ -343,10 +302,10 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(eventItem.GroupId, User);
-            if (!moderatorCheck.Succeeded)
+            ServicesAuthorizationResult editCheck = await _eventAuthorization.CanEditEventAsync(eventItem, User);
+            if (!editCheck.Succeeded)
             {
-                return moderatorCheck.ToActionResult(this);
+                return editCheck.ToActionResult(this);
             }
 
             await _eventsService.DeleteEventAsync(eventId);
@@ -371,25 +330,16 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            // Check if user is member of the group (needed for both access control and UI display)
-            bool isAdmin = false;
-            bool isUserMember = false;
-
-            string? userId = await _groupAuthorization.GetUserIdAsync(User);
-            if (userId != null)
+            // Check view access
+            ServicesAuthorizationResult viewCheck = await _eventAuthorization.CanViewEventAsync(eventItem, User);
+            if (!viewCheck.Succeeded)
             {
-                isAdmin = User.IsInRole("Admin");
-                isUserMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+                return viewCheck.ToActionResult(this);
             }
 
-            // If event is not public, check if user is member of the group (admins can access all events)
-            if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
-            {
-                if (!isAdmin && !isUserMember)
-                {
-                    return Forbid();
-                }
-            }
+            string? userId = User.Identity?.IsAuthenticated == true ? _userManager.GetUserId(User) : null;
+            bool isAdmin = User.IsInRole("Admin");
+            bool isUserMember = userId != null && await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
 
             // For UI purposes, treat admins as members (so they can see the "View Group" button)
             bool canAccessGroup = isAdmin || isUserMember;
@@ -398,18 +348,8 @@ namespace CptcEvents.Controllers
             bool canEdit = false;
             if (userId != null)
             {
-                GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(eventItem.GroupId, User);
-                if (moderatorCheck.Succeeded)
-                {
-                    canEdit = true;
-
-                    // Students have additional restrictions on editing staff/admin events
-                    if (User.IsInRole("Student"))
-                    {
-                        var currentUser = await _userManager.GetUserAsync(User);
-                        canEdit = await CanStudentEditEventAsync(eventItem, currentUser);
-                    }
-                }
+                ServicesAuthorizationResult editCheck = await _eventAuthorization.CanEditEventAsync(eventItem, User);
+                canEdit = editCheck.Succeeded;
             }
 
             var eventDetails = EventMapper.ToDetails(eventItem, canAccessGroup, canEdit);
@@ -475,16 +415,11 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Details), new { eventId });
             }
 
-            // Verify user can access this event (member of group, or event is approved public)
-            bool isAdmin = User.IsInRole("Admin");
-            bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
-
-            if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
+            // Verify user can access this event
+            ServicesAuthorizationResult viewCheck = await _eventAuthorization.CanViewEventAsync(eventItem, User);
+            if (!viewCheck.Succeeded)
             {
-                if (!isAdmin && !isMember)
-                {
-                    return Forbid();
-                }
+                return viewCheck.ToActionResult(this);
             }
 
             // Check if user already has an RSVP for this event
@@ -533,16 +468,11 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Details), new { eventId });
             }
 
-            // Verify user can access this event (member of group, or event is approved public)
-            bool isAdmin = User.IsInRole("Admin");
-            bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
-
-            if (!eventItem.IsPublic || !eventItem.IsApprovedPublic)
+            // Verify user can access this event
+            ServicesAuthorizationResult viewCheck = await _eventAuthorization.CanViewEventAsync(eventItem, User);
+            if (!viewCheck.Succeeded)
             {
-                if (!isAdmin && !isMember)
-                {
-                    return Forbid();
-                }
+                return viewCheck.ToActionResult(this);
             }
 
             EventRsvp? existingRsvp = await _rsvpService.GetUserRsvpForEventAsync(eventId, userId);
@@ -569,10 +499,10 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            GroupAuthorizationResult moderatorCheck = await _groupAuthorization.EnsureModeratorAsync(eventItem.GroupId, User);
-            if (!moderatorCheck.Succeeded)
+            ServicesAuthorizationResult editCheck = await _eventAuthorization.CanEditEventAsync(eventItem, User);
+            if (!editCheck.Succeeded)
             {
-                return moderatorCheck.ToActionResult(this);
+                return editCheck.ToActionResult(this);
             }
 
             int cleared = await _rsvpService.ClearAllRsvpsAsync(eventId);
@@ -584,29 +514,6 @@ namespace CptcEvents.Controllers
         #endregion
 
         #region Helper Methods
-
-        /// <summary>
-        /// Determines if a student user can edit the given event.
-        /// Students can only edit events they created or events created by other students.
-        /// </summary>
-        [Authorize]
-        private async Task<bool> CanStudentEditEventAsync(Event eventItem, ApplicationUser? currentUser)
-        {
-            if (currentUser == null)
-                return false;
-
-            // Student can edit if they created it
-            if (eventItem.CreatedByUserId == currentUser.Id)
-                return true;
-
-            // Student cannot edit if staff/admin created it
-            var eventCreator = await _userManager.FindByIdAsync(eventItem.CreatedByUserId);
-            if (eventCreator != null && (await _userManager.IsInRoleAsync(eventCreator, "Staff") || await _userManager.IsInRoleAsync(eventCreator, "Admin")))
-                return false;
-
-            // Student can edit if another student created it
-            return true;
-        }
 
         // Helper that populates ViewData["Groups"] with groups available to the current user.
         [Authorize]
@@ -663,7 +570,7 @@ namespace CptcEvents.Controllers
 
             bool isAdmin = User?.IsInRole("Admin") == true;
             bool isMember = await _groupService.IsUserMemberAsync(groupId, userId);
-            
+
             // Admins can access any group, regular users need membership
             if (!isAdmin && !isMember)
             {
@@ -693,7 +600,7 @@ namespace CptcEvents.Controllers
             if (user != null)
             {
                 bool isAdmin = User.IsInRole("Admin");
-                
+
                 if (isAdmin)
                 {
                     // Admins see all events

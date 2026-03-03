@@ -16,22 +16,6 @@
         </div>
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
     <!-- Pending Approval Section -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-warning text-dark">
@@ -54,17 +38,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var evt in Model.PendingEvents)
+                            @foreach (Event evt in Model.PendingEvents)
                             {
                                 <tr>
-                                    <td>
-                                        <strong>@evt.Title</strong>
-                                        @if (!string.IsNullOrEmpty(evt.Description))
-                                        {
-                                            <br />
-                                            <small class="text-muted">@evt.Description</small>
-                                        }
-                                    </td>
+                                    <td><strong>@evt.Title</strong></td>
                                     <td>@evt.Group?.Name</td>
                                     <td>@evt.DateOfEvent.ToString("yyyy-MM-dd")</td>
                                     <td>
@@ -84,20 +61,7 @@
                                         }
                                     </td>
                                     <td class="text-end">
-                                        <form method="post" action="@Url.Action("ApproveEvent", "Admin")" style="display: inline;" class="me-1">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="eventId" value="@evt.Id" />
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                Approve
-                                            </button>
-                                        </form>
-                                        <form method="post" action="@Url.Action("DenyEvent", "Admin")" style="display: inline;">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="eventId" value="@evt.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                Deny
-                                            </button>
-                                        </form>
+                                        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Details", "Events", new { eventId = evt.Id })">Review Event</a>
                                     </td>
                                 </tr>
                             }
@@ -137,14 +101,7 @@
                             @foreach (var evt in Model.ApprovedEvents)
                             {
                                 <tr>
-                                    <td>
-                                        <strong>@evt.Title</strong>
-                                        @if (!string.IsNullOrEmpty(evt.Description))
-                                        {
-                                            <br />
-                                            <small class="text-muted">@evt.Description</small>
-                                        }
-                                    </td>
+                                    <td><strong>@evt.Title</strong></td>
                                     <td>@evt.Group?.Name</td>
                                     <td>@evt.DateOfEvent.ToString("yyyy-MM-dd")</td>
                                     <td>
@@ -164,13 +121,7 @@
                                         }
                                     </td>
                                     <td class="text-end">
-                                        <form method="post" action="@Url.Action("RevokeApproval", "Admin")" style="display: inline;" onsubmit="return confirm('Revoke approval for this event?');">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="eventId" value="@evt.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                Revoke
-                                            </button>
-                                        </form>
+                                        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Details", "Events", new { eventId = evt.Id })">Review Event</a>
                                     </td>
                                 </tr>
                             }
@@ -210,14 +161,7 @@
                             @foreach (var evt in Model.DeniedEvents)
                             {
                                 <tr>
-                                    <td>
-                                        <strong>@evt.Title</strong>
-                                        @if (!string.IsNullOrEmpty(evt.Description))
-                                        {
-                                            <br />
-                                            <small class="text-muted">@evt.Description</small>
-                                        }
-                                    </td>
+                                    <td><strong>@evt.Title</strong></td>
                                     <td>@evt.Group?.Name</td>
                                     <td>@evt.DateOfEvent.ToString("yyyy-MM-dd")</td>
                                     <td>
@@ -237,13 +181,7 @@
                                         }
                                     </td>
                                     <td class="text-end">
-                                        <form method="post" action="@Url.Action("RestoreEvent", "Admin")" style="display: inline;">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="eventId" value="@evt.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                Restore
-                                            </button>
-                                        </form>
+                                        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Details", "Events", new { eventId = evt.Id })">Review Event</a>
                                     </td>
                                 </tr>
                             }

@@ -1,7 +1,8 @@
 using CptcEvents.Authorization;
+using CptcEvents.Authorization.EventAuthorizationService;
+using CptcEvents.Authorization.GroupAuthorizationService;
 using CptcEvents.Models;
 using CptcEvents.Services;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CptcEvents.Controllers
@@ -13,8 +14,7 @@ namespace CptcEvents.Controllers
     public class ImagesController : Controller
     {
         private readonly IEventService _eventService;
-        private readonly IGroupAuthorizationService _groupAuthorization;
-        private readonly IGroupService _groupService;
+        private readonly IEventAuthorizationService _eventAuthorization;
         private readonly IImageStorageService? _imageStorageService;
 
         /// <summary>
@@ -22,14 +22,11 @@ namespace CptcEvents.Controllers
         /// </summary>
         public ImagesController(
             IEventService eventService,
-            IGroupAuthorizationService groupAuthorization,
-            IGroupService groupService,
-            UserManager<ApplicationUser> userManager,
+            IEventAuthorizationService eventAuthorization,
             IImageStorageService? imageStorageService = null)
         {
             _eventService = eventService;
-            _groupAuthorization = groupAuthorization;
-            _groupService = groupService;
+            _eventAuthorization = eventAuthorization;
             _imageStorageService = imageStorageService;
         }
 
@@ -56,27 +53,11 @@ namespace CptcEvents.Controllers
                 return NotFound();
             }
 
-            // Check visibility: public approved events are accessible to anyone
-            bool isPublicApproved = eventItem.IsPublic && eventItem.IsApprovedPublic;
-
-            if (!isPublicApproved)
+            // Check access using event authorization service
+            ServicesAuthorizationResult viewCheck = await _eventAuthorization.CanViewEventAsync(eventItem, User);
+            if (!viewCheck.Succeeded)
             {
-                // For non-public events, user must be authenticated and be a member of the group (or an admin)
-                string? userId = await _groupAuthorization.GetUserIdAsync(User);
-                if (userId == null)
-                {
-                    return Challenge();
-                }
-
-                bool isAdmin = User.IsInRole("Admin");
-                if (!isAdmin)
-                {
-                    bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
-                    if (!isMember)
-                    {
-                        return Forbid();
-                    }
-                }
+                return viewCheck.ToActionResult(this);
             }
 
             // Download the image from storage
