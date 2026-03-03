@@ -1,43 +1,8 @@
 using System.Security.Claims;
+using CptcEvents.Authorization;
+using CptcEvents.Models;
 
 namespace CptcEvents.Authorization.GroupAuthorizationService;
-
-/// <summary>
-/// Enumeration of possible authorization failures when checking group membership or roles.
-/// </summary>
-public enum GroupAuthorizationFailure
-{
-    /// <summary>
-    /// No failure; authorization succeeded.
-    /// </summary>
-    None,
-
-    /// <summary>
-    /// User is not authenticated.
-    /// </summary>
-    NotAuthenticated,
-
-    /// <summary>
-    /// The requested group was not found.
-    /// </summary>
-    GroupNotFound,
-
-    /// <summary>
-    /// User is not a member of the group.
-    /// </summary>
-    NotMember,
-
-    /// <summary>
-    /// User is not a moderator (or higher) in the group.
-    /// </summary>
-    NotModerator,
-
-    /// <summary>
-    /// User is not the owner of the group.
-    /// </summary>
-    NotOwner
-}
-
 
 
 /// <summary>
@@ -58,7 +23,7 @@ public interface IGroupAuthorizationService
     /// <param name="groupId">The ID of the group to check membership against.</param>
     /// <param name="user">The claims principal representing the current user.</param>
     /// <returns>A result indicating success or the specific authorization failure.</returns>
-    Task<GroupAuthorizationResult> EnsureMemberAsync(int groupId, ClaimsPrincipal user);
+    Task<ServicesAuthorizationResult> EnsureMemberAsync(int groupId, ClaimsPrincipal user);
 
     /// <summary>
     /// Ensures the current user is a moderator (or owner) of the specified group.
@@ -66,7 +31,7 @@ public interface IGroupAuthorizationService
     /// <param name="groupId">The ID of the group to check moderator status against.</param>
     /// <param name="user">The claims principal representing the current user.</param>
     /// <returns>A result indicating success or the specific authorization failure.</returns>
-    Task<GroupAuthorizationResult> EnsureModeratorAsync(int groupId, ClaimsPrincipal user);
+    Task<ServicesAuthorizationResult> EnsureModeratorAsync(int groupId, ClaimsPrincipal user);
 
     /// <summary>
     /// Ensures the current user is the owner of the specified group.
@@ -74,5 +39,23 @@ public interface IGroupAuthorizationService
     /// <param name="groupId">The ID of the group to check ownership against.</param>
     /// <param name="user">The claims principal representing the current user.</param>
     /// <returns>A result indicating success or the specific authorization failure.</returns>
-    Task<GroupAuthorizationResult> EnsureOwnerAsync(int groupId, ClaimsPrincipal user);
+    Task<ServicesAuthorizationResult> EnsureOwnerAsync(int groupId, ClaimsPrincipal user);
+
+    /// <summary>
+    /// Determines whether the current user is an "effective owner" of the specified group —
+    /// i.e. either the actual group owner or a site admin.
+    /// Admins are treated as owners so they can perform owner-level UI actions.
+    /// </summary>
+    /// <param name="groupId">The ID of the group to check.</param>
+    /// <param name="user">The claims principal representing the current user.</param>
+    /// <returns>True if the user is the group owner or an admin; otherwise, false.</returns>
+    Task<bool> IsEffectiveOwnerAsync(int groupId, ClaimsPrincipal user);
+
+    /// <summary>
+    /// Returns all groups visible to the user based on their role and group memberships.
+    /// Admins see all groups; regular users see only groups they are members of.
+    /// </summary>
+    /// <param name="user">The claims principal representing the current user.</param>
+    /// <returns>A collection of groups the user is permitted to see.</returns>
+    Task<IEnumerable<Group>> GetVisibleGroupsForUserAsync(ClaimsPrincipal user);
 }

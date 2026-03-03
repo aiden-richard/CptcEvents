@@ -3,6 +3,7 @@ using CptcEvents.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using CptcEvents.Models;
+using CptcEvents.Authorization;
 
 namespace CptcEvents.Authorization.GroupAuthorizationService;
 
@@ -30,12 +31,12 @@ public class GroupAuthorizationService : IGroupAuthorizationService
     }
 
     /// <inheritdoc/>
-    public async Task<GroupAuthorizationResult> EnsureMemberAsync(int groupId, ClaimsPrincipal user)
+    public async Task<ServicesAuthorizationResult> EnsureMemberAsync(int groupId, ClaimsPrincipal user)
     {
         string? userId = await GetUserIdAsync(user);
         if (userId == null)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotAuthenticated);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotAuthenticated);
         }
 
         // Admins can access any group
@@ -44,33 +45,33 @@ public class GroupAuthorizationService : IGroupAuthorizationService
             Group? adminGroup = await _groupService.GetGroupByIdAsync(groupId);
             if (adminGroup == null)
             {
-                return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+                return ServicesAuthorizationResult.Fail(AuthorizationFailure.ResourceNotFound);
             }
-            return GroupAuthorizationResult.Success();
+            return ServicesAuthorizationResult.Success();
         }
 
         Group? group = await _groupService.GetGroupByIdAsync(groupId);
         if (group == null)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.ResourceNotFound);
         }
 
         bool isMember = await _groupService.IsUserMemberAsync(groupId, userId);
         if (!isMember)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotMember);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotMember);
         }
 
-        return GroupAuthorizationResult.Success();
+        return ServicesAuthorizationResult.Success();
     }
 
     /// <inheritdoc/>
-    public async Task<GroupAuthorizationResult> EnsureModeratorAsync(int groupId, ClaimsPrincipal user)
+    public async Task<ServicesAuthorizationResult> EnsureModeratorAsync(int groupId, ClaimsPrincipal user)
     {
         string? userId = await GetUserIdAsync(user);
         if (userId == null)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotAuthenticated);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotAuthenticated);
         }
 
         // Admins have moderator privileges in any group
@@ -79,33 +80,33 @@ public class GroupAuthorizationService : IGroupAuthorizationService
             Group? adminGroup = await _groupService.GetGroupByIdAsync(groupId);
             if (adminGroup == null)
             {
-                return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+                return ServicesAuthorizationResult.Fail(AuthorizationFailure.ResourceNotFound);
             }
-            return GroupAuthorizationResult.Success();
+            return ServicesAuthorizationResult.Success();
         }
 
         Group? group = await _groupService.GetGroupByIdAsync(groupId);
         if (group == null)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.ResourceNotFound);
         }
 
         bool isModerator = await _groupService.IsUserModeratorAsync(groupId, userId);
         if (!isModerator)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotModerator);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotModerator);
         }
 
-        return GroupAuthorizationResult.Success();
+        return ServicesAuthorizationResult.Success();
     }
 
     /// <inheritdoc/>
-    public async Task<GroupAuthorizationResult> EnsureOwnerAsync(int groupId, ClaimsPrincipal user)
+    public async Task<ServicesAuthorizationResult> EnsureOwnerAsync(int groupId, ClaimsPrincipal user)
     {
         string? userId = await GetUserIdAsync(user);
         if (userId == null)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotAuthenticated);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotAuthenticated);
         }
 
         // Admins have owner privileges in any group
@@ -114,48 +115,60 @@ public class GroupAuthorizationService : IGroupAuthorizationService
             Group? adminGroup = await _groupService.GetGroupByIdAsync(groupId);
             if (adminGroup == null)
             {
-                return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+                return ServicesAuthorizationResult.Fail(AuthorizationFailure.ResourceNotFound);
             }
-            return GroupAuthorizationResult.Success();
+            return ServicesAuthorizationResult.Success();
         }
 
         Group? group = await _groupService.GetGroupByIdAsync(groupId);
         if (group == null)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.GroupNotFound);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.ResourceNotFound);
         }
 
         bool isOwner = await _groupService.IsUserOwnerAsync(groupId, userId);
         if (!isOwner)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotOwner);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotOwner);
         }
 
-        return GroupAuthorizationResult.Success();
+        return ServicesAuthorizationResult.Success();
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> IsEffectiveOwnerAsync(int groupId, ClaimsPrincipal user)
+    {
+        string? userId = await GetUserIdAsync(user);
+        if (userId == null) return false;
+
+        if (user.IsInRole("Admin")) return true;
+
+        return await _groupService.IsUserOwnerAsync(groupId, userId);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<Group>> GetVisibleGroupsForUserAsync(ClaimsPrincipal user)
+    {
+        string? userId = await GetUserIdAsync(user);
+        if (userId == null) return Enumerable.Empty<Group>();
+
+        bool isAdmin = user.IsInRole("Admin");
+        return await _groupService.GetGroupsForUserAsync(userId, isAdmin);
     }
 }
 
 /// <summary>
-/// Extension methods for <see cref="GroupAuthorizationResult"/> to convert authorization failures into appropriate HTTP responses.
+/// Backward compatibility extension for <see cref="GroupAuthorizationResult"/>.
+/// Deprecated: Use <see cref="AuthorizationResultExtensions.ToActionResult"/> instead.
 /// </summary>
 public static class GroupAuthorizationResultExtensions
 {
     /// <summary>
-    /// Converts a failed authorization result into an appropriate HTTP action result.
+    /// Converts a <see cref="GroupAuthorizationResult"/> to an action result.
+    /// Deprecated: Use <see cref="AuthorizationResultExtensions.ToActionResult"/> instead.
     /// </summary>
-    /// <param name="result">The authorization result to convert.</param>
-    /// <param name="controller">The controller context for creating action results.</param>
-    /// <returns>An action result appropriate for the failure reason (Challenge, NotFound, or Forbid).</returns>
     public static IActionResult ToActionResult(this GroupAuthorizationResult result, Controller controller)
     {
-        return result.Failure switch
-        {
-            GroupAuthorizationFailure.NotAuthenticated => controller.Challenge(),
-            GroupAuthorizationFailure.GroupNotFound => controller.NotFound(),
-            GroupAuthorizationFailure.NotMember => controller.RedirectToAction("Index"),
-            GroupAuthorizationFailure.NotModerator => controller.Forbid(),
-            GroupAuthorizationFailure.NotOwner => controller.Forbid(),
-            _ => controller.Forbid()
-        };
+        return result.ToAuthorizationResult().ToActionResult(controller);
     }
 }
