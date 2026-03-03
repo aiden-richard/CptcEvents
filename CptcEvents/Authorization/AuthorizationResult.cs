@@ -40,18 +40,18 @@ public enum AuthorizationFailure
 /// Result of an authorization check containing success status and failure reason (if applicable).
 /// Used by both event and group authorization services to provide a consistent result pattern.
 /// </summary>
-public record AuthorizationResult(bool Succeeded, AuthorizationFailure Failure)
+public record ServicesAuthorizationResult(bool Succeeded, AuthorizationFailure Failure)
 {
     /// <summary>
     /// Creates a successful authorization result.
     /// </summary>
     /// <returns>A result indicating authorization succeeded.</returns>
-    public static AuthorizationResult Success() => new(true, AuthorizationFailure.None);
+    public static ServicesAuthorizationResult Success() => new(true, AuthorizationFailure.None);
 
     /// <summary>
     /// Creates a failed authorization result with the specified failure reason.
     /// </summary>
     /// <param name="failure">The reason authorization failed.</param>
     /// <returns>A result indicating authorization failed with the specified reason.</returns>
-    public static AuthorizationResult Fail(AuthorizationFailure failure) => new(false, failure);
+    public static ServicesAuthorizationResult Fail(AuthorizationFailure failure) => new(false, failure);
 }

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using CptcEvents.Models;
-using CptcEvents.Authorization.GroupAuthorizationService;
+using CptcEvents.Authorization;
 
 namespace CptcEvents.Authorization.EventAuthorizationService;
 
@@ -17,7 +17,7 @@ public interface IEventAuthorizationService
     /// <param name="eventItem">The event to check access against.</param>
     /// <param name="user">The claims principal representing the current user.</param>
     /// <returns>A result indicating success or the specific authorization failure.</returns>
-    Task<GroupAuthorizationResult> CanViewEventAsync(Event eventItem, ClaimsPrincipal user);
+    Task<ServicesAuthorizationResult> CanViewEventAsync(Event eventItem, ClaimsPrincipal user);
 
     /// <summary>
     /// Determines whether the current user can edit the given event.
@@ -27,7 +27,7 @@ public interface IEventAuthorizationService
     /// <param name="eventItem">The event to check edit access against.</param>
     /// <param name="user">The claims principal representing the current user.</param>
     /// <returns>A result indicating success or the specific authorization failure.</returns>
-    Task<GroupAuthorizationResult> CanEditEventAsync(Event eventItem, ClaimsPrincipal user);
+    Task<ServicesAuthorizationResult> CanEditEventAsync(Event eventItem, ClaimsPrincipal user);
 
     /// <summary>
     /// Returns all events visible to the user based on their role and group memberships.

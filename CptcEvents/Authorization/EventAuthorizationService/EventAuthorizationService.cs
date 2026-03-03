@@ -2,7 +2,7 @@ using System.Security.Claims;
 using CptcEvents.Services;
 using Microsoft.AspNetCore.Identity;
 using CptcEvents.Models;
-using CptcEvents.Authorization.GroupAuthorizationService;
+using CptcEvents.Authorization;
 
 namespace CptcEvents.Authorization.EventAuthorizationService;
 
@@ -26,59 +26,59 @@ public class EventAuthorizationService : IEventAuthorizationService
     #region Event Access Control
 
     /// <inheritdoc/>
-    public async Task<GroupAuthorizationResult> CanViewEventAsync(Event eventItem, ClaimsPrincipal user)
+    public async Task<ServicesAuthorizationResult> CanViewEventAsync(Event eventItem, ClaimsPrincipal user)
     {
         // Public approved events are visible to everyone including anonymous users
         if (eventItem.IsPublic && eventItem.IsApprovedPublic)
         {
-            return GroupAuthorizationResult.Success();
+            return ServicesAuthorizationResult.Success();
         }
 
         string? userId = user.Identity?.IsAuthenticated == true ? _userManager.GetUserId(user) : null;
         if (userId == null)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotAuthenticated);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotAuthenticated);
         }
 
         // Admins can view any event
         if (user.IsInRole("Admin"))
         {
-            return GroupAuthorizationResult.Success();
+            return ServicesAuthorizationResult.Success();
         }
 
         // Private events require group membership
         bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
         if (!isMember)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotMember);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotMember);
         }
 
-        return GroupAuthorizationResult.Success();
+        return ServicesAuthorizationResult.Success();
     }
 
     /// <inheritdoc/>
-    public async Task<GroupAuthorizationResult> CanEditEventAsync(Event eventItem, ClaimsPrincipal user)
+    public async Task<ServicesAuthorizationResult> CanEditEventAsync(Event eventItem, ClaimsPrincipal user)
     {
         string? userId = user.Identity?.IsAuthenticated == true ? _userManager.GetUserId(user) : null;
         if (userId == null)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotAuthenticated);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotAuthenticated);
         }
 
         // Admins can edit any event
         if (user.IsInRole("Admin"))
         {
-            return GroupAuthorizationResult.Success();
+            return ServicesAuthorizationResult.Success();
         }
 
         // User must be a moderator in the event's group
         bool isModerator = await _groupService.IsUserModeratorAsync(eventItem.GroupId, userId);
         if (!isModerator)
         {
-            return GroupAuthorizationResult.Fail(GroupAuthorizationFailure.NotModerator);
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotModerator);
         }
 
-        return GroupAuthorizationResult.Success();
+        return ServicesAuthorizationResult.Success();
     }
 
     #endregion
