@@ -1,6 +1,4 @@
-﻿using CptcEvents.Data;
-using CptcEvents.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using CptcEvents.Models;
 
 namespace CptcEvents.Services;
 
@@ -55,13 +53,6 @@ public interface IEventService
     /// <param name="userId">The ID of the user to retrieve events for.</param>
     /// <returns>A collection of events from groups where the user is a member, ordered by date (ascending) and start time.</returns>
     Task<IEnumerable<Event>> GetEventsForUserAsync(string userId);
-
-    /// <summary>
-    /// Retrieves all events upcoming visible to a specific user based on their group memberships.
-    /// </summary>
-    /// <param name="userId">The ID of the user to retrieve events for.</param>
-    /// <returns>A collection of upcoming events from groups where the user is a member, ordered by date (ascending) and start time.</returns>
-    Task<IEnumerable<Event>> GetActiveEventsForUserAsync(string userId);
 
     /// <summary>
     /// Retrieves all events visible to a user, considering admin privileges.

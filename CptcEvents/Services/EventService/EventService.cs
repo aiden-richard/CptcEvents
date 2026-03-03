@@ -1,5 +1,6 @@
 using CptcEvents.Data;
 using CptcEvents.Models;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore;
 
 namespace CptcEvents.Services;
@@ -132,6 +133,11 @@ public class EventService : IEventService
     /// <inheritdoc/>
     public async Task<Event> CreateEventAsync(Event newEvent)
     {
+        if (!string.IsNullOrEmpty(newEvent.Description))
+        {
+            newEvent.Description = new HtmlSanitizer().Sanitize(newEvent.Description);
+        }
+
         _context.Events.Add(newEvent);
         await _context.SaveChangesAsync();
 
@@ -148,6 +154,11 @@ public class EventService : IEventService
         if (existingEvent == null)
         {
             return null;
+        }
+
+        if (!string.IsNullOrEmpty(updatedEvent.Description))
+        {
+            updatedEvent.Description = new HtmlSanitizer().Sanitize(updatedEvent.Description);
         }
 
         // Update event properties
