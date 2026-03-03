@@ -83,6 +83,28 @@ public class EventAuthorizationService : IEventAuthorizationService
 
     #endregion
 
+    /// <inheritdoc/>
+    public async Task<ServicesAuthorizationResult> CanMakeEventPublicAsync(Event? existingEvent, ClaimsPrincipal user)
+    {
+        // If editing an existing event whose creator is a Student, deny regardless of the requesting user's role
+        if (existingEvent != null)
+        {
+            var creator = await _userManager.FindByIdAsync(existingEvent.CreatedByUserId);
+            if (creator != null && await _userManager.IsInRoleAsync(creator, "Student"))
+            {
+                return ServicesAuthorizationResult.Fail(AuthorizationFailure.CreatorIsStudent);
+            }
+        }
+
+        // Only Staff or Admin may make events public
+        if (!user.IsInRole("Staff") && !user.IsInRole("Admin"))
+        {
+            return ServicesAuthorizationResult.Fail(AuthorizationFailure.NotStaff);
+        }
+
+        return ServicesAuthorizationResult.Success();
+    }
+
     #region Event Retrieval
 
     /// <inheritdoc/>

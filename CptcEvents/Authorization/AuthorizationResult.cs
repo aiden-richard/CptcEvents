@@ -33,7 +33,17 @@ public enum AuthorizationFailure
     /// <summary>
     /// User is not the owner of the resource.
     /// </summary>
-    NotOwner
+    NotOwner,
+
+    /// <summary>
+    /// User does not have a staff-level role (Staff or Admin) required for the action.
+    /// </summary>
+    NotStaff,
+
+    /// <summary>
+    /// The event was created by a Student and therefore cannot be made public.
+    /// </summary>
+    CreatorIsStudent
 }
 
 /// <summary>

@@ -44,4 +44,14 @@ public interface IEventAuthorizationService
     /// <param name="user">The claims principal representing the current user.</param>
     /// <returns>A collection of upcoming events the user is permitted to see.</returns>
     Task<IEnumerable<Event>> GetActiveVisibleEventsForUserAsync(ClaimsPrincipal user);
+
+    /// <summary>
+    /// Determines whether the current user may set an event as public.
+    /// Requires a Staff or Admin role. When editing an existing event, also rejects if the event
+    /// was originally created by a Student.
+    /// </summary>
+    /// <param name="existingEvent">The existing event being edited, or <c>null</c> when creating a new event.</param>
+    /// <param name="user">The claims principal representing the current user.</param>
+    /// <returns>A result indicating success or the specific authorization failure.</returns>
+    Task<ServicesAuthorizationResult> CanMakeEventPublicAsync(Event? existingEvent, ClaimsPrincipal user);
 }
