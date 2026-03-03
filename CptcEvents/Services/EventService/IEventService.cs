@@ -124,4 +124,29 @@ public interface IEventService
     Task<IEnumerable<Event>> GetEventsInRangeAsync(DateOnly start, DateOnly end);
 
     #endregion
+
+    #region Event Approval Methods
+
+    /// <summary>
+    /// Marks a public event as approved for display on the homepage.
+    /// </summary>
+    /// <param name="eventId">The ID of the event to approve.</param>
+    /// <returns><c>true</c> if the event was found and approved; <c>false</c> if the event does not exist.</returns>
+    Task<bool> ApproveEventAsync(int eventId);
+
+    /// <summary>
+    /// Marks a public event as denied, preventing it from appearing on the homepage.
+    /// </summary>
+    /// <param name="eventId">The ID of the event to deny.</param>
+    /// <returns><c>true</c> if the event was found and denied; <c>false</c> if the event does not exist.</returns>
+    Task<bool> DenyEventAsync(int eventId);
+
+    /// <summary>
+    /// Clears any approval or denial decision on a public event, returning it to a pending state.
+    /// </summary>
+    /// <param name="eventId">The ID of the event whose decision should be revoked.</param>
+    /// <returns><c>true</c> if the event was found and reset to pending; <c>false</c> if the event does not exist.</returns>
+    Task<bool> RevokeApprovalDecisionAsync(int eventId);
+
+    #endregion
 }

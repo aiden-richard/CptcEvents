@@ -23,6 +23,8 @@ public class EventService : IEventService
         _context = context;
     }
 
+    #region Event Retrieval Methods
+
     /// <inheritdoc/>
     public async Task<IEnumerable<Event>> GetAllEventsAsync()
     {
@@ -43,6 +45,7 @@ public class EventService : IEventService
     {
         return await _context.Events
             .Include(e => e.Group)
+            .Include(e => e.CreatedByUser)
             .Where(e => e.IsPublic && e.IsApprovedPublic)
             .OrderByDescending(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
@@ -54,6 +57,7 @@ public class EventService : IEventService
     {
         return await _context.Events
             .Include(e => e.Group)
+            .Include(e => e.CreatedByUser)
             .Where(e => e.IsPublic && !e.IsApprovedPublic && !e.IsDeniedPublic)
             .OrderBy(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
@@ -65,6 +69,7 @@ public class EventService : IEventService
     {
         return await _context.Events
             .Include(e => e.Group)
+            .Include(e => e.CreatedByUser)
             .Where(e => e.IsPublic && e.IsDeniedPublic)
             .OrderBy(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
@@ -119,6 +124,10 @@ public class EventService : IEventService
             .Include(e => e.Group)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
+
+    #endregion
+
+    #region Event Management Methods
 
     /// <inheritdoc/>
     public async Task<Event> CreateEventAsync(Event newEvent)
@@ -221,4 +230,42 @@ public class EventService : IEventService
             return await GetActiveEventsForUserAsync(userId);
         }
     }
+
+    /// <inheritdoc/>
+    public async Task<bool> ApproveEventAsync(int eventId)
+    {
+        Event? existingEvent = await _context.Events.FindAsync(eventId);
+        if (existingEvent == null) return false;
+
+        existingEvent.IsApprovedPublic = true;
+        existingEvent.IsDeniedPublic = false;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> DenyEventAsync(int eventId)
+    {
+        Event? existingEvent = await _context.Events.FindAsync(eventId);
+        if (existingEvent == null) return false;
+
+        existingEvent.IsApprovedPublic = false;
+        existingEvent.IsDeniedPublic = true;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> RevokeApprovalDecisionAsync(int eventId)
+    {
+        Event? existingEvent = await _context.Events.FindAsync(eventId);
+        if (existingEvent == null) return false;
+
+        existingEvent.IsApprovedPublic = false;
+        existingEvent.IsDeniedPublic = false;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    #endregion
 }
