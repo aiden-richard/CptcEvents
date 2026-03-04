@@ -37,10 +37,9 @@
   > [Authorization services](../../CptcEvents/Authorization/)
 
 - ### Event approval and visibility workflow
-  - Why it may change:
-  - How it is isolated:
-
-  > [](../../CptcEvents/)
+  - Why it may change: The current two-step flow (request public -> admin approves/denies) works for now, but could change to need support for auto-approval trusted instructors' events or another flow change. The three separate booleans (`IsPublic`, `IsApprovedPublic`, `IsDeniedPublic`) are already getting to be a little much and this should be cleaned up.
+  - How it is isolated: Approval state lives on the `Event` model as boolean flags. I think replacing the three booleans with an `ApprovalStatus` enum (e.g. `Pending`, `Approved`, `Denied`) would be a cleaner way to do things.
+  > [Event.cs](../../CptcEvents/Models/Event.cs)
 
 - ### Event recurrence
   - Why it may change:
