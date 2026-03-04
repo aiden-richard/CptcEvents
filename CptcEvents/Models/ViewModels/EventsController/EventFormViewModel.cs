@@ -40,25 +40,21 @@ public class EventFormViewModel : IValidatableObject
     public string? GroupName { get; set; }
 
     /// <summary>
-    /// Whether the event is publicly visible.
+    /// The approval status of this event for public display.
     /// </summary>
-    public bool IsPublic { get; set; }
-
-    /// <summary>
-    /// Whether the event has been approved for display on the homepage.
-    /// </summary>
-    public bool IsApprovedPublic { get; set; }
-
-    /// <summary>
-    /// Whether the event has been denied from display on the homepage.
-    /// </summary>
-    public bool IsDeniedPublic { get; set; }
+    public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Private;
 
     /// <summary>
     /// Whether RSVP is enabled for this event.
     /// </summary>
     [Display(Name = "Enable RSVP")]
     public bool IsRsvpEnabled { get; set; }
+
+    /// <summary>
+    /// Optional cutoff date/time after which RSVPs are no longer accepted.
+    /// </summary>
+    [Display(Name = "RSVP Cutoff")]
+    public DateTime? RsvpCutoffAt { get; set; }
 
     /// <summary>
     /// Whether the event is an all-day event.
