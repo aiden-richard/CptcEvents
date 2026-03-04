@@ -20,13 +20,13 @@
   - Why it may change: The rules dictating who can join a group and who can create invites are likely to change. For example, we currently use group privacy level to determine if a user can join a group AND whether or not a user can create an invite for a group. I think this could be handled better.
   - How it is isolated: The valid privacy levels are defined in the `PrivacyLevel` enum on the `Group` model. I think we should move this out to two separate objects: **1.** `PrivacyLevel` options change to `Public` and `RequiresInvite` **2.** We create a new object `GroupInvitePolicy` which does what it implies. If a group is public, any member should be able to generate an invite for ease of access to the group.
 
-  > [Group model (enum at bottom again)](../../CptcEvents/Models/Group.cs)
+  > [Group.cs (enum at bottom again)](../../CptcEvents/Models/Group.cs)
 
 - ### Group roles
-  - Why it may change:
-  - How it is isolated:
+  - Why it may change: The current Member/Moderator/Owner roles may not be enough as the system grows. New roles or per-group custom roles could be introduced.
+  - How it is isolated: The valid roles are defined in a `RoleType` enum on `GroupMember`, so the hierarchy can be extended without touching group or invite logic. We could change this logic to use a new `GroupRole` object that can handle custom roles as well as the existing ones.
 
-  > [](../../CptcEvents/)
+  > [GroupMember.cs (enum... at the bottom)](../../CptcEvents/Models/GroupMember.cs)
 
 - ### GroupInvite validity logic
   - Why it may change:
