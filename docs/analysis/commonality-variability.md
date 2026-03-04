@@ -29,10 +29,12 @@
   > [GroupMember.cs (enum... at the bottom)](../../CptcEvents/Models/GroupMember.cs)
 
 - ### GroupInvite validity logic
-  - Why it may change:
-  - How it is isolated:
+  - Why it may change: The rules for what makes an invite valid (expiration, single vs. multi-use, user-specific vs. general) are design decisions that may be subject change. For example, a security requirement could mandate all invites expire within 24 hours.
+  - How it is isolated: Expiration rules are located in the `IsExpired` property on `GroupInvite`, so expiration and usage policies can change without affecting the redemption. Redemption auth logic is in the InvitesController, this should be in the auth folder and I missed that when I was doing refactoring this week. Will be fixed soon.
 
-  > [](../../CptcEvents/)
+  > [GroupInvite.cs](../../CptcEvents/Models/GroupInvite.cs)
+  <br>
+  > [Authorization services](../../CptcEvents/Authorization/)
 
 - ### Event approval and visibility workflow
   - Why it may change:
