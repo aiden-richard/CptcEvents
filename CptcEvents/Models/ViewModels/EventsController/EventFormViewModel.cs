@@ -40,19 +40,9 @@ public class EventFormViewModel : IValidatableObject
     public string? GroupName { get; set; }
 
     /// <summary>
-    /// Whether the event is publicly visible.
+    /// The approval status of this event for public display.
     /// </summary>
-    public bool IsPublic { get; set; }
-
-    /// <summary>
-    /// Whether the event has been approved for display on the homepage.
-    /// </summary>
-    public bool IsApprovedPublic { get; set; }
-
-    /// <summary>
-    /// Whether the event has been denied from display on the homepage.
-    /// </summary>
-    public bool IsDeniedPublic { get; set; }
+    public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Private;
 
     /// <summary>
     /// Whether RSVP is enabled for this event.

@@ -19,9 +19,7 @@
         Description = Model.Description,
         GroupId = Model.GroupId,
         GroupName = Model.GroupName,
-        IsPublic = Model.IsPublic,
-        IsApprovedPublic = Model.IsApprovedPublic,
-        IsDeniedPublic = Model.IsDeniedPublic,
+        ApprovalStatus = Model.ApprovalStatus,
         IsAllDay = Model.IsAllDay,
         DateOfEvent = Model.DateOfEvent,
         StartTime = Model.StartTime,
@@ -127,25 +125,23 @@
                     <div>
                         <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Visibility</p>
                         <div>
-                            @if (Model.IsPublic)
+                            @switch (Model.ApprovalStatus)
                             {
-                                <span class="badge text-bg-success">Public</span>
-                                @if (Model.IsApprovedPublic)
-                                {
+                                case ApprovalStatus.Approved:
+                                    <span class="badge text-bg-success">Public</span>
                                     <span class="badge text-bg-success">Approved</span>
-                                }
-                                else if (Model.IsDeniedPublic)
-                                {
-                                    <span class="badge text-bg-danger">Denied</span>
-                                }
-                                else
-                                {
+                                    break;
+                                case ApprovalStatus.PendingApproval:
+                                    <span class="badge text-bg-success">Public</span>
                                     <span class="badge text-bg-warning">Pending</span>
-                                }
-                            }
-                            else
-                            {
-                                <span class="badge text-bg-secondary">Private</span>
+                                    break;
+                                case ApprovalStatus.Denied:
+                                    <span class="badge text-bg-success">Public</span>
+                                    <span class="badge text-bg-danger">Denied</span>
+                                    break;
+                                default:
+                                    <span class="badge text-bg-secondary">Private</span>
+                                    break;
                             }
                         </div>
                     </div>
@@ -238,30 +234,30 @@
                 </div>
             }
 
-            @* Admin Approval Card (only for public events, only for admins) *@
-            @if (Model.IsPublic && User.IsInRole("Admin"))
+            @* Admin Approval Card (only for non-private events, only for admins) *@
+            @if (Model.ApprovalStatus != ApprovalStatus.Private && User.IsInRole("Admin"))
             {
-                var approvalColor = Model.IsApprovedPublic ? "success" : Model.IsDeniedPublic ? "danger" : "warning";
+                var approvalColor = Model.ApprovalStatus == ApprovalStatus.Approved ? "success" : Model.ApprovalStatus == ApprovalStatus.Denied ? "danger" : "warning";
                 <div class="card mt-3 border-@approvalColor">
                     <div class="card-header text-bg-@approvalColor fw-semibold">Admin: Public Approval</div>
                     <div class="card-body d-flex flex-column gap-2">
                         <p class="mb-1 small">
                             Status:
-                            @if (Model.IsApprovedPublic)
+                            @switch (Model.ApprovalStatus)
                             {
-                                <span class="badge text-bg-success">Approved</span>
-                            }
-                            else if (Model.IsDeniedPublic)
-                            {
-                                <span class="badge text-bg-danger">Denied</span>
-                            }
-                            else
-                            {
-                                <span class="badge text-bg-warning">Pending</span>
+                                case ApprovalStatus.Approved:
+                                    <span class="badge text-bg-success">Approved</span>
+                                    break;
+                                case ApprovalStatus.Denied:
+                                    <span class="badge text-bg-danger">Denied</span>
+                                    break;
+                                default:
+                                    <span class="badge text-bg-warning">Pending</span>
+                                    break;
                             }
                         </p>
                         <div class="d-flex gap-2 flex-wrap">
-                            @if (!Model.IsApprovedPublic && !Model.IsDeniedPublic)
+                            @if (Model.ApprovalStatus == ApprovalStatus.PendingApproval)
                             {
                                 @* Pending: allow approve or deny *@
                                 <form asp-controller="Admin" asp-action="ApproveEvent" asp-route-eventId="@Model.Id" method="post" class="d-inline">

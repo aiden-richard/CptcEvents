@@ -49,7 +49,7 @@
                             <span>@evt.StartTime.ToString("hh\\:mm") - @evt.EndTime.ToString("hh\\:mm")</span>
                         }
                     </td>
-                    <td>@(!evt.IsPublic ? "Group only" : evt.IsDeniedPublic ? "Public (denied)" : evt.IsApprovedPublic ? "Public" : "Public (pending)")</td>
+                    <td>@(evt.ApprovalStatus == CptcEvents.Models.ApprovalStatus.Private ? "Group only" : evt.ApprovalStatus == CptcEvents.Models.ApprovalStatus.Denied ? "Public (denied)" : evt.ApprovalStatus == CptcEvents.Models.ApprovalStatus.Approved ? "Public" : "Public (pending)")</td>
                     <td class="text-end">
                         @if (Model.UserIsOwner || evt.CreatedByUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
                         {

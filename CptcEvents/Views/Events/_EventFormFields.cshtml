@@ -104,39 +104,43 @@ else
     </div>
 }
 
-@* IsPublic (Role-based visibility) *@
+@* ApprovalStatus (Role-based visibility) *@
 @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
 {
+    var isRequestingPublic = Model?.ApprovalStatus != CptcEvents.Models.ApprovalStatus.Private;
     <div class="form-check mb-3">
         <div class="d-flex align-items-center gap-2">
             <div>
-                <input asp-for="IsPublic" class="form-check-input" />
-                <label asp-for="IsPublic" class="form-check-label">Show on Homepage</label>
+                <input type="checkbox" class="form-check-input" id="showOnHomepage"
+                       checked="@isRequestingPublic"
+                       onchange="document.getElementById('approvalStatusHidden').value = this.checked ? '@((int)CptcEvents.Models.ApprovalStatus.PendingApproval)' : '@((int)CptcEvents.Models.ApprovalStatus.Private)';" />
+                <label for="showOnHomepage" class="form-check-label">Show on Homepage</label>
+                <input type="hidden" id="approvalStatusHidden" name="ApprovalStatus"
+                       value="@((int)(isRequestingPublic ? Model!.ApprovalStatus : CptcEvents.Models.ApprovalStatus.Private))" />
             </div>
             @* In edit mode, show approval status badge *@
-            @if (Model != null && Model.Id.HasValue && Model.IsPublic)
+            @if (Model != null && Model.Id.HasValue && Model.ApprovalStatus != CptcEvents.Models.ApprovalStatus.Private)
             {
-                @if (Model.IsDeniedPublic)
+                @switch (Model.ApprovalStatus)
                 {
-                    <span class="badge text-bg-danger">Denied</span>
-                }
-                else if (Model.IsApprovedPublic)
-                {
-                    <span class="badge text-bg-success">Approved</span>
-                }
-                else
-                {
-                    <span class="badge text-bg-warning">Pending</span>
+                    case CptcEvents.Models.ApprovalStatus.Denied:
+                        <span class="badge text-bg-danger">Denied</span>
+                        break;
+                    case CptcEvents.Models.ApprovalStatus.Approved:
+                        <span class="badge text-bg-success">Approved</span>
+                        break;
+                    case CptcEvents.Models.ApprovalStatus.PendingApproval:
+                        <span class="badge text-bg-warning">Pending</span>
+                        break;
                 }
             }
         </div>
-        <span asp-validation-for="IsPublic" class="text-danger"></span>
     </div>
 }
 else
 {
     @* Non-staff users cannot make events public *@
-    <input asp-for="IsPublic" type="hidden" value="false" />
+    <input type="hidden" name="ApprovalStatus" value="@((int)CptcEvents.Models.ApprovalStatus.Private)" />
 }
 
 @* Enable RSVP *@

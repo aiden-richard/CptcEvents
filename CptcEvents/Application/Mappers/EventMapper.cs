@@ -22,9 +22,7 @@ public static class EventMapper
         StartTime = e.StartTime,
         EndTime = e.EndTime,
         IsAllDay = e.IsAllDay,
-        IsPublic = e.IsPublic,
-        IsApprovedPublic = e.IsApprovedPublic,
-        IsDeniedPublic = e.IsDeniedPublic,
+        ApprovalStatus = e.ApprovalStatus,
         IsRsvpEnabled = e.IsRsvpEnabled,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
@@ -47,9 +45,7 @@ public static class EventMapper
         StartTime = e.StartTime,
         EndTime = e.EndTime,
         IsAllDay = e.IsAllDay,
-        IsPublic = e.IsPublic,
-        IsApprovedPublic = e.IsApprovedPublic,
-        IsDeniedPublic = e.IsDeniedPublic,
+        ApprovalStatus = e.ApprovalStatus,
         IsRsvpEnabled = e.IsRsvpEnabled,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
@@ -70,9 +66,7 @@ public static class EventMapper
         StartTime = e.StartTime,
         EndTime = e.EndTime,
         IsAllDay = e.IsAllDay,
-        IsPublic = e.IsPublic,
-        IsApprovedPublic = e.IsApprovedPublic,
-        IsDeniedPublic = e.IsDeniedPublic,
+        ApprovalStatus = e.ApprovalStatus,
         IsRsvpEnabled = e.IsRsvpEnabled,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
@@ -92,9 +86,7 @@ public static class EventMapper
         StartTime = e.StartTime,
         EndTime = e.EndTime,
         IsAllDay = e.IsAllDay,
-        IsPublic = e.IsPublic,
-        IsApprovedPublic = e.IsApprovedPublic,
-        IsDeniedPublic = e.IsDeniedPublic,
+        ApprovalStatus = e.ApprovalStatus,
         Url = e.Url,
         CreatedByUserId = e.CreatedByUserId
     };
@@ -108,7 +100,7 @@ public static class EventMapper
         Title = model.Title,
         Description = model.Description,
         GroupId = model.GroupId,
-        IsPublic = model.IsPublic,
+        ApprovalStatus = model.ApprovalStatus,
         IsRsvpEnabled = model.IsRsvpEnabled,
         IsAllDay = model.IsAllDay,
         DateOfEvent = model.DateOfEvent,
@@ -127,7 +119,7 @@ public static class EventMapper
     {
         target.Title = model.Title;
         target.Description = model.Description;
-        target.IsPublic = model.IsPublic;
+        target.ApprovalStatus = model.ApprovalStatus;
         target.IsRsvpEnabled = model.IsRsvpEnabled;
         target.IsAllDay = model.IsAllDay;
         target.DateOfEvent = model.DateOfEvent;
