@@ -9,10 +9,30 @@
 - An admin has access to the admin panel
 
 ## Variabilities
-- Variability 1
+- RSVP response options
   - Why it may change:
   - How it is isolated:
 
-- Variability 2
+- Group privacy level rules
+  - Why it may change:
+  - How it is isolated:
+
+- Group roles
+  - Why it may change:
+  - How it is isolated:
+
+- GroupInvite validity logic
+  - Why it may change:
+  - How it is isolated:
+
+- Event approval and visibility workflow
+  - Why it may change:
+  - How it is isolated:
+
+- Event recurrence
+  - Why it may change:
+  - How it is isolated:
+
+- Rsvp cutoff
   - Why it may change:
   - How it is isolated:
