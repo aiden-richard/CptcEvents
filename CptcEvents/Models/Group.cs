@@ -9,21 +9,6 @@ using System.Reflection;
 namespace CptcEvents.Models;
 
 /// <summary>
-/// Defines the privacy modes available for a <see cref="Group"/>.
-/// </summary>
-public enum PrivacyLevel
-{
-    [Display(Name = "Public - Anyone can join")]
-    Public,
-
-    [Display(Name = "Moderators and above can create invites")]
-    ModeratorInvitePrivate,
-
-    [Display(Name = "Only owner can create invites")]
-    OwnerInvitePrivate
-}
-
-/// <summary>
 /// Represents a community group with members, description and privacy settings.
 /// </summary>
 public class Group
@@ -76,11 +61,26 @@ public class Group
     /// </summary>
     [StringLength(7)]
     public string? Color { get; set; }
-    
+
     /// <summary>
     /// Collection of users who are members of the group.
     /// </summary>
     public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
 
     public int MemberCount => Members.Count;
+}
+
+/// <summary>
+/// Defines the privacy modes available for a <see cref="Group"/>.
+/// </summary>
+public enum PrivacyLevel
+{
+    [Display(Name = "Public - Anyone can join")]
+    Public,
+
+    [Display(Name = "Moderators and above can create invites")]
+    ModeratorInvitePrivate,
+
+    [Display(Name = "Only owner can create invites")]
+    OwnerInvitePrivate
 }
