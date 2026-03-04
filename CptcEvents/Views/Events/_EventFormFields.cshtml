@@ -145,10 +145,31 @@ else
 
 @* Enable RSVP *@
 <div class="form-check mb-3">
-    <input asp-for="IsRsvpEnabled" class="form-check-input" />
+    <input asp-for="IsRsvpEnabled" class="form-check-input" id="IsRsvpEnabledCheck" />
     <label asp-for="IsRsvpEnabled" class="form-check-label">Enable RSVP</label>
     <small class="text-muted d-block">Allow users to respond Going, Maybe, or Not Going.</small>
 </div>
+
+@* RSVP Cutoff (shown when RSVP is enabled) *@
+<div class="mb-3" id="rsvpCutoffWrapper" style="@(Model?.IsRsvpEnabled == true ? "" : "display:none;")">
+    <div class="form-floating">
+        <input type="datetime-local" asp-for="RsvpCutoffAt" class="form-control" id="rsvpCutoffInput" />
+        <label asp-for="RsvpCutoffAt">RSVP Cutoff</label>
+    </div>
+    <small class="text-muted">Leave blank to accept RSVPs until the event date.</small>
+</div>
+
+<script>
+    (function () {
+        var rsvpCheck = document.getElementById('IsRsvpEnabledCheck');
+        var cutoffWrapper = document.getElementById('rsvpCutoffWrapper');
+        if (rsvpCheck && cutoffWrapper) {
+            rsvpCheck.addEventListener('change', function () {
+                cutoffWrapper.style.display = this.checked ? '' : 'none';
+            });
+        }
+    })();
+</script>
 
 @* IsAllDay, Date, Time, URL Fields *@
 @if (Model != null && Model.Id.HasValue)

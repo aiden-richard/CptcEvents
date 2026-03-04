@@ -51,6 +51,12 @@ public class EventFormViewModel : IValidatableObject
     public bool IsRsvpEnabled { get; set; }
 
     /// <summary>
+    /// Optional cutoff date/time after which RSVPs are no longer accepted.
+    /// </summary>
+    [Display(Name = "RSVP Cutoff")]
+    public DateTime? RsvpCutoffAt { get; set; }
+
+    /// <summary>
     /// Whether the event is an all-day event.
     /// </summary>
     public bool IsAllDay { get; set; }

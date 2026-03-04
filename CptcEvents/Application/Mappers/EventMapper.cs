@@ -24,6 +24,7 @@ public static class EventMapper
         IsAllDay = e.IsAllDay,
         ApprovalStatus = e.ApprovalStatus,
         IsRsvpEnabled = e.IsRsvpEnabled,
+        RsvpCutoffAt = e.RsvpCutoffAt,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = false
@@ -47,6 +48,7 @@ public static class EventMapper
         IsAllDay = e.IsAllDay,
         ApprovalStatus = e.ApprovalStatus,
         IsRsvpEnabled = e.IsRsvpEnabled,
+        RsvpCutoffAt = e.RsvpCutoffAt,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = isCurrentUserMember
@@ -68,6 +70,7 @@ public static class EventMapper
         IsAllDay = e.IsAllDay,
         ApprovalStatus = e.ApprovalStatus,
         IsRsvpEnabled = e.IsRsvpEnabled,
+        RsvpCutoffAt = e.RsvpCutoffAt,
         Url = e.Url,
         BannerImageUrl = e.BannerImageUrl != null ? $"/Images/Event/{e.Id}" : null,
         IsCurrentUserMember = isCurrentUserMember,
@@ -102,6 +105,7 @@ public static class EventMapper
         GroupId = model.GroupId,
         ApprovalStatus = model.ApprovalStatus,
         IsRsvpEnabled = model.IsRsvpEnabled,
+        RsvpCutoffAt = model.RsvpCutoffAt,
         IsAllDay = model.IsAllDay,
         DateOfEvent = model.DateOfEvent,
         StartTime = model.StartTime,
@@ -121,6 +125,7 @@ public static class EventMapper
         target.Description = model.Description;
         target.ApprovalStatus = model.ApprovalStatus;
         target.IsRsvpEnabled = model.IsRsvpEnabled;
+        target.RsvpCutoffAt = model.RsvpCutoffAt;
         target.IsAllDay = model.IsAllDay;
         target.DateOfEvent = model.DateOfEvent;
         target.StartTime = model.StartTime;

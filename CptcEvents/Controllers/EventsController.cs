@@ -415,6 +415,15 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Details), new { eventId });
             }
 
+            // Check if RSVP window is still open
+            bool isPastEvent = eventItem.DateOfEvent < DateOnly.FromDateTime(DateTime.Now);
+            bool isCutoffPassed = eventItem.RsvpCutoffAt.HasValue && eventItem.RsvpCutoffAt.Value < DateTime.Now;
+            if (isPastEvent || isCutoffPassed)
+            {
+                TempData["Error"] = "RSVP is no longer available for this event.";
+                return RedirectToAction(nameof(Details), new { eventId });
+            }
+
             // Verify user can access this event
             ServicesAuthorizationResult viewCheck = await _eventAuthorization.CanViewEventAsync(eventItem, User);
             if (!viewCheck.Succeeded)
@@ -465,6 +474,15 @@ namespace CptcEvents.Controllers
             if (!eventItem.IsRsvpEnabled)
             {
                 TempData["Error"] = "RSVP is not enabled for this event.";
+                return RedirectToAction(nameof(Details), new { eventId });
+            }
+
+            // Check if RSVP window is still open
+            bool isPastEvent = eventItem.DateOfEvent < DateOnly.FromDateTime(DateTime.Now);
+            bool isCutoffPassed = eventItem.RsvpCutoffAt.HasValue && eventItem.RsvpCutoffAt.Value < DateTime.Now;
+            if (isPastEvent || isCutoffPassed)
+            {
+                TempData["Error"] = "RSVP is no longer available for this event.";
                 return RedirectToAction(nameof(Details), new { eventId });
             }
 

@@ -41,6 +41,12 @@ public class Event : IValidatableObject
     public bool IsRsvpEnabled { get; set; } = false;
 
     /// <summary>
+    /// Optional cutoff date/time after which RSVPs are no longer accepted.
+    /// If null, RSVPs are accepted up until the event date.
+    /// </summary>
+    public DateTime? RsvpCutoffAt { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether this event spans the entire day (has no specific start/end times).
     /// </summary>
     public bool IsAllDay { get; set; } = false;

@@ -40,6 +40,17 @@ public record EventDetailsViewModel
     /// </summary>
     public bool IsRsvpEnabled { get; init; }
 
+    /// <summary>
+    /// Optional cutoff date/time after which RSVPs are no longer accepted.
+    /// </summary>
+    public DateTime? RsvpCutoffAt { get; init; }
+
+    /// <summary>
+    /// Whether RSVPs are currently open: event hasn't passed and cutoff (if set) hasn't been reached.
+    /// </summary>
+    public bool IsRsvpOpen => DateOfEvent >= DateOnly.FromDateTime(DateTime.Now)
+        && (RsvpCutoffAt == null || RsvpCutoffAt.Value > DateTime.Now);
+
     // ── RSVP ──────────────────────────────────────────────
 
     /// <summary>
