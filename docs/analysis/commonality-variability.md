@@ -48,7 +48,7 @@
   > [Event.cs](../../CptcEvents/Models/Event.cs)
 
 - ### RSVP cutoff
-  - Why it may change:
-  - How it is isolated:
+  - Why it may change: We have `IsRsvpEnabled` to toggle RSVPs on/off, but no concept of a cutoff date. Some events might need a deadline to rsvp by. We also currently don't check that past events cannot be RSVP'd to. This should be changed.
+  - How it is isolated: Not yet implemented. A nullable `RsvpCutoffAt` property on `Event` that defaults to the date/time of the event would isolate the cutoff policy.
 
-    > [](../../CptcEvents/)
+  > [Event.cs](../../CptcEvents/Models/Event.cs)
