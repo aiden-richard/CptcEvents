@@ -16,26 +16,31 @@
   > [EventRsvp.cs (enum located at bottom of file)](../../CptcEvents/Models/EventRsvp.cs)
 
 
-- Group privacy level rules
+- ### Group privacy level rules
   - Why it may change:
   - How it is isolated:
 
-- Group roles
+
+- ### Group roles
   - Why it may change:
   - How it is isolated:
 
-- GroupInvite validity logic
+
+- ### GroupInvite validity logic
   - Why it may change:
   - How it is isolated:
 
-- Event approval and visibility workflow
+
+- ### Event approval and visibility workflow
   - Why it may change:
   - How it is isolated:
 
-- Event recurrence
+
+- ### Event recurrence
   - Why it may change:
   - How it is isolated:
 
-- Rsvp cutoff
+
+- ### RSVP cutoff
   - Why it may change:
   - How it is isolated:
