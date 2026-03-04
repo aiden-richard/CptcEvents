@@ -42,10 +42,10 @@
   > [Event.cs](../../CptcEvents/Models/Event.cs)
 
 - ### Event recurrence
-  - Why it may change:
-  - How it is isolated:
+  - Why it may change: All events are currently one-off. Regular club meetings or weekly lab sessions would need repeating events, which would change how date and time are stored and queried.
+  - How it is isolated: Not yet implemented. A `RecurrenceRule` configuration object attached to `Event` could define frequency and interval, keeping recurrence logic out of the core event entity.
 
-  > [](../../CptcEvents/)
+  > [Event.cs](../../CptcEvents/Models/Event.cs)
 
 - ### RSVP cutoff
   - Why it may change:
