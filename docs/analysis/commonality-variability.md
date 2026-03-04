@@ -6,7 +6,6 @@
 - A group contains group members and events
 - Group members have a role in the group
 - A user can create and edit an event
-- An admin has access to the admin panel
 
 ## Variabilities
 - ### RSVP response options
@@ -30,7 +29,7 @@
 
 - ### GroupInvite validity logic
   - Why it may change: The rules for what makes an invite valid (expiration, single vs. multi-use, user-specific vs. general) are design decisions that may be subject change. For example, a security requirement could mandate all invites expire within 24 hours.
-  - How it is isolated: Expiration rules are located in the `IsExpired` property on `GroupInvite`, so expiration and usage policies can change without affecting the redemption. Redemption auth logic is in the InvitesController, this should be in the auth folder and I missed that when I was doing refactoring this week. Will be fixed soon.
+  - How it is isolated: Expiration rules are located in the `IsExpired` property on `GroupInvite`, so expiration and usage policies can change without affecting the redemption. Redemption auth logic is in the `InvitesController`, this should be in the auth folder and I missed that when I was doing refactoring this week. Will be fixed soon.
 
   > [GroupInvite.cs](../../CptcEvents/Models/GroupInvite.cs)
   <br>
