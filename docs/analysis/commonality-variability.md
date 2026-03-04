@@ -20,27 +20,34 @@
   - Why it may change:
   - How it is isolated:
 
+  > [](../../CptcEvents/)
 
 - ### Group roles
   - Why it may change:
   - How it is isolated:
 
+  > [](../../CptcEvents/)
 
 - ### GroupInvite validity logic
   - Why it may change:
   - How it is isolated:
 
+  > [](../../CptcEvents/)
 
 - ### Event approval and visibility workflow
   - Why it may change:
   - How it is isolated:
 
+  > [](../../CptcEvents/)
 
 - ### Event recurrence
   - Why it may change:
   - How it is isolated:
 
+  > [](../../CptcEvents/)
 
 - ### RSVP cutoff
   - Why it may change:
   - How it is isolated:
+
+    > [](../../CptcEvents/)
