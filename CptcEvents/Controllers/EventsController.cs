@@ -117,8 +117,8 @@ namespace CptcEvents.Controllers
                 return moderatorCheck.ToActionResult(this);
             }
 
-            // Only Staff and Admin roles can make events public
-            if (model.IsPublic)
+            // Only Staff and Admin roles can request public approval
+            if (model.ApprovalStatus != ApprovalStatus.Private)
             {
                 ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(null, User);
                 if (!publicCheck.Succeeded)
@@ -203,8 +203,8 @@ namespace CptcEvents.Controllers
                 return editCheck.ToActionResult(this);
             }
 
-            // Only Staff and Admin roles can make events public; student-created events can never be made public
-            if (model.IsPublic)
+            // Only Staff and Admin roles can request public approval; student-created events can never be made public
+            if (model.ApprovalStatus != ApprovalStatus.Private)
             {
                 ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(existingEvent, User);
                 if (!publicCheck.Succeeded)
@@ -415,6 +415,15 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Details), new { eventId });
             }
 
+            // Check if RSVP window is still open
+            bool isPastEvent = eventItem.DateOfEvent < DateOnly.FromDateTime(DateTime.Now);
+            bool isCutoffPassed = eventItem.RsvpCutoffAt.HasValue && eventItem.RsvpCutoffAt.Value < DateTime.Now;
+            if (isPastEvent || isCutoffPassed)
+            {
+                TempData["Error"] = "RSVP is no longer available for this event.";
+                return RedirectToAction(nameof(Details), new { eventId });
+            }
+
             // Verify user can access this event
             ServicesAuthorizationResult viewCheck = await _eventAuthorization.CanViewEventAsync(eventItem, User);
             if (!viewCheck.Succeeded)
@@ -465,6 +474,15 @@ namespace CptcEvents.Controllers
             if (!eventItem.IsRsvpEnabled)
             {
                 TempData["Error"] = "RSVP is not enabled for this event.";
+                return RedirectToAction(nameof(Details), new { eventId });
+            }
+
+            // Check if RSVP window is still open
+            bool isPastEvent = eventItem.DateOfEvent < DateOnly.FromDateTime(DateTime.Now);
+            bool isCutoffPassed = eventItem.RsvpCutoffAt.HasValue && eventItem.RsvpCutoffAt.Value < DateTime.Now;
+            if (isPastEvent || isCutoffPassed)
+            {
+                TempData["Error"] = "RSVP is no longer available for this event.";
                 return RedirectToAction(nameof(Details), new { eventId });
             }
 
@@ -590,7 +608,7 @@ namespace CptcEvents.Controllers
         /// </summary>
         /// <remarks>This method is intended for use by pages that require event data
         /// formatted for the FullCalendar JavaScript library. The returned list will be empty if no events are
-        /// found. Only events marked as both IsPublic and IsApprovedPublic are included for non-admin users.</remarks>
+        /// found. Only events with <see cref="ApprovalStatus.Approved"/> are included for non-admin users.</remarks>
         /// <returns>A JSON result containing a list of event objects formatted for FullCalendar.</returns>
         public async Task<IActionResult> GetEvents()
         {

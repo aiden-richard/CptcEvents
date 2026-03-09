@@ -19,16 +19,15 @@
         Description = Model.Description,
         GroupId = Model.GroupId,
         GroupName = Model.GroupName,
-        IsPublic = Model.IsPublic,
-        IsApprovedPublic = Model.IsApprovedPublic,
-        IsDeniedPublic = Model.IsDeniedPublic,
+        ApprovalStatus = Model.ApprovalStatus,
         IsAllDay = Model.IsAllDay,
         DateOfEvent = Model.DateOfEvent,
         StartTime = Model.StartTime,
         EndTime = Model.EndTime,
         Url = Model.Url,
         BannerImageUrl = Model.BannerImageUrl,
-        IsRsvpEnabled = Model.IsRsvpEnabled
+        IsRsvpEnabled = Model.IsRsvpEnabled,
+        RsvpCutoffAt = Model.RsvpCutoffAt
     };
 }
 
@@ -127,25 +126,23 @@
                     <div>
                         <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Visibility</p>
                         <div>
-                            @if (Model.IsPublic)
+                            @switch (Model.ApprovalStatus)
                             {
-                                <span class="badge text-bg-success">Public</span>
-                                @if (Model.IsApprovedPublic)
-                                {
+                                case ApprovalStatus.Approved:
+                                    <span class="badge text-bg-success">Public</span>
                                     <span class="badge text-bg-success">Approved</span>
-                                }
-                                else if (Model.IsDeniedPublic)
-                                {
-                                    <span class="badge text-bg-danger">Denied</span>
-                                }
-                                else
-                                {
+                                    break;
+                                case ApprovalStatus.PendingApproval:
+                                    <span class="badge text-bg-success">Public</span>
                                     <span class="badge text-bg-warning">Pending</span>
-                                }
-                            }
-                            else
-                            {
-                                <span class="badge text-bg-secondary">Private</span>
+                                    break;
+                                case ApprovalStatus.Denied:
+                                    <span class="badge text-bg-success">Public</span>
+                                    <span class="badge text-bg-danger">Denied</span>
+                                    break;
+                                default:
+                                    <span class="badge text-bg-secondary">Private</span>
+                                    break;
                             }
                         </div>
                     </div>
@@ -169,6 +166,16 @@
                                 <span class="badge text-bg-warning">@Model.MaybeCount Maybe</span>
                                 <span class="badge text-bg-secondary">@Model.NotGoingCount Not Going</span>
                             </div>
+                            @if (Model.RsvpCutoffAt.HasValue)
+                            {
+                                <small class="text-muted d-block mt-1">
+                                    @(Model.IsRsvpOpen ? "Closes" : "Closed") @Model.RsvpCutoffAt.Value.ToString("MMM d, yyyy h:mm tt")
+                                </small>
+                            }
+                            else if (!Model.IsRsvpOpen)
+                            {
+                                <small class="text-muted d-block mt-1">Closed (past event)</small>
+                            }
                         </div>
                     }
 
@@ -182,86 +189,93 @@
                     <div class="card-body">
                         <p class="text-muted small mb-2 text-uppercase fw-semibold" style="letter-spacing:0.06em;">Your Response</p>
 
-                        @if (Model.CurrentUserRsvpStatus.HasValue)
+                        @if (!Model.IsRsvpOpen)
                         {
-                            <p class="mb-2">
-                                You responded:
-                                @switch (Model.CurrentUserRsvpStatus.Value)
-                                {
-                                    case RsvpStatus.Going:
-                                        <span class="badge text-bg-success">Going</span>
-                                        break;
-                                    case RsvpStatus.Maybe:
-                                        <span class="badge text-bg-warning">Maybe</span>
-                                        break;
-                                    case RsvpStatus.NotGoing:
-                                        <span class="badge text-bg-secondary">Not Going</span>
-                                        break;
-                                }
-                            </p>
+                            <p class="text-muted small mb-0">RSVP is closed for this event.</p>
                         }
-
-                        <div class="d-flex gap-2 flex-wrap">
-                            <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="status" value="@RsvpStatus.Going" />
-                                <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.Going ? "btn-success" : "btn-outline-success")">
-                                    Going
-                                </button>
-                            </form>
-                            <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="status" value="@RsvpStatus.Maybe" />
-                                <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.Maybe ? "btn-warning" : "btn-outline-warning")">
-                                    Maybe
-                                </button>
-                            </form>
-                            <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="status" value="@RsvpStatus.NotGoing" />
-                                <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.NotGoing ? "btn-secondary" : "btn-outline-secondary")">
-                                    Not Going
-                                </button>
-                            </form>
-
+                        else
+                        {
                             @if (Model.CurrentUserRsvpStatus.HasValue)
                             {
-                                <form asp-action="RemoveRsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                <p class="mb-2">
+                                    You responded:
+                                    @switch (Model.CurrentUserRsvpStatus.Value)
+                                    {
+                                        case RsvpStatus.Going:
+                                            <span class="badge text-bg-success">Going</span>
+                                            break;
+                                        case RsvpStatus.Maybe:
+                                            <span class="badge text-bg-warning">Maybe</span>
+                                            break;
+                                        case RsvpStatus.NotGoing:
+                                            <span class="badge text-bg-secondary">Not Going</span>
+                                            break;
+                                    }
+                                </p>
+                            }
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        Remove RSVP
+                                    <input type="hidden" name="status" value="@RsvpStatus.Going" />
+                                    <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.Going ? "btn-success" : "btn-outline-success")">
+                                        Going
                                     </button>
                                 </form>
-                            }
-                        </div>
+                                <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="status" value="@RsvpStatus.Maybe" />
+                                    <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.Maybe ? "btn-warning" : "btn-outline-warning")">
+                                        Maybe
+                                    </button>
+                                </form>
+                                <form asp-action="Rsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="status" value="@RsvpStatus.NotGoing" />
+                                    <button type="submit" class="btn btn-sm @(Model.CurrentUserRsvpStatus == RsvpStatus.NotGoing ? "btn-secondary" : "btn-outline-secondary")">
+                                        Not Going
+                                    </button>
+                                </form>
+
+                                @if (Model.CurrentUserRsvpStatus.HasValue)
+                                {
+                                    <form asp-action="RemoveRsvp" asp-route-eventId="@Model.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            Remove RSVP
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
             }
 
-            @* Admin Approval Card (only for public events, only for admins) *@
-            @if (Model.IsPublic && User.IsInRole("Admin"))
+            @* Admin Approval Card (only for non-private events, only for admins) *@
+            @if (Model.ApprovalStatus != ApprovalStatus.Private && User.IsInRole("Admin"))
             {
-                var approvalColor = Model.IsApprovedPublic ? "success" : Model.IsDeniedPublic ? "danger" : "warning";
+                var approvalColor = Model.ApprovalStatus == ApprovalStatus.Approved ? "success" : Model.ApprovalStatus == ApprovalStatus.Denied ? "danger" : "warning";
                 <div class="card mt-3 border-@approvalColor">
                     <div class="card-header text-bg-@approvalColor fw-semibold">Admin: Public Approval</div>
                     <div class="card-body d-flex flex-column gap-2">
                         <p class="mb-1 small">
                             Status:
-                            @if (Model.IsApprovedPublic)
+                            @switch (Model.ApprovalStatus)
                             {
-                                <span class="badge text-bg-success">Approved</span>
-                            }
-                            else if (Model.IsDeniedPublic)
-                            {
-                                <span class="badge text-bg-danger">Denied</span>
-                            }
-                            else
-                            {
-                                <span class="badge text-bg-warning">Pending</span>
+                                case ApprovalStatus.Approved:
+                                    <span class="badge text-bg-success">Approved</span>
+                                    break;
+                                case ApprovalStatus.Denied:
+                                    <span class="badge text-bg-danger">Denied</span>
+                                    break;
+                                default:
+                                    <span class="badge text-bg-warning">Pending</span>
+                                    break;
                             }
                         </p>
                         <div class="d-flex gap-2 flex-wrap">
-                            @if (!Model.IsApprovedPublic && !Model.IsDeniedPublic)
+                            @if (Model.ApprovalStatus == ApprovalStatus.PendingApproval)
                             {
                                 @* Pending: allow approve or deny *@
                                 <form asp-controller="Admin" asp-action="ApproveEvent" asp-route-eventId="@Model.Id" method="post" class="d-inline">

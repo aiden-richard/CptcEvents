@@ -32,7 +32,7 @@
                         </dd>
                         <dt class="col-sm-4">Visibility</dt>
                         <dd class="col-sm-8">
-                            @if (Model.IsPublic)
+                            @if (Model.ApprovalStatus != CptcEvents.Models.ApprovalStatus.Private)
                             {
                                 <span class="badge bg-success">Public</span>
                             }

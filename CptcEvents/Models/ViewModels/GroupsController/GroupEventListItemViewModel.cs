@@ -23,9 +23,7 @@ public class GroupEventListItemViewModel
 
     public bool IsAllDay { get; init; }
 
-    public bool IsPublic { get; init; }
-    public bool IsApprovedPublic { get; init; }
-    public bool IsDeniedPublic { get; init; }
+    public ApprovalStatus ApprovalStatus { get; init; }
 
     public string Description { get; init; } = string.Empty;
 

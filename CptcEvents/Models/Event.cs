@@ -31,24 +31,20 @@ public class Event : IValidatableObject
     public string? Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether this event is marked as public.
+    /// Gets or sets the approval status of this event for public display.
     /// </summary>
-    public bool IsPublic { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets a value indicating whether this public event has been approved for display on the homepage.
-    /// </summary>
-    public bool IsApprovedPublic { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets a value indicating whether this public event has been denied and should not be displayed.
-    /// </summary>
-    public bool IsDeniedPublic { get; set; } = false;
+    public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Private;
 
     /// <summary>
     /// Gets or sets a value indicating whether RSVP is enabled for this event.
     /// </summary>
     public bool IsRsvpEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Optional cutoff date/time after which RSVPs are no longer accepted.
+    /// If null, RSVPs are accepted up until the event date.
+    /// </summary>
+    public DateTime? RsvpCutoffAt { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether this event spans the entire day (has no specific start/end times).
@@ -125,4 +121,22 @@ public class Event : IValidatableObject
 
         yield break;
     }
+}
+
+/// <summary>
+/// Defines the approval workflow states for public event visibility.
+/// </summary>
+public enum ApprovalStatus
+{
+    [Display(Name = "Private")]
+    Private,
+
+    [Display(Name = "Pending Approval")]
+    PendingApproval,
+
+    [Display(Name = "Approved")]
+    Approved,
+
+    [Display(Name = "Denied")]
+    Denied
 }

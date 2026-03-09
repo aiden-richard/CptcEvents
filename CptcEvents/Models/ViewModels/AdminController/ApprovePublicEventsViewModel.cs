@@ -7,17 +7,17 @@ namespace CptcEvents.Models.ViewModels;
 public class ApprovePublicEventsViewModel
 {
     /// <summary>
-    /// Public events that are pending approval (IsPublic = true, IsApprovedPublic = false, IsDeniedPublic = false).
+    /// Events with <see cref="ApprovalStatus.PendingApproval"/> status.
     /// </summary>
     public IEnumerable<Event> PendingEvents { get; set; } = new List<Event>();
 
     /// <summary>
-    /// Public events that have been approved (IsPublic = true, IsApprovedPublic = true).
+    /// Events with <see cref="ApprovalStatus.Approved"/> status.
     /// </summary>
     public IEnumerable<Event> ApprovedEvents { get; set; } = new List<Event>();
 
     /// <summary>
-    /// Public events that have been denied (IsPublic = true, IsDeniedPublic = true).
+    /// Events with <see cref="ApprovalStatus.Denied"/> status.
     /// </summary>
     public IEnumerable<Event> DeniedEvents { get; set; } = new List<Event>();
 }

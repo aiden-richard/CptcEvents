@@ -82,7 +82,7 @@
                             }
                         </td>
                         <td>
-                            @if (eventItem.IsPublic)
+                            @if (eventItem.ApprovalStatus != CptcEvents.Models.ApprovalStatus.Private)
                             {
                                 <span class="badge bg-success">Public</span>
                             }
@@ -92,24 +92,20 @@
                             }
                         </td>
                         <td>
-                            @if (eventItem.IsPublic)
+                            @switch (eventItem.ApprovalStatus)
                             {
-                                @if (eventItem.IsApprovedPublic)
-                                {
+                                case CptcEvents.Models.ApprovalStatus.Approved:
                                     <span class="badge bg-success">Approved</span>
-                                }
-                                else if (eventItem.IsDeniedPublic)
-                                {
+                                    break;
+                                case CptcEvents.Models.ApprovalStatus.Denied:
                                     <span class="badge bg-danger">Denied</span>
-                                }
-                                else
-                                {
+                                    break;
+                                case CptcEvents.Models.ApprovalStatus.PendingApproval:
                                     <span class="badge bg-warning">Pending</span>
-                                }
-                            }
-                            else
-                            {
-                                <span class="text-muted">N/A</span>
+                                    break;
+                                default:
+                                    <span class="text-muted">N/A</span>
+                                    break;
                             }
                         </td>
                         <td class="text-end">
