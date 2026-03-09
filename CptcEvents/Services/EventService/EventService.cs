@@ -37,7 +37,7 @@ public class EventService : IEventService
     public async Task<IEnumerable<Event>> GetPublicEventsAsync()
     {
         return await _context.Events
-            .Where(e => e.IsPublic)
+            .Where(e => e.ApprovalStatus != ApprovalStatus.Private)
             .ToListAsync();
     }
 
@@ -47,7 +47,7 @@ public class EventService : IEventService
         return await _context.Events
             .Include(e => e.Group)
             .Include(e => e.CreatedByUser)
-            .Where(e => e.IsPublic && e.IsApprovedPublic)
+            .Where(e => e.ApprovalStatus == ApprovalStatus.Approved)
             .OrderByDescending(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
             .ToListAsync();
@@ -59,7 +59,7 @@ public class EventService : IEventService
         return await _context.Events
             .Include(e => e.Group)
             .Include(e => e.CreatedByUser)
-            .Where(e => e.IsPublic && !e.IsApprovedPublic && !e.IsDeniedPublic)
+            .Where(e => e.ApprovalStatus == ApprovalStatus.PendingApproval)
             .OrderBy(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
             .ToListAsync();
@@ -71,7 +71,7 @@ public class EventService : IEventService
         return await _context.Events
             .Include(e => e.Group)
             .Include(e => e.CreatedByUser)
-            .Where(e => e.IsPublic && e.IsDeniedPublic)
+            .Where(e => e.ApprovalStatus == ApprovalStatus.Denied)
             .OrderBy(e => e.DateOfEvent)
             .ThenBy(e => e.StartTime)
             .ToListAsync();
@@ -164,7 +164,7 @@ public class EventService : IEventService
         // Update event properties
         existingEvent.Title = updatedEvent.Title;
         existingEvent.Description = updatedEvent.Description;
-        existingEvent.IsPublic = updatedEvent.IsPublic;
+        existingEvent.ApprovalStatus = updatedEvent.ApprovalStatus;
         existingEvent.IsRsvpEnabled = updatedEvent.IsRsvpEnabled;
         existingEvent.IsAllDay = updatedEvent.IsAllDay;
         existingEvent.DateOfEvent = updatedEvent.DateOfEvent;
@@ -248,8 +248,7 @@ public class EventService : IEventService
         Event? existingEvent = await _context.Events.FindAsync(eventId);
         if (existingEvent == null) return false;
 
-        existingEvent.IsApprovedPublic = true;
-        existingEvent.IsDeniedPublic = false;
+        existingEvent.ApprovalStatus = ApprovalStatus.Approved;
         await _context.SaveChangesAsync();
         return true;
     }
@@ -260,8 +259,7 @@ public class EventService : IEventService
         Event? existingEvent = await _context.Events.FindAsync(eventId);
         if (existingEvent == null) return false;
 
-        existingEvent.IsApprovedPublic = false;
-        existingEvent.IsDeniedPublic = true;
+        existingEvent.ApprovalStatus = ApprovalStatus.Denied;
         await _context.SaveChangesAsync();
         return true;
     }
@@ -272,8 +270,7 @@ public class EventService : IEventService
         Event? existingEvent = await _context.Events.FindAsync(eventId);
         if (existingEvent == null) return false;
 
-        existingEvent.IsApprovedPublic = false;
-        existingEvent.IsDeniedPublic = false;
+        existingEvent.ApprovalStatus = ApprovalStatus.PendingApproval;
         await _context.SaveChangesAsync();
         return true;
     }

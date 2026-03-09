@@ -73,7 +73,7 @@
                                             <h6 class="mb-0">
                                                 <a asp-controller="Events" asp-action="Details" asp-route-eventId="@evt.Id" class="text-decoration-none text-body">@evt.Title</a>
                                             </h6>
-                                            @if (!evt.IsPublic)
+                                            @if (evt.ApprovalStatus == CptcEvents.Models.ApprovalStatus.Private)
                                             {
                                                 <span class="badge rounded-pill text-bg-secondary" style="font-size: 0.65rem;">Private</span>
                                             }

@@ -28,8 +28,8 @@ public class EventAuthorizationService : IEventAuthorizationService
     /// <inheritdoc/>
     public async Task<ServicesAuthorizationResult> CanViewEventAsync(Event eventItem, ClaimsPrincipal user)
     {
-        // Public approved events are visible to everyone including anonymous users
-        if (eventItem.IsPublic && eventItem.IsApprovedPublic)
+        // Approved events are visible to everyone including anonymous users
+        if (eventItem.ApprovalStatus == ApprovalStatus.Approved)
         {
             return ServicesAuthorizationResult.Success();
         }

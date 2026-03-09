@@ -25,11 +25,7 @@ public record EventDetailsViewModel
 
     public bool IsAllDay { get; init; }
 
-    public bool IsPublic { get; init; }
-
-    public bool IsApprovedPublic { get; init; }
-
-    public bool IsDeniedPublic { get; init; }
+    public ApprovalStatus ApprovalStatus { get; init; }
 
     public string? Url { get; init; }
 
@@ -43,6 +39,17 @@ public record EventDetailsViewModel
     /// Whether RSVP is enabled for this event.
     /// </summary>
     public bool IsRsvpEnabled { get; init; }
+
+    /// <summary>
+    /// Optional cutoff date/time after which RSVPs are no longer accepted.
+    /// </summary>
+    public DateTime? RsvpCutoffAt { get; init; }
+
+    /// <summary>
+    /// Whether RSVPs are currently open: event hasn't passed and cutoff (if set) hasn't been reached.
+    /// </summary>
+    public bool IsRsvpOpen => DateOfEvent >= DateOnly.FromDateTime(DateTime.Now)
+        && (RsvpCutoffAt == null || RsvpCutoffAt.Value > DateTime.Now);
 
     // ── RSVP ──────────────────────────────────────────────
 
