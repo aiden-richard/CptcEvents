@@ -183,7 +183,7 @@ public class InviteService : IInviteService
 		}
 
 		// Check for owner-only privacy level
-		if (group.PrivacyLevel == PrivacyLevel.OwnerInvitePrivate && group.OwnerId != currentUserId)
+		if (group.InvitePolicy == GroupInvitePolicy.OwnerOnly && group.OwnerId != currentUserId)
 		{
 			result.IsValid = false;
 			result.Unauthorized = true;
@@ -270,7 +270,7 @@ public class InviteService : IInviteService
 			return result;
 		}
 
-		if (group.PrivacyLevel == PrivacyLevel.OwnerInvitePrivate && group.OwnerId != currentUserId)
+		if (group.InvitePolicy == GroupInvitePolicy.OwnerOnly && group.OwnerId != currentUserId)
 		{
 			result.IsValid = false;
 			result.Unauthorized = true;

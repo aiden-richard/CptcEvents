@@ -35,10 +35,11 @@ public static class GroupMapper
         Group = ToSummary(group),
         Description = group.Description,
         PrivacyLevel = group.PrivacyLevel,
+        InvitePolicy = group.InvitePolicy,
         Color = group.Color,
         UserIsOwner = userIsOwner,
         UserIsModerator = userIsModerator,
-        ModeratorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate,
+        ModeratorsCanInvite = group.InvitePolicy != GroupInvitePolicy.OwnerOnly,
         MemberCount = group.MemberCount,
         ModeratorCount = moderatorCount,
         InviteCount = inviteCount,
@@ -60,7 +61,7 @@ public static class GroupMapper
         Group = ToSummary(group),
         UserIsModerator = userIsModerator,
         UserIsOwner = userIsOwner,
-        ModeratorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate,
+        ModeratorsCanInvite = group.InvitePolicy != GroupInvitePolicy.OwnerOnly,
         UpcomingEvents = upcomingEvents,
         Events = allEvents
     };

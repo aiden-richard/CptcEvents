@@ -26,10 +26,16 @@ public class GroupFormViewModel
     public string? Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Privacy level for the group.
+    /// Privacy level for the group (join access).
     /// </summary>
     [Required]
-    public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.ModeratorInvitePrivate;
+    public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.RequiresInvite;
+
+    /// <summary>
+    /// Who is allowed to create invites for this group.
+    /// </summary>
+    [Required]
+    public GroupInvitePolicy InvitePolicy { get; set; } = GroupInvitePolicy.ModeratorAndAbove;
 
     /// <summary>
     /// Hex color code for the group used in calendar displays.
