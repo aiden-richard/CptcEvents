@@ -1,0 +1,85 @@
+# Docker Compose file for production environment
+# Defines the services, volumes, and network for the cptc-events application.
+# We set up:
+# - A cloudflare tunnel to expose the application securely.
+# - A SQL Server database container with persistent storage and initialization scripts.
+# - The application container that depends on the database.
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.1.2
+    container_name: CptcEventsTunnel
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    restart: unless-stopped
+    networks:
+      - CptcEventsNetwork
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    hostname: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${SA_PASSWORD}
+      - CPTCEVENTS_DB_PASSWORD=${CPTCEVENTS_DB_PASSWORD}
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+      - ./SqlServer/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./SqlServer/entrypoint.sh:/entrypoint.sh
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
+    restart: unless-stopped
+    # Health check: Confirms SQL Server is accepting connections
+    # App container will not start until this passes
+    healthcheck:
+      test: ["/bin/bash", "-c", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $${MSSQL_SA_PASSWORD} -C -Q 'SELECT 1' > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - CptcEventsNetwork
+
+  migrations:
+    image: cptcevents:latest
+    container_name: cptcevents-migrations
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    command: ["dotnet", "ef", "database", "update"]
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CptcEvents;User Id=cptcevents_app;Password=${CPTCEVENTS_DB_PASSWORD};TrustServerCertificate=True
+    networks:
+      - CptcEventsNetwork
+
+  cptcevents-app:
+    image: cptcevents:latest
+    container_name: cptcevents-app
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CptcEvents;User Id=cptcevents_app;Password=${CPTCEVENTS_DB_PASSWORD};TrustServerCertificate=True
+      - SendGrid__ApiKey=${SENDGRID_API_KEY}
+      - AdminUser__Email=${ADMIN_EMAIL}
+      - AdminUser__UserName=${ADMIN_USERNAME}
+      - AdminUser__Password=${ADMIN_PASSWORD}
+      - AzureBlobStorage__ConnectionString=${AZURE_BLOB_CONNECTION_STRING}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    networks:
+      - CptcEventsNetwork
+
+volumes:
+  sqlserver-data:
+
+networks:
+  CptcEventsNetwork:
+    driver: bridge
