@@ -1,3 +1,6 @@
+using CptcEvents.Authorization;
+using CptcEvents.Authorization.InviteAuthorizationService;
+using AuthorizationFailure = CptcEvents.Authorization.AuthorizationFailure;
 using CptcEvents.Models;
 using CptcEvents.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -15,19 +18,19 @@ namespace CptcEvents.Controllers
     {
         private readonly IInviteService _inviteService;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IGroupService _groupService;
+        private readonly IInviteAuthorizationService _inviteAuthorization;
 
         /// <summary>
         /// Creates a new instance of <see cref="InvitesController"/>.
         /// </summary>
         /// <param name="inviteService">Invite service for data operations.</param>
         /// <param name="userManager">User manager for identity operations.</param>
-        /// <param name="groupService">Group service for group-related operations.</param>
-        public InvitesController(IInviteService inviteService, UserManager<ApplicationUser> userManager, IGroupService groupService)
+        /// <param name="inviteAuthorization">Invite authorization service.</param>
+        public InvitesController(IInviteService inviteService, UserManager<ApplicationUser> userManager, IInviteAuthorizationService inviteAuthorization)
         {
             _inviteService = inviteService;
             _userManager = userManager;
-            _groupService = groupService;
+            _inviteAuthorization = inviteAuthorization;
         }
 
         /// <summary>
@@ -65,14 +68,12 @@ namespace CptcEvents.Controllers
 
             GroupInvite? invite = await _inviteService.GetInviteByCodeAsync(code);
 
-            if (invite == null || invite.IsExpired)
+            ServicesAuthorizationResult authCheck = _inviteAuthorization.CanViewRedeem(invite, userId);
+            if (!authCheck.Succeeded)
             {
-                return RedirectToAction(nameof(RedeemByQuery));
-            }
-
-            if (invite.InvitedUserId != null && invite.InvitedUserId != userId)
-            {
-                return Unauthorized();
+                return authCheck.Failure == AuthorizationFailure.InviteNotForUser
+                    ? Unauthorized()
+                    : RedirectToAction(nameof(RedeemByQuery));
             }
 
             return View(invite);
@@ -99,34 +100,31 @@ namespace CptcEvents.Controllers
 
             if (invite == null)
             {
-                ModelState.AddModelError(string.Empty, "The invite could not be found.");
                 return NotFound();
             }
 
-            if (invite.IsExpired)
+            ServicesAuthorizationResult authCheck = await _inviteAuthorization.CanRedeemInviteAsync(invite, userId);
+            if (!authCheck.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, "This invite is expired or already used.");
-                return View(invite);
-            }
-
-            if (invite.InvitedUserId != null && invite.InvitedUserId != userId)
-            {
-                return Unauthorized();
-            }
-
-            if (await _groupService.IsUserMemberAsync(invite.GroupId, userId))
-            {
-                ViewData["Error"] = "You are already a member of this group.";
-                // Re-fetch to ensure view has current state
-                invite = await _inviteService.GetInviteByCodeAsync(code);
-                return View(invite);
+                switch (authCheck.Failure)
+                {
+                    case AuthorizationFailure.InviteExpired:
+                        ModelState.AddModelError(string.Empty, "This invite is expired or already used.");
+                        return View(invite);
+                    case AuthorizationFailure.InviteNotForUser:
+                        return Unauthorized();
+                    case AuthorizationFailure.AlreadyMember:
+                        ViewData["Error"] = "You are already a member of this group.";
+                        return View(invite);
+                    default:
+                        return Forbid();
+                }
             }
 
             GroupMember? member = await _inviteService.RedeemInviteAsync(invite.Id, userId);
             if (member == null)
             {
                 ModelState.AddModelError(string.Empty, "Could not redeem the invite. You may already be a member or the invite is no longer valid.");
-                // Re-fetch to ensure view has current state
                 invite = await _inviteService.GetInviteByCodeAsync(code);
                 return View(invite);
             }
