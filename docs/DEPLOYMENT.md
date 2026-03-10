@@ -23,17 +23,15 @@ For local development setup instructions, see the [Local Development Guide](DEVE
 ```
 User Browser (cptcevents.org)
         ↓
-[Cloudflare Tunnel]
-        ↓
-[Caddy Reverse Proxy]
+[Cloudflare Tunnel]  (cloudflared container)
         ↓
 [ASP.NET Core App Container]  ──→  [SQL Server 2022 Container]
     (cptcevents-app)                    (sqlserver)
          └──────────────────────────────────┘
-                  sqldevserver_default Docker network
+                      CptcEventsNetwork (Docker bridge)
 ```
 
-All components run on the same self-hosted server. The app and database containers communicate over a shared Docker network (`sqldevserver_default`) using the `sqlserver` hostname.
+All components run on the same self-hosted server. The app, database, and Cloudflare tunnel containers all communicate over a shared Docker bridge network (`CptcEventsNetwork`) using the `sqlserver` hostname. Cloudflare Tunnel handles public traffic routing directly to the app — no Caddy reverse proxy is used.
 
 ## Infrastructure Components
 
@@ -43,15 +41,16 @@ The application and database both run directly on the production server as Docke
 
 ### SQL Server 2022 (Docker)
 
-The database runs as a Docker container managed by `SqlDevServer/docker-compose.yml`. It uses a named volume (`sqlserver-data`) to persist data across container restarts and redeployments.
+The database runs as a Docker container managed by `deploy/docker-compose.yml`. It uses a named volume (`sqlserver-data`) to persist data across container restarts and redeployments.
 
-The database is managed through Entity Framework Core migrations, which are applied automatically on application startup via `context.Database.MigrateAsync()` in `Program.cs`.
+Database migrations are applied by a dedicated `migrations` container (running `dotnet ef database update`) that starts after SQL Server is healthy and completes before the app container starts.
 
 **Key configuration:**
 - Container name/hostname: `sqlserver`
-- Port: `1433` (mapped to host)
+- Port: `1433` (internal to `CptcEventsNetwork`)
 - Data persistence: `sqlserver-data` Docker volume
-- SA password: managed via `SA_PASSWORD` GitHub secret / `.env` file
+- SA password: managed via `SA_PASSWORD` GitHub secret
+- App DB user: `cptcevents_app` with password from `CPTCEVENTS_DB_PASSWORD` secret
 
 ### Caddy Reverse Proxy
 
@@ -86,11 +85,13 @@ The application uses GitHub Actions with a **self-hosted runner** installed on t
 
 1. **Checkout** — Pull the latest source code onto the runner
 
-2. **Start Database** — Run `docker compose up -d` in `SqlDevServer/` to ensure the SQL Server container is running (no-op if already up)
+2. **Validate Secrets** — Verify all required GitHub secrets are present before touching any running containers; fails fast with a clear error listing missing secrets
 
 3. **Build Image** — Build the Docker image from `CptcEvents/Dockerfile`, tagging it with both the commit SHA and `latest`
 
-4. **Replace Container** — Stop and remove the existing `cptcevents-app` container, then start a new one on the `sqldevserver_default` network with all required environment variables injected
+4. **Start Infrastructure** — Run `docker compose -f deploy/docker-compose.yml up -d sqlserver cloudflared` to ensure the database and Cloudflare tunnel are running (no-op if already healthy)
+
+5. **Deploy App** — Run `docker compose -f deploy/docker-compose.yml up -d --force-recreate migrations cptcevents-app` to run migrations in a short-lived container and then recreate the app container with the new image
 
 ### Secrets Management
 
@@ -98,14 +99,16 @@ The pipeline uses GitHub Secrets to securely manage sensitive configuration:
 
 | Secret | Purpose |
 |---|---|
-| `SA_PASSWORD` | SQL Server SA password (used to start the DB container and build the app connection string) |
+| `SA_PASSWORD` | SQL Server SA password (used to start the DB container) |
+| `CPTCEVENTS_DB_PASSWORD` | Password for the `cptcevents_app` database user (used by the app and migrations containers) |
+| `CLOUDFLARE_TUNNEL_TOKEN` | Token for the Cloudflare tunnel container |
 | `SENDGRID_API_KEY` | Email service API key |
 | `ADMIN_EMAIL` | Initial admin account email |
 | `ADMIN_USERNAME` | Initial admin account username |
 | `ADMIN_PASSWORD` | Initial admin account password |
 | `AZURE_BLOB_CONNECTION_STRING` | Azure Blob Storage for file uploads |
 
-These secrets are injected as environment variables into the running container at deployment time. The database connection string is constructed from `SA_PASSWORD` at deploy time — no separate `SQL_CONNECTION_STRING` secret is needed.
+These secrets are injected as environment variables via `deploy/docker-compose.yml` at deployment time. The app connects to the database as the `cptcevents_app` user (not SA), keeping the SA credential isolated to the database container itself.
 
 ## Additional Resources
 

@@ -33,16 +33,31 @@
                     @if (Model.IsOwner)
                     {
                         <select asp-for="PrivacyLevel" class="form-select" asp-items="@(Html.GetEnumSelectList<CptcEvents.Models.PrivacyLevel>())"></select>
-                        <label asp-for="PrivacyLevel">Privacy Level</label>
+                        <label asp-for="PrivacyLevel">Join Access</label>
                     }
                     else
                     {
                         <input type="text" class="form-control" value="@Model.PrivacyLevel" disabled />
-                        <label>Privacy Level</label>
+                        <label>Join Access</label>
                         <input type="hidden" asp-for="PrivacyLevel" />
-                        <small class="text-muted">Only the group owner can change the privacy level.</small>
+                        <small class="text-muted">Only the group owner can change these settings.</small>
                     }
                     <span asp-validation-for="PrivacyLevel" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    @if (Model.IsOwner)
+                    {
+                        <select asp-for="InvitePolicy" class="form-select" asp-items="@(Html.GetEnumSelectList<CptcEvents.Models.GroupInvitePolicy>())"></select>
+                        <label asp-for="InvitePolicy">Invite Policy</label>
+                    }
+                    else
+                    {
+                        <input type="text" class="form-control" value="@Model.InvitePolicy" disabled />
+                        <label>Invite Policy</label>
+                        <input type="hidden" asp-for="InvitePolicy" />
+                    }
+                    <span asp-validation-for="InvitePolicy" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">

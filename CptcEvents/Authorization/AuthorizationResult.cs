@@ -43,7 +43,22 @@ public enum AuthorizationFailure
     /// <summary>
     /// The event was created by a Student and therefore cannot be made public.
     /// </summary>
-    CreatorIsStudent
+    CreatorIsStudent,
+
+    /// <summary>
+    /// The invite is expired or has already been fully used.
+    /// </summary>
+    InviteExpired,
+
+    /// <summary>
+    /// The invite is restricted to a specific user who is not the current user.
+    /// </summary>
+    InviteNotForUser,
+
+    /// <summary>
+    /// The user is already a member of the group and cannot redeem this invite.
+    /// </summary>
+    AlreadyMember
 }
 
 /// <summary>

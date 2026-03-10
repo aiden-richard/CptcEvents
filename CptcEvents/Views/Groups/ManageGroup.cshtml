@@ -2,10 +2,11 @@
 
 @{
 	ViewData["Title"] = $"Manage {Model.Group.Name}";
-	string privacyLabel = Model.PrivacyLevel switch
+	string privacyLabel = Model.PrivacyLevel == CptcEvents.Models.PrivacyLevel.Public ? "Public" : "Private";
+	string inviteLabel = Model.InvitePolicy switch
 	{
-		CptcEvents.Models.PrivacyLevel.Public => "Public",
-		CptcEvents.Models.PrivacyLevel.ModeratorInvitePrivate => "Moderator invites",
+		CptcEvents.Models.GroupInvitePolicy.AnyMember => "Anyone can invite",
+		CptcEvents.Models.GroupInvitePolicy.ModeratorAndAbove => "Moderator invites",
 		_ => "Owner invites"
 	};
 }
@@ -45,7 +46,7 @@
 							<p class="text-muted small mb-1">Invites</p>
 							<h4 class="mb-0">Share access</h4>
 						</div>
-						<span class="badge @(Model.ModeratorsCanInvite ? "text-bg-success" : "text-bg-secondary")">@privacyLabel</span>
+						<span class="badge @(Model.ModeratorsCanInvite ? "text-bg-success" : "text-bg-secondary")">@inviteLabel</span>
 					</div>
 					<p class="text-muted mb-2">
 						@if (Model.ModeratorsCanInvite)

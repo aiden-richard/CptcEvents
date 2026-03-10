@@ -40,6 +40,9 @@ namespace CptcEvents.Controllers
             return View();
         }
 
+        [HttpGet("/health")]
+        public IActionResult Health() => Ok("Healthy");
+
         /// <summary>
         /// Displays the error page when an exception occurs.
         /// GET /Home/Error

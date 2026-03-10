@@ -6,6 +6,7 @@ services:
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${SA_PASSWORD}
+      - CPTCEVENTS_DB_PASSWORD=${CPTCEVENTS_DB_PASSWORD}
     ports:
       - "1433:1433"
     volumes:

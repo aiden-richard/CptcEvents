@@ -9,6 +9,33 @@ using System.Reflection;
 namespace CptcEvents.Models;
 
 /// <summary>
+/// Defines whether a group can be joined without an invite.
+/// </summary>
+public enum PrivacyLevel
+{
+    [Display(Name = "Public - Anyone can join")]
+    Public,
+
+    [Display(Name = "Private - Requires invite to join")]
+    RequiresInvite
+}
+
+/// <summary>
+/// Defines who is allowed to create invites for a group.
+/// </summary>
+public enum GroupInvitePolicy
+{
+    [Display(Name = "Any member can create invites")]
+    AnyMember,
+
+    [Display(Name = "Moderators and above can create invites")]
+    ModeratorAndAbove,
+
+    [Display(Name = "Only the owner can create invites")]
+    OwnerOnly
+}
+
+/// <summary>
 /// Represents a community group with members, description and privacy settings.
 /// </summary>
 public class Group
@@ -50,10 +77,16 @@ public class Group
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Tracks the privacy level of the group.
+    /// Tracks the privacy level of the group (join access).
     /// </summary>
     [Required]
-    public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.ModeratorInvitePrivate;
+    public PrivacyLevel PrivacyLevel { get; set; } = PrivacyLevel.RequiresInvite;
+
+    /// <summary>
+    /// Defines who is allowed to create invites for this group.
+    /// </summary>
+    [Required]
+    public GroupInvitePolicy InvitePolicy { get; set; } = GroupInvitePolicy.ModeratorAndAbove;
 
     /// <summary>
     /// Hex color code for the group used in calendar displays.
@@ -68,19 +101,4 @@ public class Group
     public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
 
     public int MemberCount => Members.Count;
-}
-
-/// <summary>
-/// Defines the privacy modes available for a <see cref="Group"/>.
-/// </summary>
-public enum PrivacyLevel
-{
-    [Display(Name = "Public - Anyone can join")]
-    Public,
-
-    [Display(Name = "Moderators and above can create invites")]
-    ModeratorInvitePrivate,
-
-    [Display(Name = "Only owner can create invites")]
-    OwnerInvitePrivate
 }

@@ -14,6 +14,8 @@ public class ManageGroupViewModel
 
     public PrivacyLevel PrivacyLevel { get; set; }
 
+    public GroupInvitePolicy InvitePolicy { get; set; }
+
     public string? Color { get; set; }
 
     public bool UserIsOwner { get; set; }

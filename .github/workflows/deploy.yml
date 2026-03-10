@@ -13,28 +13,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
 
-      # Step 2: Ensure SQL Server container is running
-      - name: Ensure SQL Server is running
-        env:
-          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
-        run: |
-          if [ -z "$(docker ps -q -f name=sqlserver)" ]; then
-            docker compose --env-file /dev/null -f ./SqlServer/docker-compose.yml up -d
-          fi
-
-      # Step 3: Build Docker Image
-      - name: Build Docker Image
-        working-directory: ./CptcEvents
-        run: |
-          docker build -t cptcevents:${{ github.sha }} -t cptcevents:latest .
-
-      # Step 4: Stop and remove existing container
-      - name: Stop existing container
-        run: |
-          docker stop cptcevents-app || true
-          docker rm cptcevents-app || true
-
-      # Step 5: Validate required deployment secrets
+      # Step 2: Validate required deployment secrets before touching anything
       - name: Validate required secrets
         env:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
@@ -42,6 +21,8 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
           SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
+          CPTCEVENTS_DB_PASSWORD: ${{ secrets.CPTCEVENTS_DB_PASSWORD }}
+          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
           AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
         run: |
           missing=""
@@ -50,6 +31,8 @@ jobs:
           [ -z "$ADMIN_PASSWORD" ] && missing="$missing ADMIN_PASSWORD"
           [ -z "$SENDGRID_API_KEY" ] && missing="$missing SENDGRID_API_KEY"
           [ -z "$SA_PASSWORD" ] && missing="$missing SA_PASSWORD"
+          [ -z "$CPTCEVENTS_DB_PASSWORD" ] && missing="$missing CPTCEVENTS_DB_PASSWORD"
+          [ -z "$CLOUDFLARE_TUNNEL_TOKEN" ] && missing="$missing CLOUDFLARE_TUNNEL_TOKEN"
           [ -z "$AZURE_BLOB_CONNECTION_STRING" ] && missing="$missing AZURE_BLOB_CONNECTION_STRING"
 
           if [ -n "$missing" ]; then
@@ -58,26 +41,31 @@ jobs:
             exit 1
           fi
 
-      # Step 6: Run new container on the same Docker network as SQL Server
-      - name: Run new container
+      # Step 3: Build Docker Image
+      - name: Build Docker Image
+        working-directory: ./CptcEvents
+        run: |
+          docker build -t cptcevents:${{ github.sha }} -t cptcevents:latest .
+
+      # Step 4: Bring up infrastructure (sqlserver + cloudflared) without recreating if already healthy
+      - name: Start infrastructure
         env:
           SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
+          CPTCEVENTS_DB_PASSWORD: ${{ secrets.CPTCEVENTS_DB_PASSWORD }}
+          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+        run: |
+          docker compose -f deploy/docker-compose.yml up -d sqlserver cloudflared
+
+      # Step 5: Run migrations then recreate the app container with the new image
+      - name: Deploy app
+        env:
+          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
+          CPTCEVENTS_DB_PASSWORD: ${{ secrets.CPTCEVENTS_DB_PASSWORD }}
+          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
         run: |
-          docker run -d \
-            --name cptcevents-app \
-            --restart unless-stopped \
-            --network CptcEventsNetwork \
-            -p 8080:8080 \
-            -e ASPNETCORE_ENVIRONMENT=Production \
-            -e "ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CptcEvents;User Id=sa;Password=$SA_PASSWORD;TrustServerCertificate=True" \
-            -e "SendGrid__ApiKey=$SENDGRID_API_KEY" \
-            -e "AdminUser__Email=$ADMIN_EMAIL" \
-            -e "AdminUser__UserName=$ADMIN_USERNAME" \
-            -e "AdminUser__Password=$ADMIN_PASSWORD" \
-            -e "AzureBlobStorage__ConnectionString=$AZURE_BLOB_CONNECTION_STRING" \
-            cptcevents:latest
+          docker compose -f deploy/docker-compose.yml up -d --force-recreate migrations cptcevents-app

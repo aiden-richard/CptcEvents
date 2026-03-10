@@ -4,6 +4,7 @@ using CptcEvents.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CptcEvents.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309235628_SplitPrivacyLevelAndGroupInvitePolicy")]
+    partial class SplitPrivacyLevelAndGroupInvitePolicy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -109,9 +112,6 @@ namespace CptcEvents.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ApprovalStatus")
-                        .HasColumnType("int");
-
                     b.Property<string>("BannerImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -136,11 +136,17 @@ namespace CptcEvents.Migrations
                     b.Property<bool>("IsAllDay")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsRsvpEnabled")
+                    b.Property<bool>("IsApprovedPublic")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("RsvpCutoffAt")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("IsDeniedPublic")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRsvpEnabled")
+                        .HasColumnType("bit");
 
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time");

@@ -3,6 +3,7 @@ using CptcEvents.Authorization.Handlers;
 using CptcEvents.Authorization.Requirements;
 using CptcEvents.Authorization.EventAuthorizationService;
 using CptcEvents.Authorization.GroupAuthorizationService;
+using CptcEvents.Authorization.InviteAuthorizationService;
 using CptcEvents.Data;
 using CptcEvents.Models;
 using CptcEvents.Services;
@@ -53,6 +54,7 @@ builder.Services.AddScoped<IRsvpService, RsvpService>();
 builder.Services.AddScoped<IInstructorCodeService, InstructorCodeService>();
 builder.Services.AddScoped<IGroupAuthorizationService, GroupAuthorizationService>();
 builder.Services.AddScoped<IEventAuthorizationService, EventAuthorizationService>();
+builder.Services.AddScoped<IInviteAuthorizationService, InviteAuthorizationService>();
 
 // Azure Blob Storage for image uploads
 var blobConnectionString = builder.Configuration["AzureBlobStorage:ConnectionString"];
@@ -148,8 +150,12 @@ async Task SeedDB(WebApplication app)
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-    // Apply pending migrations
-    await context.Database.MigrateAsync();
+    if (app.Environment.IsDevelopment())
+    {
+        // Apply pending migrations in dev mode only
+        // Production migrations are applied in docker-compose.production.yml
+        await context.Database.MigrateAsync();
+    }
 
     // Get admin user configuration from appsettings
     var adminEmail = configuration.GetValue<string>("AdminUser:Email");

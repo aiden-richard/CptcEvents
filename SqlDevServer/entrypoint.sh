@@ -19,7 +19,7 @@ done
 # Run initialization script
 if [ -f /docker-entrypoint-initdb.d/init.sql ]; then
     echo "Running initialization script..."
-    /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -i /docker-entrypoint-initdb.d/init.sql
+    /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -i /docker-entrypoint-initdb.d/init.sql -v CPTCEVENTS_DB_PASSWORD="$CPTCEVENTS_DB_PASSWORD"
     echo "Initialization complete"
 fi
 

@@ -88,6 +88,7 @@ namespace CptcEvents.Controllers
                 Name = model.Name,
                 Description = model.Description,
                 PrivacyLevel = model.PrivacyLevel,
+                InvitePolicy = model.InvitePolicy,
                 Color = model.Color,
                 OwnerId = userId
             };
@@ -129,6 +130,7 @@ namespace CptcEvents.Controllers
                 Name = group.Name,
                 Description = group.Description,
                 PrivacyLevel = group.PrivacyLevel,
+                InvitePolicy = group.InvitePolicy,
                 Color = group.Color,
                 IsOwner = isOwner
             };
@@ -176,6 +178,7 @@ namespace CptcEvents.Controllers
             existingGroup.Name = model.Name;
             existingGroup.Description = model.Description;
             existingGroup.PrivacyLevel = model.PrivacyLevel;
+            existingGroup.InvitePolicy = model.InvitePolicy;
             existingGroup.Color = model.Color;
 
             Group? result = await _groupService.UpdateGroupAsync(existingGroup, userId);
@@ -255,7 +258,7 @@ namespace CptcEvents.Controllers
             }
 
             bool isOwner = await _groupAuthorization.IsEffectiveOwnerAsync(groupId, User);
-            bool moderatorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate;
+            bool moderatorsCanInvite = group.InvitePolicy != GroupInvitePolicy.OwnerOnly;
 
             List<Event> events = (await _eventService.GetEventsForGroupAsync(groupId)).ToList();
             DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -275,6 +278,7 @@ namespace CptcEvents.Controllers
                 Group = GroupMapper.ToSummary(group),
                 Description = group.Description,
                 PrivacyLevel = group.PrivacyLevel,
+                InvitePolicy = group.InvitePolicy,
                 UserIsOwner = isOwner,
                 UserIsModerator = true,
                 ModeratorsCanInvite = moderatorsCanInvite,
@@ -510,7 +514,7 @@ namespace CptcEvents.Controllers
             var viewModel = new ManageMembersViewModel
             {
                 Group = GroupMapper.ToSummary(group),
-                ModeratorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate,
+                ModeratorsCanInvite = group.InvitePolicy != GroupInvitePolicy.OwnerOnly,
                 Members = members
             };
 
@@ -762,7 +766,7 @@ namespace CptcEvents.Controllers
             {
                 Group = GroupMapper.ToSummary(group),
                 UserIsOwner = isOwner,
-                ModeratorsCanInvite = group.PrivacyLevel != PrivacyLevel.OwnerInvitePrivate,
+                ModeratorsCanInvite = group.InvitePolicy != GroupInvitePolicy.OwnerOnly,
                 Invites = invites
                     .Select(i => new InviteListItemViewModel
                     {
@@ -900,7 +904,7 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (invite.Group.PrivacyLevel == PrivacyLevel.OwnerInvitePrivate && invite.Group.OwnerId != currentUserId)
+            if (invite.Group.InvitePolicy == GroupInvitePolicy.OwnerOnly && invite.Group.OwnerId != currentUserId)
             {
                 return RedirectToAction(nameof(Index));
             }
@@ -1012,7 +1016,7 @@ namespace CptcEvents.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (invite.Group.PrivacyLevel == PrivacyLevel.OwnerInvitePrivate && invite.Group.OwnerId != currentUserId)
+            if (invite.Group.InvitePolicy == GroupInvitePolicy.OwnerOnly && invite.Group.OwnerId != currentUserId)
             {
                 return RedirectToAction(nameof(Index));
             }
