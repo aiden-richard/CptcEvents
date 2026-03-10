@@ -4,6 +4,7 @@ using CptcEvents.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CptcEvents.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260304082851_ReplaceApprovalBooleansWithEnum")]
+    partial class ReplaceApprovalBooleansWithEnum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -139,9 +142,6 @@ namespace CptcEvents.Migrations
                     b.Property<bool>("IsRsvpEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("RsvpCutoffAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time");
 
@@ -215,9 +215,6 @@ namespace CptcEvents.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("InvitePolicy")
-                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()

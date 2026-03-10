@@ -4,30 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace CptcEvents.Models;
 
 /// <summary>
-/// Defines the role a user can have within a group.
-/// </summary>
-public enum RoleType
-{
-    /// <summary>
-    /// Standard member with limited permissions.
-    /// </summary>
-    [Display(Name = "Member")]
-    Member,
-
-    /// <summary>
-    /// Moderator with elevated permissions to manage group content and members.
-    /// </summary>
-    [Display(Name = "Moderator")]
-    Moderator,
-
-    /// <summary>
-    /// Owner of the group with full administrative control.
-    /// </summary>
-    [Display(Name = "Owner")]
-    Owner
-}
-
-/// <summary>
 /// Represents a user's membership in a group, including their role and join time.
 /// </summary>
 public class GroupMember
@@ -84,4 +60,28 @@ public class GroupMember
     /// UTC timestamp when the user joined the group. Defaults to the time the instance is created.
     /// </summary>
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Defines the role a user can have within a group.
+/// </summary>
+public enum RoleType
+{
+    /// <summary>
+    /// Standard member with limited permissions.
+    /// </summary>
+    [Display(Name = "Member")]
+    Member,
+
+    /// <summary>
+    /// Moderator with elevated permissions to manage group content and members.
+    /// </summary>
+    [Display(Name = "Moderator")]
+    Moderator,
+
+    /// <summary>
+    /// Owner of the group with full administrative control.
+    /// </summary>
+    [Display(Name = "Owner")]
+    Owner
 }

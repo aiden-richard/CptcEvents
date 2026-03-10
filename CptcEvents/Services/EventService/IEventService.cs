@@ -17,27 +17,23 @@ public interface IEventService
     Task<IEnumerable<Event>> GetAllEventsAsync();
 
     /// <summary>
-    /// Retrieves all publicly visible events.
+    /// Retrieves all non-private events (any <see cref="ApprovalStatus"/> other than <see cref="ApprovalStatus.Private"/>).
     /// </summary>
-    /// <returns>A collection of events where <see cref="Event.IsPublic"/> is true.</returns>
     Task<IEnumerable<Event>> GetPublicEventsAsync();
 
     /// <summary>
-    /// Retrieves all approved public events for display on the homepage.
+    /// Retrieves all events with <see cref="ApprovalStatus.Approved"/> status for display on the homepage.
     /// </summary>
-    /// <returns>A collection of events where <see cref="Event.IsPublic"/> and <see cref="Event.IsApprovedPublic"/> are both true.</returns>
     Task<IEnumerable<Event>> GetApprovedPublicEventsAsync();
 
     /// <summary>
-    /// Retrieves all public events that are pending approval for admin review.
+    /// Retrieves all events with <see cref="ApprovalStatus.PendingApproval"/> status for admin review.
     /// </summary>
-    /// <returns>A collection of events where <see cref="Event.IsPublic"/> is true and <see cref="Event.IsApprovedPublic"/> is false.</returns>
     Task<IEnumerable<Event>> GetEventsPendingPublicApproval();
 
     /// <summary>
-    /// Retrieves all public events that have been denied for admin review.
+    /// Retrieves all events with <see cref="ApprovalStatus.Denied"/> status.
     /// </summary>
-    /// <returns>A collection of events where <see cref="Event.IsPublic"/> is true and <see cref="Event.IsDeniedPublic"/> is true.</returns>
     Task<IEnumerable<Event>> GetDeniedPublicEventsAsync();
 
     /// <summary>
@@ -119,24 +115,18 @@ public interface IEventService
     #region Event Approval Methods
 
     /// <summary>
-    /// Marks a public event as approved for display on the homepage.
+    /// Sets an event's <see cref="ApprovalStatus"/> to <see cref="ApprovalStatus.Approved"/>.
     /// </summary>
-    /// <param name="eventId">The ID of the event to approve.</param>
-    /// <returns><c>true</c> if the event was found and approved; <c>false</c> if the event does not exist.</returns>
     Task<bool> ApproveEventAsync(int eventId);
 
     /// <summary>
-    /// Marks a public event as denied, preventing it from appearing on the homepage.
+    /// Sets an event's <see cref="ApprovalStatus"/> to <see cref="ApprovalStatus.Denied"/>.
     /// </summary>
-    /// <param name="eventId">The ID of the event to deny.</param>
-    /// <returns><c>true</c> if the event was found and denied; <c>false</c> if the event does not exist.</returns>
     Task<bool> DenyEventAsync(int eventId);
 
     /// <summary>
-    /// Clears any approval or denial decision on a public event, returning it to a pending state.
+    /// Resets an event's <see cref="ApprovalStatus"/> to <see cref="ApprovalStatus.PendingApproval"/>.
     /// </summary>
-    /// <param name="eventId">The ID of the event whose decision should be revoked.</param>
-    /// <returns><c>true</c> if the event was found and reset to pending; <c>false</c> if the event does not exist.</returns>
     Task<bool> RevokeApprovalDecisionAsync(int eventId);
 
     #endregion

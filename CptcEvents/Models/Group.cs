@@ -94,7 +94,7 @@ public class Group
     /// </summary>
     [StringLength(7)]
     public string? Color { get; set; }
-    
+
     /// <summary>
     /// Collection of users who are members of the group.
     /// </summary>
