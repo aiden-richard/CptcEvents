@@ -37,9 +37,14 @@ docker compose up -d
 
 This will:
 - Start SQL Server 2022 on port 1433
-- Create the `CptcEvents-Sql-DevServer` database automatically
+- Create the `CptcEvents-Sql-DevServer` database and `cptcevents_app` login automatically
 - Persist data in a Docker volume (survives restarts)
-- Use SA password from `.env` file (`CptcDev123!`)
+- Use credentials from `.env` file (`SA_PASSWORD=CptcDev123!`, `CPTCEVENTS_DB_PASSWORD=CptcDev123!`)
+
+**Note:** The compose file uses an external Docker network (`CptcEventsNetwork`). Create it once before starting the container:
+```bash
+docker network create CptcEventsNetwork
+```
 
 **Verify SQL Server is running:**
 ```bash
@@ -72,8 +77,8 @@ docker compose down -v
 ### 3. Configuration (Optional)
 
 **Development settings are pre-configured** in `appsettings.Development.json`:
-- Database: `CptcEvents-Sql-DevServer` on localhost:1433
-- Admin credentials: `admin@cptc.edu` / `CptcDev`
+- Database: `CptcEvents-Sql-DevServer` on localhost:1433 (using SA account)
+- Admin credentials: `admin@cptc.edu` / `CptcDev123!`
 - SA password: `CptcDev123!` (from `SqlDevServer/.env`)
 
 **User Secrets (Optional - for production-like testing):**
@@ -109,8 +114,8 @@ The application will:
 
 ### 5. Access the Application
 
-- Navigate to `https://localhost:7274` or `http://localhost:5000`
-- Log in with admin credentials: `admin@cptc.edu` / `CptcDev`
+- Navigate to `https://localhost:7134` or `http://localhost:5000`
+- Log in with admin credentials: `admin@cptc.edu` / `CptcDev123!`
 - Register new accounts or create events/groups
 
 **If you encounter database connection issues:**
