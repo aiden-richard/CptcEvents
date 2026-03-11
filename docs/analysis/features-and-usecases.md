@@ -74,3 +74,21 @@
 ## Use Case Diagram
 
 <img src="use-case-diagram.png" alt="Use Case Diagram" width="750" />
+
+## Detailed Use Cases
+
+### UC1: <Title>
+**Primary Actor:**  
+**Goal:**  
+**Preconditions:**  
+**Success Outcome:**  
+
+** Main Flow **
+1. ...
+2. ...
+
+** Alternate Flow **
+- A1: ...
+- A2: ...
+
+### UC2: <Title>
