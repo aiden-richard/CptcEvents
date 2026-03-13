@@ -3,4 +3,5 @@
     <File Path=".github/workflows/dotnet.yml" />
   </Folder>
   <Project Path="CptcEvents/CptcEvents.csproj" />
+  <Project Path="CptcEvents.Tests/CptcEvents.Tests.csproj" />
 </Solution>
