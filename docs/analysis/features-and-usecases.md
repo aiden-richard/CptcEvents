@@ -220,20 +220,20 @@
 ---
 
 ### UC9: Request public event visibility
-**Primary Actor:** Instructor<br>
+**Primary Actor:** Staff Member (Instructor)<br>
 **Goal:** Flag an event as pending public visibility so that an admin can review it for homepage display.<br>
-**Preconditions:** The user is authenticated with the Instructor role; the user holds Moderator or Owner role in the group that owns the event; the event is not already pending or approved for public display.<br>
+**Preconditions:** The user is authenticated with the Staff role; the user holds Moderator or Owner role in the group that owns the event; the event is not already pending or approved for public display.<br>
 **Success Outcome:** The event's public visibility status is set to Pending; the event enters the admin approval queue.<br>
 
 **Main Flow**
-1. Instructor submits a public visibility request for a specific event.
-2. System verifies the user holds the Instructor role.
+1. Staff member submits a public visibility request for a specific event.
+2. System verifies the user holds the Staff role.
 3. System verifies the user holds Moderator or Owner role in the event's group.
 4. System verifies the event is not already in a Pending or Approved state.
 5. System sets the event's public visibility status to Pending.
 
 **Alternate Flow**
-- A1: user does not hold the Instructor role -> system rejects the request and reports an authorisation error; status is unchanged.
+- A1: user does not hold the Staff role -> system rejects the request and reports an authorisation error; status is unchanged.
 - A2: user does not hold Moderator or Owner role in the group -> system rejects the request and reports an authorisation error; status is unchanged.
 - A3: Event is already Pending or Approved -> system rejects the request and reports that it has already been submitted; status is unchanged.
 
