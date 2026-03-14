@@ -84,14 +84,16 @@ public class EventAuthorizationService : IEventAuthorizationService
     #endregion
 
     /// <inheritdoc/>
-    public async Task<ServicesAuthorizationResult> CanMakeEventPublicAsync(Event? existingEvent, ClaimsPrincipal user)
+    public async Task<ServicesAuthorizationResult> CanMakeEventPublicAsync(Event? existingEvent, ClaimsPrincipal user, ApprovalStatus requestedStatus = ApprovalStatus.PendingApproval)
     {
         // If editing an existing event whose creator is a Student, deny regardless of the requesting user's role
         if (existingEvent != null)
         {
-            // UC9 A3: Event is already Pending or Approved — cannot re-submit
-            if (existingEvent.ApprovalStatus == ApprovalStatus.PendingApproval ||
-                existingEvent.ApprovalStatus == ApprovalStatus.Approved)
+            // UC9 A3: Resubmission guard — only applies when transitioning to PendingApproval.
+            // Preserving an already-Approved status during an edit is allowed.
+            if (requestedStatus == ApprovalStatus.PendingApproval &&
+                (existingEvent.ApprovalStatus == ApprovalStatus.PendingApproval ||
+                 existingEvent.ApprovalStatus == ApprovalStatus.Approved))
             {
                 return ServicesAuthorizationResult.Fail(AuthorizationFailure.AlreadyPendingOrApproved);
             }

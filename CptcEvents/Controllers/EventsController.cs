@@ -120,7 +120,7 @@ namespace CptcEvents.Controllers
             // Only Staff and Admin roles can request public approval
             if (model.ApprovalStatus != ApprovalStatus.Private)
             {
-                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(null, User);
+                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(null, User, model.ApprovalStatus);
                 if (!publicCheck.Succeeded)
                 {
                     ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
@@ -206,7 +206,7 @@ namespace CptcEvents.Controllers
             // Only Staff and Admin roles can request public approval; student-created events can never be made public
             if (model.ApprovalStatus != ApprovalStatus.Private)
             {
-                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(existingEvent, User);
+                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(existingEvent, User, model.ApprovalStatus);
                 if (!publicCheck.Succeeded)
                 {
                     TempData["Error"] = publicCheck.Failure == CptcEvents.Authorization.AuthorizationFailure.CreatorIsStudent

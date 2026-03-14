@@ -48,10 +48,12 @@ public interface IEventAuthorizationService
     /// <summary>
     /// Determines whether the current user may set an event as public.
     /// Requires a Staff or Admin role. When editing an existing event, also rejects if the event
-    /// was originally created by a Student.
+    /// was originally created by a Student, or if <paramref name="requestedStatus"/> is
+    /// <see cref="ApprovalStatus.PendingApproval"/> and the event is already pending or approved.
     /// </summary>
     /// <param name="existingEvent">The existing event being edited, or <c>null</c> when creating a new event.</param>
     /// <param name="user">The claims principal representing the current user.</param>
+    /// <param name="requestedStatus">The approval status the caller wants to assign.</param>
     /// <returns>A result indicating success or the specific authorization failure.</returns>
-    Task<ServicesAuthorizationResult> CanMakeEventPublicAsync(Event? existingEvent, ClaimsPrincipal user);
+    Task<ServicesAuthorizationResult> CanMakeEventPublicAsync(Event? existingEvent, ClaimsPrincipal user, ApprovalStatus requestedStatus = ApprovalStatus.PendingApproval);
 }

@@ -170,6 +170,37 @@ public class EventAuthorizationServiceTests
     }
 
     [Fact]
+    public async Task CanMakeEventPublic_AlreadyApproved_PreservingApprovedStatus_Succeeds()
+    {
+        // Arrange — editing an Approved event and keeping ApprovalStatus = Approved should not be blocked
+        using var ctx = TestDbContextFactory.Create();
+        var userManager = CreateMockUserManager();
+        var service = CreateService(userManager, ctx);
+
+        var creator = new ApplicationUser { Id = "creator-1", UserName = "creator", FirstName = "Test", LastName = "User" };
+        userManager.Setup(u => u.FindByIdAsync("creator-1")).ReturnsAsync(creator);
+        userManager.Setup(u => u.IsInRoleAsync(creator, "Student")).ReturnsAsync(false);
+
+        var ev = new Event
+        {
+            Title = "Approved Event",
+            DateOfEvent = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5)),
+            GroupId = 1,
+            CreatedByUserId = "creator-1",
+            IsAllDay = true,
+            ApprovalStatus = ApprovalStatus.Approved
+        };
+
+        var staffUser = MakeUser("staff-1", "Staff");
+
+        // Act — requestedStatus matches the existing status (edit preserves Approved)
+        var result = await service.CanMakeEventPublicAsync(ev, staffUser, ApprovalStatus.Approved);
+
+        // Assert
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact]
     public async Task CanMakeEventPublic_StudentCreatedEvent_Fails()
     {
         // Arrange — UC9 A2: event creator is a Student; public visibility not allowed regardless of requesting user's role
