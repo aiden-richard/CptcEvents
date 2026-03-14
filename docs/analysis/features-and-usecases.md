@@ -196,7 +196,6 @@
 **Alternate Flow**
 - A1: user does not hold Moderator or Owner role -> system rejects the request and reports an authorisation error; no event is created.
 - A2: Event title is empty -> system rejects the request and reports a validation error; no event is created.
-- A3: Event date/time is in the past -> system rejects the request and reports a validation error; no event is created.
 
 ---
 
@@ -215,7 +214,6 @@
 **Alternate Flow**
 - A1: user is not a member of the event's group -> system rejects the request and reports an authorisation error; no RSVP is recorded.
 - A2: Event has already occurred -> system rejects the request and reports that the event is past; no RSVP is recorded.
-- A3: Submitted status value is not one of the accepted values -> system rejects the request and reports a validation error.
 
 ---
 

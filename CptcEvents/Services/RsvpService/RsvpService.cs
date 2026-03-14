@@ -10,10 +10,12 @@ namespace CptcEvents.Services;
 public class RsvpService : IRsvpService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IGroupService _groupService;
 
-    public RsvpService(ApplicationDbContext context)
+    public RsvpService(ApplicationDbContext context, IGroupService groupService)
     {
         _context = context;
+        _groupService = groupService;
     }
 
     /// <summary>
@@ -21,9 +23,28 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<EventRsvp?> CreateRsvpAsync(int eventId, string userId, RsvpStatus status)
     {
+        // Reject out-of-range status values (UC8 A3)
+        if (!Enum.IsDefined(typeof(RsvpStatus), status))
+        {
+            return null;
+        }
+
         // Check if event exists
-        bool eventExists = await _context.Events.AnyAsync(e => e.Id == eventId);
-        if (!eventExists)
+        Event? eventItem = await _context.Events.FindAsync(eventId);
+        if (eventItem == null)
+        {
+            return null;
+        }
+
+        // UC8 A2: Reject RSVPs for events that have already occurred
+        if (eventItem.DateOfEvent < DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            return null;
+        }
+
+        // UC8 A1: Reject RSVPs if user is not a member of the event's group
+        bool isMember = await _groupService.IsUserMemberAsync(eventItem.GroupId, userId);
+        if (!isMember)
         {
             return null;
         }

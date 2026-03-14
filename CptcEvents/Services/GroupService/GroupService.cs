@@ -144,6 +144,12 @@ public class GroupService : IGroupService
             return null;
         }
 
+        // UC3 A1: Direct joins to RequiresInvite groups are not permitted; users must use an invite
+        if (group.PrivacyLevel == PrivacyLevel.RequiresInvite && role != RoleType.Owner && inviteId == null)
+        {
+            return null;
+        }
+
         // Don't add duplicate membership (fast pre-check)
         if (group.Members.Any(g => g.UserId == userId))
         {
