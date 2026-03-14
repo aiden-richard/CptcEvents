@@ -89,6 +89,13 @@ public class EventAuthorizationService : IEventAuthorizationService
         // If editing an existing event whose creator is a Student, deny regardless of the requesting user's role
         if (existingEvent != null)
         {
+            // UC9 A3: Event is already Pending or Approved — cannot re-submit
+            if (existingEvent.ApprovalStatus == ApprovalStatus.PendingApproval ||
+                existingEvent.ApprovalStatus == ApprovalStatus.Approved)
+            {
+                return ServicesAuthorizationResult.Fail(AuthorizationFailure.AlreadyPendingOrApproved);
+            }
+
             var creator = await _userManager.FindByIdAsync(existingEvent.CreatedByUserId);
             if (creator != null && await _userManager.IsInRoleAsync(creator, "Student"))
             {
