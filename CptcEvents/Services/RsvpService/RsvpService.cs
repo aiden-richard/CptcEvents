@@ -77,6 +77,12 @@ public class RsvpService : IRsvpService
     /// </summary>
     public async Task<EventRsvp?> UpdateRsvpAsync(int rsvpId, RsvpStatus newStatus)
     {
+        // Reject out-of-range status values (UC8 A3)
+        if (!Enum.IsDefined(typeof(RsvpStatus), newStatus))
+        {
+            return null;
+        }
+
         EventRsvp? rsvp = await _context.EventRsvps.FindAsync(rsvpId);
         if (rsvp == null)
         {

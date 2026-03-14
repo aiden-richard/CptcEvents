@@ -89,6 +89,26 @@ public class RsvpServiceTests
         Assert.Null(updated);
     }
 
+    [Fact]
+    public async Task UpdateRsvp_InvalidStatus_ReturnsNullAndDoesNotPersist()
+    {
+        // Arrange — submitted status is not a valid RsvpStatus value
+        using var ctx = TestDbContextFactory.Create();
+        var groupService = new GroupService(ctx);
+        var service = new RsvpService(ctx, groupService);
+        var (ev, _) = await SeedGroupEventAndMemberAsync(ctx, groupService);
+        var rsvp = await service.CreateRsvpAsync(ev.Id, "user-2", RsvpStatus.Going);
+
+        // Act
+        var updated = await service.UpdateRsvpAsync(rsvp!.Id, (RsvpStatus)999);
+        var persisted = await ctx.EventRsvps.FindAsync(rsvp.Id);
+
+        // Assert
+        Assert.Null(updated);
+        Assert.NotNull(persisted);
+        Assert.Equal(RsvpStatus.Going, persisted.Status);
+    }
+
     // UC8 alternate paths
 
     [Fact]
