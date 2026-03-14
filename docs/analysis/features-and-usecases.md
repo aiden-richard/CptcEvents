@@ -190,13 +190,12 @@
 
 **Main Flow**
 1. Moderator submits an event creation request with a title, description, date/time, and location.
-2. System validates that the title is non-empty and the date/time is in the future.
+2. System validates that the title is non-empty and the date/time is provided in a valid format.
 3. System creates the event and associates it with the group.
 
 **Alternate Flow**
 - A1: user does not hold Moderator or Owner role -> system rejects the request and reports an authorisation error; no event is created.
 - A2: Event title is empty -> system rejects the request and reports a validation error; no event is created.
-- A3: Event date/time is in the past -> system rejects the request and reports a validation error; no event is created.
 
 ---
 
@@ -215,25 +214,25 @@
 **Alternate Flow**
 - A1: user is not a member of the event's group -> system rejects the request and reports an authorisation error; no RSVP is recorded.
 - A2: Event has already occurred -> system rejects the request and reports that the event is past; no RSVP is recorded.
-- A3: Submitted status value is not one of the accepted values -> system rejects the request and reports a validation error.
+- A3: Member submits an RSVP with an invalid or unsupported status value -> system rejects the request, reports a validation error indicating an invalid RSVP status, and no RSVP is recorded.
 
 ---
 
 ### UC9: Request public event visibility
-**Primary Actor:** Instructor<br>
+**Primary Actor:** Staff Member (Instructor)<br>
 **Goal:** Flag an event as pending public visibility so that an admin can review it for homepage display.<br>
-**Preconditions:** The user is authenticated with the Instructor role; the user holds Moderator or Owner role in the group that owns the event; the event is not already pending or approved for public display.<br>
+**Preconditions:** The user is authenticated with the Staff role; the user holds Moderator or Owner role in the group that owns the event; the event is not already pending or approved for public display.<br>
 **Success Outcome:** The event's public visibility status is set to Pending; the event enters the admin approval queue.<br>
 
 **Main Flow**
-1. Instructor submits a public visibility request for a specific event.
-2. System verifies the user holds the Instructor role.
+1. Staff member submits a public visibility request for a specific event.
+2. System verifies the user holds the Staff role.
 3. System verifies the user holds Moderator or Owner role in the event's group.
 4. System verifies the event is not already in a Pending or Approved state.
 5. System sets the event's public visibility status to Pending.
 
 **Alternate Flow**
-- A1: user does not hold the Instructor role -> system rejects the request and reports an authorisation error; status is unchanged.
+- A1: user does not hold the Staff role -> system rejects the request and reports an authorisation error; status is unchanged.
 - A2: user does not hold Moderator or Owner role in the group -> system rejects the request and reports an authorisation error; status is unchanged.
 - A3: Event is already Pending or Approved -> system rejects the request and reports that it has already been submitted; status is unchanged.
 

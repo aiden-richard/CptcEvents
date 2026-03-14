@@ -58,7 +58,12 @@ public enum AuthorizationFailure
     /// <summary>
     /// The user is already a member of the group and cannot redeem this invite.
     /// </summary>
-    AlreadyMember
+    AlreadyMember,
+
+    /// <summary>
+    /// The event is already Pending or Approved for public display.
+    /// </summary>
+    AlreadyPendingOrApproved
 }
 
 /// <summary>

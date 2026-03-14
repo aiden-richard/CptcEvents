@@ -107,7 +107,8 @@ else
 @* ApprovalStatus (Role-based visibility) *@
 @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
 {
-    var isRequestingPublic = Model?.ApprovalStatus != CptcEvents.Models.ApprovalStatus.Private;
+    var currentApprovalStatus = Model?.ApprovalStatus ?? CptcEvents.Models.ApprovalStatus.Private;
+    var isRequestingPublic = currentApprovalStatus != CptcEvents.Models.ApprovalStatus.Private;
     <div class="form-check mb-3">
         <div class="d-flex align-items-center gap-2">
             <div>
@@ -116,7 +117,7 @@ else
                        onchange="document.getElementById('approvalStatusHidden').value = this.checked ? '@((int)CptcEvents.Models.ApprovalStatus.PendingApproval)' : '@((int)CptcEvents.Models.ApprovalStatus.Private)';" />
                 <label for="showOnHomepage" class="form-check-label">Show on Homepage</label>
                 <input type="hidden" id="approvalStatusHidden" name="ApprovalStatus"
-                       value="@((int)(isRequestingPublic ? Model!.ApprovalStatus : CptcEvents.Models.ApprovalStatus.Private))" />
+                       value="@((int)(isRequestingPublic ? currentApprovalStatus : CptcEvents.Models.ApprovalStatus.Private))" />
             </div>
             @* In edit mode, show approval status badge *@
             @if (Model != null && Model.Id.HasValue && Model.ApprovalStatus != CptcEvents.Models.ApprovalStatus.Private)
