@@ -190,7 +190,7 @@ public class RsvpServiceTests
     [Fact]
     public async Task CreateRsvp_AlreadyRsvped_ReturnsNull()
     {
-        // Arrange — duplicate RSVP guard (service-layer; UC8 A2 past-event check is controller-enforced)
+        // Arrange
         using var ctx = TestDbContextFactory.Create();
         var groupService = new GroupService(ctx);
         var service = new RsvpService(ctx, groupService);
