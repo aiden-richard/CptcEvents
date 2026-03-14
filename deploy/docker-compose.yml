@@ -31,7 +31,7 @@ services:
     # Health check: Confirms SQL Server is accepting connections
     # App container will not start until this passes
     healthcheck:
-      test: ["/bin/bash", "-c", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $${MSSQL_SA_PASSWORD} -C -Q 'SELECT 1' > /dev/null 2>&1"]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $${MSSQL_SA_PASSWORD} -C -Q 'SELECT 1' > /dev/null 2>&1"]
       interval: 10s
       timeout: 5s
       retries: 5
