@@ -190,7 +190,7 @@
 
 **Main Flow**
 1. Moderator submits an event creation request with a title, description, date/time, and location.
-2. System validates that the title is non-empty and the date/time is in the future.
+2. System validates that the title is non-empty and the date/time is provided in a valid format.
 3. System creates the event and associates it with the group.
 
 **Alternate Flow**
@@ -214,6 +214,7 @@
 **Alternate Flow**
 - A1: user is not a member of the event's group -> system rejects the request and reports an authorisation error; no RSVP is recorded.
 - A2: Event has already occurred -> system rejects the request and reports that the event is past; no RSVP is recorded.
+- A3: Member submits an RSVP with an invalid or unsupported status value -> system rejects the request, reports a validation error indicating an invalid RSVP status, and no RSVP is recorded.
 
 ---
 
