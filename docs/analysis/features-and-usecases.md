@@ -95,11 +95,11 @@
 - A3: Instructor code is supplied but invalid or already used -> system rejects the request and reports an invalid code error; no account is created.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Areas/Identity/Pages/Account/Register.cshtml.cs — ``OnPostAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Areas/Identity/Pages/Account/Register.cshtml.cs#L143)
-- Key collaborators: [CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs — ``ValidateCodeAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs#L62)
+- Entry point: [CptcEvents/Areas/Identity/Pages/Account/Register.cshtml.cs — ``OnPostAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Areas/Identity/Pages/Account/Register.cshtml.cs#L143)
+- Key collaborators: [CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs — ``ValidateCodeAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs#L62)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/InstructorCodeServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/InstructorCodeServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/InstructorCodeServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/InstructorCodeServiceTests.cs)
 - Covers success path: ``ValidateCode_ValidCode_ReturnsTrue``
 - Covers alternate/failure path: ``ValidateCode_InvalidCode_ReturnsFalse``, ``ValidateCode_InactiveCode_ReturnsFalse``, ``ValidateCode_WrongEmail_ReturnsFalse``, ``ValidateCode_ExpiredCode_ReturnsFalse`` (A3)
 - A1 (duplicate email) and A2 (password too short/mismatch) are enforced by ASP.NET Identity
@@ -121,11 +121,11 @@
 - A1: Group name is empty or exceeds maximum length -> system rejects the request and reports a validation error; no group is created.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/GroupsController.cs — ``Create`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/GroupsController.cs#L73)
-- Key collaborators: [CptcEvents/Services/GroupService/GroupService.cs — ``CreateGroupAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/GroupService/GroupService.cs#L70)
+- Entry point: [CptcEvents/Controllers/GroupsController.cs — ``Create`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/GroupsController.cs#L73)
+- Key collaborators: [CptcEvents/Services/GroupService/GroupService.cs — ``CreateGroupAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/GroupService/GroupService.cs#L70)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/GroupServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/GroupServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/GroupServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/GroupServiceTests.cs)
 - Covers success path: ``CreateGroup_PersistsGroup``, ``CreateGroup_AssignsOwnerRoleMembership``
 - Covers alternate/failure path: UC2 A1 (empty name) enforced by ModelState / [Required] annotation on GroupFormViewModel — no service-layer test needed
 
@@ -147,11 +147,11 @@
 - A2: User is already a member of the group -> system rejects the request and reports that membership already exists.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/GroupsController.cs — ``JoinConfirmed`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/GroupsController.cs#L352)
-- Key collaborators: [CptcEvents/Services/GroupService/GroupService.cs — ``AddUserToGroupAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/GroupService/GroupService.cs#L135)
+- Entry point: [CptcEvents/Controllers/GroupsController.cs — ``JoinConfirmed`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/GroupsController.cs#L352)
+- Key collaborators: [CptcEvents/Services/GroupService/GroupService.cs — ``AddUserToGroupAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/GroupService/GroupService.cs#L135)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/GroupServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/GroupServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/GroupServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/GroupServiceTests.cs)
 - Covers success path: ``AddUserToGroup_AddsUserAsMember``
 - Covers alternate/failure path: ``AddUserToGroup_PrivateGroup_ReturnsNull`` (A1), ``AddUserToGroup_AlreadyMember_ReturnsNull`` (A2), ``AddUserToGroup_GroupNotFound_ReturnsNull``
 
@@ -172,11 +172,11 @@
 - A1: user doesn't meet role criteria based on group settings -> system rejects the request.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/GroupsController.cs — ``CreateInvite`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/GroupsController.cs#L818)
-- Key collaborators: [CptcEvents/Services/InviteService/InviteService.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/InviteService/IInviteService.cs) — [``ValidateCreateInviteAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/InviteService/IInviteService.cs#L88), [``CreateInviteAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/InviteService/IInviteService.cs#L36)
+- Entry point: [CptcEvents/Controllers/GroupsController.cs — ``CreateInvite`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/GroupsController.cs#L818)
+- Key collaborators: [CptcEvents/Services/InviteService/InviteService.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/InviteService/IInviteService.cs) — [``ValidateCreateInviteAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/InviteService/IInviteService.cs#L88), [``CreateInviteAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/InviteService/IInviteService.cs#L36)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/InviteServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/InviteServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/InviteServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/InviteServiceTests.cs)
 - Covers success path: ``ValidateCreateInvite_OwnerOnly_OwnerSucceeds``
 - Covers alternate/failure path: ``ValidateCreateInvite_OwnerOnly_NonOwnerFails`` (A1), ``ValidateCreateInvite_EmptyCurrentUser_FailsUnauthorized``, ``ValidateCreateInvite_GroupNotFound_FailsNotFound``, ``ValidateCreateInvite_TargetUsernameNotFound_Fails``, ``ValidateCreateInvite_SelfInvite_Fails``, ``ValidateCreateInvite_TargetedInviteMultiUse_Fails``, ``ValidateCreateInvite_ExpiresWithoutExpiresAt_Fails``, ``ValidateCreateInvite_ExpiresInPast_Fails``, ``ValidateUpdateInvite_TargetedInviteMultiUse_Fails``
 
@@ -199,11 +199,11 @@
 - A2: User is already a member of the group -> system rejects the request and reports that membership already exists; code state is unchanged.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/InvitesController.cs — ``Redeem`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/InvitesController.cs#L61)
-- Key collaborators: [CptcEvents/Services/InviteService/InviteService.cs — ``RedeemInviteAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/InviteService/InviteService.cs#L93)
+- Entry point: [CptcEvents/Controllers/InvitesController.cs — ``Redeem`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/InvitesController.cs#L61)
+- Key collaborators: [CptcEvents/Services/InviteService/InviteService.cs — ``RedeemInviteAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/InviteService/InviteService.cs#L93)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/InviteServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/InviteServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/InviteServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/InviteServiceTests.cs)
 - Covers success path: ``RedeemInvite_ValidInvite_AddsMember``, ``RedeemInvite_ValidInvite_IncrementsTimesUsed``
 - Covers alternate/failure path: ``RedeemInvite_ExpiredByTimesUsed_ReturnsNull`` (A1), ``RedeemInvite_ExpiredByExpiresAt_ReturnsNull`` (A1), ``RedeemInvite_AlreadyMember_ReturnsNull`` (A2), ``RedeemInvite_NotFound_ReturnsNull``
 
@@ -227,11 +227,11 @@
 - A3: Owner attempts to change their own role or remove themselves -> system rejects the request; an Owner may not demote or remove themselves.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/GroupsController.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/GroupsController.cs) — [``UpdateMemberRole`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/GroupsController.cs#L536), [``RemoveMember`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/GroupsController.cs#L586)
-- Key collaborators: [CptcEvents/Services/GroupService/GroupService.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/GroupService/GroupService.cs) — [``UpdateUserRoleAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/GroupService/GroupService.cs#L180), [``RemoveUserFromGroupAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/GroupService/GroupService.cs#L210); [CptcEvents/Authorization/GroupAuthorizationService/GroupAuthorizationService.cs — ``EnsureOwnerAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Authorization/GroupAuthorizationService/GroupAuthorizationService.cs#L104)
+- Entry point: [CptcEvents/Controllers/GroupsController.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/GroupsController.cs) — [``UpdateMemberRole`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/GroupsController.cs#L536), [``RemoveMember`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/GroupsController.cs#L586)
+- Key collaborators: [CptcEvents/Services/GroupService/GroupService.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/GroupService/GroupService.cs) — [``UpdateUserRoleAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/GroupService/GroupService.cs#L180), [``RemoveUserFromGroupAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/GroupService/GroupService.cs#L210); [CptcEvents/Authorization/GroupAuthorizationService/GroupAuthorizationService.cs — ``EnsureOwnerAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Authorization/GroupAuthorizationService/GroupAuthorizationService.cs#L104)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/GroupServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/GroupServiceTests.cs), [CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/GroupServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/GroupServiceTests.cs), [CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs)
 - Covers success path: ``UpdateUserRole_ChangesMemberRole``, ``RemoveUserFromGroup_RemovesMember``, ``EnsureOwner_Owner_Succeeds``
 - Covers alternate/failure path: ``EnsureOwner_MemberOnly_Fails`` (A1), ``UpdateUserRole_NonMember_ReturnsNull`` (A2), ``RemoveUserFromGroup_NonMember_DoesNothing`` (A2), ``UpdateUserRole_CannotDemoteOwner_ReturnsNull`` (A3)
 
@@ -253,11 +253,11 @@
 - A2: Event title is empty -> system rejects the request and reports a validation error; no event is created.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/EventsController.cs — ``Create`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/EventsController.cs#L70)
-- Key collaborators: [CptcEvents/Services/EventService/EventService.cs — ``CreateEventAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/EventService/EventService.cs#L134); [CptcEvents/Authorization/GroupAuthorizationService/GroupAuthorizationService.cs — ``EnsureModeratorAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Authorization/GroupAuthorizationService/GroupAuthorizationService.cs#L69)
+- Entry point: [CptcEvents/Controllers/EventsController.cs — ``Create`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/EventsController.cs#L70)
+- Key collaborators: [CptcEvents/Services/EventService/EventService.cs — ``CreateEventAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/EventService/EventService.cs#L134); [CptcEvents/Authorization/GroupAuthorizationService/GroupAuthorizationService.cs — ``EnsureModeratorAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Authorization/GroupAuthorizationService/GroupAuthorizationService.cs#L69)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/EventServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/EventServiceTests.cs), [CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/EventServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/EventServiceTests.cs), [CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs)
 - Covers success path: ``CreateEvent_PersistsEvent``, ``EnsureModerator_Moderator_Succeeds``, ``EnsureModerator_Owner_Succeeds``
 - Covers alternate/failure path: ``EnsureModerator_MemberOnly_Fails`` (A1), ``CreateEvent_EmptyTitle_FailsModelValidation`` (A2)
 
@@ -281,11 +281,11 @@
 - A3: Member submits an RSVP with an invalid or unsupported status value -> system rejects the request, reports a validation error indicating an invalid RSVP status, and no RSVP is recorded.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/EventsController.cs — ``Rsvp`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/EventsController.cs#L396)
-- Key collaborators: [CptcEvents/Services/RsvpService/RsvpService.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/RsvpService/RsvpService.cs) — [``CreateRsvpAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/RsvpService/RsvpService.cs#L24), [``UpdateRsvpAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/RsvpService/RsvpService.cs#L78)
+- Entry point: [CptcEvents/Controllers/EventsController.cs — ``Rsvp`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/EventsController.cs#L396)
+- Key collaborators: [CptcEvents/Services/RsvpService/RsvpService.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/RsvpService/RsvpService.cs) — [``CreateRsvpAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/RsvpService/RsvpService.cs#L24), [``UpdateRsvpAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/RsvpService/RsvpService.cs#L78)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/RsvpServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/RsvpServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/RsvpServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/RsvpServiceTests.cs)
 - Covers success path: ``CreateRsvp_RecordsRsvp``, ``UpdateRsvp_ChangesStatus``
 - Covers alternate/failure path: ``CreateRsvp_UserNotMember_ReturnsNull`` (A1), ``CreateRsvp_PastEvent_ReturnsNull`` (A2), ``CreateRsvp_InvalidStatus_ReturnsNull`` (A3), ``UpdateRsvp_InvalidStatus_ReturnsNullAndDoesNotPersist`` (A3 update path), ``CreateRsvp_AlreadyRsvped_ReturnsNull``, ``CreateRsvp_EventNotFound_ReturnsNull``, ``UpdateRsvp_NotFound_ReturnsNull``, ``DeleteRsvp_ExistingRsvp_ReturnsTrue``, ``DeleteRsvp_NotFound_ReturnsFalse``
 
@@ -310,11 +310,11 @@
 - A3: Event is already Pending or Approved -> system rejects the request and reports that it has already been submitted; status is unchanged.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/EventsController.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/EventsController.cs) — [``Edit`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/EventsController.cs#L186), [``Create`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/EventsController.cs#L112)
-- Key collaborators: [CptcEvents/Authorization/EventAuthorizationService/EventAuthorizationService.cs — ``CanMakeEventPublicAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Authorization/EventAuthorizationService/EventAuthorizationService.cs); [CptcEvents/Services/EventService/EventService.cs — ``UpdateEventAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/EventService/EventService.cs#L151)
+- Entry point: [CptcEvents/Controllers/EventsController.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/EventsController.cs) — [``Edit`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/EventsController.cs#L186), [``Create`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/EventsController.cs#L112)
+- Key collaborators: [CptcEvents/Authorization/EventAuthorizationService/EventAuthorizationService.cs — ``CanMakeEventPublicAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Authorization/EventAuthorizationService/EventAuthorizationService.cs); [CptcEvents/Services/EventService/EventService.cs — ``UpdateEventAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/EventService/EventService.cs#L151)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Authorization/EventAuthorizationServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Authorization/EventAuthorizationServiceTests.cs), [CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs)
+- Test file: [CptcEvents.Tests/Authorization/EventAuthorizationServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Authorization/EventAuthorizationServiceTests.cs), [CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Authorization/GroupAuthorizationServiceTests.cs)
 - Covers success path: ``CanMakeEventPublic_StaffUser_Succeeds``, ``CanMakeEventPublic_AlreadyApproved_PreservingApprovedStatus_Succeeds``
 - Covers alternate/failure path: ``CanMakeEventPublic_NonStaffUser_Fails`` (A1), ``CanMakeEventPublic_StudentCreatedEvent_Fails``, ``CanMakeEventPublic_AlreadyPending_Fails`` (A3), ``CanMakeEventPublic_AlreadyApproved_Fails`` (A3), ``EnsureModerator_MemberOnly_Fails``
 
@@ -337,14 +337,14 @@
 - A2: Event is not in Pending status -> system rejects the request and reports that the event is not awaiting review; status is unchanged.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/AdminController.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/AdminController.cs) — [``ApproveEvent`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/AdminController.cs#L141), [``DenyEvent`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/AdminController.cs#L189)
-- Key collaborators: [CptcEvents/Services/EventService/EventService.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/EventService/EventService.cs) — [``ApproveEventAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/EventService/EventService.cs#L246), [``DenyEventAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/EventService/EventService.cs#L260)
+- Entry point: [CptcEvents/Controllers/AdminController.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/AdminController.cs) — [``ApproveEvent`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/AdminController.cs#L141), [``DenyEvent`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/AdminController.cs#L189)
+- Key collaborators: [CptcEvents/Services/EventService/EventService.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/EventService/EventService.cs) — [``ApproveEventAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/EventService/EventService.cs#L246), [``DenyEventAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/EventService/EventService.cs#L260)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/EventServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/EventServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/EventServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/EventServiceTests.cs)
 - Covers success path: ``ApproveEvent_SetsApprovedStatus``, ``DenyEvent_SetsDeniedStatus``
 - Covers alternate/failure path: ``ApproveEvent_NotPending_ReturnsFalse`` (A2), ``DenyEvent_NotPending_ReturnsFalse`` (A2), ``ApproveEvent_NonExistentEvent_ReturnsFalse``, ``DenyEvent_NonExistentEvent_ReturnsFalse``
-- A1 (user does not hold Admin role) is enforced by ``[Authorize(Roles = "Admin")]`` in the [AdminController](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/AdminController.cs#L10)
+- A1 (user does not hold Admin role) is enforced by ``[Authorize(Roles = "Admin")]`` in the [AdminController](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/AdminController.cs#L10)
 
 ---
 
@@ -369,11 +369,11 @@
 - A2 (Delete): Code does not exist -> system rejects the request and reports a not-found error; no change is made.
 
 **Implementation Evidence**
-- Entry point: [CptcEvents/Controllers/AdminController.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/AdminController.cs) — [``CreateInstructorCode`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/AdminController.cs#L67), [``DeleteInstructorCode`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/AdminController.cs#L94)
-- Key collaborators: [CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs) — [``CreateCodeAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs#L76), [``DeleteCodeAsync``](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs#L96)
+- Entry point: [CptcEvents/Controllers/AdminController.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/AdminController.cs) — [``CreateInstructorCode`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/AdminController.cs#L67), [``DeleteInstructorCode`` (POST)](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/AdminController.cs#L94)
+- Key collaborators: [CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs) — [``CreateCodeAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs#L76), [``DeleteCodeAsync``](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Services/InstructorCodeService/InstructorCodeService.cs#L96)
 
 **Unit Test Evidence**
-- Test file: [CptcEvents.Tests/Services/InstructorCodeServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents.Tests/Services/InstructorCodeServiceTests.cs)
+- Test file: [CptcEvents.Tests/Services/InstructorCodeServiceTests.cs](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents.Tests/Services/InstructorCodeServiceTests.cs)
 - Covers success path: ``CreateCode_PersistsCode``, ``DeleteCode_RemovesCode``
 - Covers alternate/failure path: ``DeleteCode_NonExistentCode_ReturnsFalse`` (A2)
-- A1 (user does not hold Admin role) is enforced by ``[Authorize(Roles = "Admin")]`` in the [AdminController](https://github.com/aiden-richard/CptcEvents/blob/d4aaa8d3e05999b755f4514eac027357bde428f0/CptcEvents/Controllers/AdminController.cs#L10)
+- A1 (user does not hold Admin role) is enforced by ``[Authorize(Roles = "Admin")]`` in the [AdminController](https://github.com/aiden-richard/CptcEvents/blob/CPW207-FinalDocUpdate/CptcEvents/Controllers/AdminController.cs#L10)
