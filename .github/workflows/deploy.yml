@@ -7,6 +7,15 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted
+    env:
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
+      CPTCEVENTS_DB_PASSWORD: ${{ secrets.CPTCEVENTS_DB_PASSWORD }}
+      CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+      AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
 
     steps:
       # Step 1: Checkout main branch
@@ -15,28 +24,27 @@ jobs:
 
       # Step 2: Validate required deployment secrets before touching anything
       - name: Validate required secrets
-        env:
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
-          CPTCEVENTS_DB_PASSWORD: ${{ secrets.CPTCEVENTS_DB_PASSWORD }}
-          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
-          AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
         run: |
-          missing=""
-          [ -z "$ADMIN_EMAIL" ] && missing="$missing ADMIN_EMAIL"
-          [ -z "$ADMIN_USERNAME" ] && missing="$missing ADMIN_USERNAME"
-          [ -z "$ADMIN_PASSWORD" ] && missing="$missing ADMIN_PASSWORD"
-          [ -z "$SENDGRID_API_KEY" ] && missing="$missing SENDGRID_API_KEY"
-          [ -z "$SA_PASSWORD" ] && missing="$missing SA_PASSWORD"
-          [ -z "$CPTCEVENTS_DB_PASSWORD" ] && missing="$missing CPTCEVENTS_DB_PASSWORD"
-          [ -z "$CLOUDFLARE_TUNNEL_TOKEN" ] && missing="$missing CLOUDFLARE_TUNNEL_TOKEN"
-          [ -z "$AZURE_BLOB_CONNECTION_STRING" ] && missing="$missing AZURE_BLOB_CONNECTION_STRING"
+          required=(
+            ADMIN_EMAIL
+            ADMIN_USERNAME
+            ADMIN_PASSWORD
+            SENDGRID_API_KEY
+            SA_PASSWORD
+            CPTCEVENTS_DB_PASSWORD
+            CLOUDFLARE_TUNNEL_TOKEN
+            AZURE_BLOB_CONNECTION_STRING
+          )
 
-          if [ -n "$missing" ]; then
-            echo "ERROR: Missing required GitHub secrets: $missing"
+          missing=()
+          for key in "${required[@]}"; do
+            if [ -z "${!key}" ]; then
+              missing+=("$key")
+            fi
+          done
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "ERROR: Missing required GitHub secrets: ${missing[*]}"
             echo "Set the missing secrets in repository settings before deploying."
             exit 1
           fi
@@ -49,23 +57,10 @@ jobs:
 
       # Step 4: Bring up infrastructure (sqlserver + cloudflared) without recreating if already healthy
       - name: Start infrastructure
-        env:
-          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
-          CPTCEVENTS_DB_PASSWORD: ${{ secrets.CPTCEVENTS_DB_PASSWORD }}
-          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
         run: |
           docker compose -f deploy/docker-compose.yml up -d sqlserver cloudflared
 
       # Step 5: Run migrations then recreate the app container with the new image
       - name: Deploy app
-        env:
-          SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
-          CPTCEVENTS_DB_PASSWORD: ${{ secrets.CPTCEVENTS_DB_PASSWORD }}
-          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
-          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          AZURE_BLOB_CONNECTION_STRING: ${{ secrets.AZURE_BLOB_CONNECTION_STRING }}
         run: |
           docker compose -f deploy/docker-compose.yml up -d --force-recreate migrations cptcevents-app
