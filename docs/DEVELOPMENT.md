@@ -31,7 +31,7 @@ cd CptcEvents
 The application uses SQL Server for data storage. A Docker Compose configuration is provided for easy setup:
 
 ```bash
-cd SqlServerDev
+cd DevServices
 docker compose up -d
 ```
 
@@ -79,7 +79,7 @@ docker compose down -v
 **Development settings are pre-configured** in `appsettings.Development.json`:
 - Database: `CptcEvents-Sql-DevServer` on localhost:1433 (using SA account)
 - Admin credentials: `admin@cptc.edu` / `CptcDev123!`
-- SA password: `CptcDev123!` (from `SqlServerDev/.env`)
+- SA password: `CptcDev123!` (from `DevServices/.env`)
 
 **User Secrets (Optional):**
 
@@ -127,7 +127,7 @@ dotnet run --launch-profile https
 - Register new accounts or create events/groups
 
 **If you encounter database connection issues:**
-- Ensure SQL Server container is running: `docker compose ps` (in SqlServerDev/)
+- Ensure SQL Server container is running: `docker compose ps` (in DevServices/)
 - Check Docker logs: `docker compose logs sqlserver-dev`
 
 ### Running with HTTPS
