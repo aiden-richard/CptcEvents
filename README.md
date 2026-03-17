@@ -128,6 +128,9 @@ See [LICENSE.txt](LICENSE.txt)
 ### Upcoming Events
 ![Upcoming Events](docs/screenshots/UpcomingEvents.png)
 
+### Viewing an Event
+![View Event](docs/screenshots/ViewEvent.png)
+
 ### Editing an Event
 ![Edit Event](docs/screenshots/EditEvent.png)
 
