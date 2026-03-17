@@ -90,17 +90,9 @@ public class BlobImageStorageService : IImageStorageService
 
         try
         {
-            var uri = new Uri(imageUrl);
-            // Path segments: /{container}/{blobName}
-            var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length < 2)
-                return;
-
-            var containerName = segments[0];
-            var blobName = string.Join('/', segments.Skip(1));
-
-            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-            var blobClient = containerClient.GetBlobClient(blobName);
+            var blobUriBuilder = new BlobUriBuilder(new Uri(imageUrl));
+            var containerClient = _blobServiceClient.GetBlobContainerClient(blobUriBuilder.BlobContainerName);
+            var blobClient = containerClient.GetBlobClient(blobUriBuilder.BlobName);
             await blobClient.DeleteIfExistsAsync();
         }
         catch (UriFormatException)
@@ -116,17 +108,9 @@ public class BlobImageStorageService : IImageStorageService
 
         try
         {
-            var uri = new Uri(imageUrl);
-            // Path segments: /{container}/{blobName}
-            var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length < 2)
-                return null;
-
-            var containerName = segments[0];
-            var blobName = string.Join('/', segments.Skip(1));
-
-            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-            var blobClient = containerClient.GetBlobClient(blobName);
+            var blobUriBuilder = new BlobUriBuilder(new Uri(imageUrl));
+            var containerClient = _blobServiceClient.GetBlobContainerClient(blobUriBuilder.BlobContainerName);
+            var blobClient = containerClient.GetBlobClient(blobUriBuilder.BlobName);
 
             var response = await blobClient.DownloadStreamingAsync();
             var contentType = response.Value.Details.ContentType ?? "application/octet-stream";
