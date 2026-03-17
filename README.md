@@ -116,10 +116,6 @@ deploy/
 - [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Infrastructure and CI/CD
 - [docs/analysis/](docs/analysis/) - Class work done for CPW 207 - Object Oriented Analysis and Design
 
-## License
-
-See [LICENSE.txt](LICENSE.txt)
-
 ## Screenshots
 
 ### Homepage: [cptcevents.org](https://cptcevents.org)
@@ -133,6 +129,10 @@ See [LICENSE.txt](LICENSE.txt)
 
 ### Editing an Event
 ![Edit Event](docs/screenshots/EditEvent.png)
+
+## License
+
+See [LICENSE.txt](LICENSE.txt)
 
 ---
 
