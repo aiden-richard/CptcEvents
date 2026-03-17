@@ -66,7 +66,7 @@ cd CptcEvents
 # Create the Docker network (once)
 docker network create CptcEventsNetwork
 
-# Start SQL Server with Docker Compose
+# Start SQL Server and Azurite Blob Storage with Docker Compose
 cd DevServices
 docker compose up -d
 
