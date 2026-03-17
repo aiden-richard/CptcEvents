@@ -81,7 +81,7 @@ See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed setup instructions.
 
 ## Deployment
 
-GitHub Actions handles CI/CD with build validation on pull requests and automatic deployment to self-hosted runner.
+GitHub Actions handles CI/CD with build validation on pull requests and automatic deployment to self-hosted server.
 
 See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for infrastructure details.
 
