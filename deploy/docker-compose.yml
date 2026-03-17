@@ -3,6 +3,7 @@
 # We set up:
 # - A cloudflare tunnel to expose the application securely.
 # - A SQL Server database container with persistent storage and initialization scripts.
+# - A migrations container that runs migrations on startup
 # - The application container that depends on the database.
 
 services:
