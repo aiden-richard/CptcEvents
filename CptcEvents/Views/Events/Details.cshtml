@@ -449,9 +449,13 @@
 
                 // Copy Quill content to hidden textarea before form submission
                 var editFormEl = document.getElementById('editForm');
+                var isApproved = @Json.Serialize(Model.ApprovalStatus == ApprovalStatus.Approved);
                 if (editFormEl) {
                     editFormEl.addEventListener('submit', function (e) {
                         e.preventDefault();
+                        if (isApproved && !confirm('Editing this event will reset its status back to Pending Approval. Continue?')) {
+                            return;
+                        }
                         if (quillEditor) {
                             var html = quillEditor.root.innerHTML;
                             // Quill sets empty content as <p><br></p>
