@@ -1,4 +1,3 @@
-@using System.Linq
 @model CptcEvents.Models.ViewModels.ApprovePublicEventsViewModel
 
 @{
@@ -17,14 +16,14 @@
     </div>
 
     <!-- Pending Approval Section -->
-    <div class="card shadow-sm mb-4">
+    <div class="card shadow-sm mb-4" id="pending-section">
         <div class="card-header bg-warning text-dark">
             <h5 class="mb-0">Pending Approval</h5>
         </div>
         <div class="card-body">
-            @if (Model.PendingEvents.Any())
+            @if (Model.PendingEvents.TotalCount > 0)
             {
-                <p class="text-muted small mb-3">@Model.PendingEvents.Count() event(s) pending approval</p>
+                <p class="text-muted small mb-3">@Model.PendingEvents.TotalCount event(s) pending approval</p>
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead>
@@ -38,7 +37,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (Event evt in Model.PendingEvents)
+                            @foreach (var evt in Model.PendingEvents.Items)
                             {
                                 <tr>
                                     <td><strong>@evt.Title</strong></td>
@@ -68,6 +67,25 @@
                         </tbody>
                     </table>
                 </div>
+                @if (Model.PendingEvents.TotalPages > 1)
+                {
+                    <nav aria-label="Pending events pagination">
+                        <ul class="pagination pagination-sm justify-content-end mt-2 mb-0">
+                            <li class="page-item @(!Model.PendingEvents.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = Model.PendingEvents.CurrentPage - 1, approvedPage = Model.ApprovedEvents.CurrentPage, deniedPage = Model.DeniedEvents.CurrentPage })#pending-section">Previous</a>
+                            </li>
+                            @for (int i = 1; i <= Model.PendingEvents.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.PendingEvents.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = i, approvedPage = Model.ApprovedEvents.CurrentPage, deniedPage = Model.DeniedEvents.CurrentPage })#pending-section">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(!Model.PendingEvents.HasNextPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = Model.PendingEvents.CurrentPage + 1, approvedPage = Model.ApprovedEvents.CurrentPage, deniedPage = Model.DeniedEvents.CurrentPage })#pending-section">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
             }
             else
             {
@@ -77,14 +95,14 @@
     </div>
 
     <!-- Approved Events Section -->
-    <div class="card shadow-sm">
+    <div class="card shadow-sm" id="approved-section">
         <div class="card-header bg-success">
             <h5 class="mb-0 text-white">Approved Events</h5>
         </div>
         <div class="card-body">
-            @if (Model.ApprovedEvents.Any())
+            @if (Model.ApprovedEvents.TotalCount > 0)
             {
-                <p class="text-muted small mb-3">@Model.ApprovedEvents.Count() event(s) approved</p>
+                <p class="text-muted small mb-3">@Model.ApprovedEvents.TotalCount event(s) approved</p>
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead>
@@ -98,7 +116,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var evt in Model.ApprovedEvents)
+                            @foreach (var evt in Model.ApprovedEvents.Items)
                             {
                                 <tr>
                                     <td><strong>@evt.Title</strong></td>
@@ -128,6 +146,25 @@
                         </tbody>
                     </table>
                 </div>
+                @if (Model.ApprovedEvents.TotalPages > 1)
+                {
+                    <nav aria-label="Approved events pagination">
+                        <ul class="pagination pagination-sm justify-content-end mt-2 mb-0">
+                            <li class="page-item @(!Model.ApprovedEvents.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = Model.PendingEvents.CurrentPage, approvedPage = Model.ApprovedEvents.CurrentPage - 1, deniedPage = Model.DeniedEvents.CurrentPage })#approved-section">Previous</a>
+                            </li>
+                            @for (int i = 1; i <= Model.ApprovedEvents.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.ApprovedEvents.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = Model.PendingEvents.CurrentPage, approvedPage = i, deniedPage = Model.DeniedEvents.CurrentPage })#approved-section">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(!Model.ApprovedEvents.HasNextPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = Model.PendingEvents.CurrentPage, approvedPage = Model.ApprovedEvents.CurrentPage + 1, deniedPage = Model.DeniedEvents.CurrentPage })#approved-section">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
             }
             else
             {
@@ -137,14 +174,14 @@
     </div>
 
     <!-- Denied Events Section -->
-    <div class="card shadow-sm mt-4">
+    <div class="card shadow-sm mt-4" id="denied-section">
         <div class="card-header bg-danger">
             <h5 class="mb-0 text-white">Denied Events</h5>
         </div>
         <div class="card-body">
-            @if (Model.DeniedEvents.Any())
+            @if (Model.DeniedEvents.TotalCount > 0)
             {
-                <p class="text-muted small mb-3">@Model.DeniedEvents.Count() event(s) denied</p>
+                <p class="text-muted small mb-3">@Model.DeniedEvents.TotalCount event(s) denied</p>
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead>
@@ -158,7 +195,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var evt in Model.DeniedEvents)
+                            @foreach (var evt in Model.DeniedEvents.Items)
                             {
                                 <tr>
                                     <td><strong>@evt.Title</strong></td>
@@ -188,6 +225,25 @@
                         </tbody>
                     </table>
                 </div>
+                @if (Model.DeniedEvents.TotalPages > 1)
+                {
+                    <nav aria-label="Denied events pagination">
+                        <ul class="pagination pagination-sm justify-content-end mt-2 mb-0">
+                            <li class="page-item @(!Model.DeniedEvents.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = Model.PendingEvents.CurrentPage, approvedPage = Model.ApprovedEvents.CurrentPage, deniedPage = Model.DeniedEvents.CurrentPage - 1 })#denied-section">Previous</a>
+                            </li>
+                            @for (int i = 1; i <= Model.DeniedEvents.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.DeniedEvents.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = Model.PendingEvents.CurrentPage, approvedPage = Model.ApprovedEvents.CurrentPage, deniedPage = i })#denied-section">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(!Model.DeniedEvents.HasNextPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ApprovePublicEvents", "Admin", new { pendingPage = Model.PendingEvents.CurrentPage, approvedPage = Model.ApprovedEvents.CurrentPage, deniedPage = Model.DeniedEvents.CurrentPage + 1 })#denied-section">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
             }
             else
             {
