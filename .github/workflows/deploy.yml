@@ -24,6 +24,7 @@ jobs:
 
       # Step 2: Validate required deployment secrets before touching anything
       - name: Validate required secrets
+        shell: bash
         run: |
           required=(
             ADMIN_EMAIL
