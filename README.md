@@ -2,7 +2,7 @@
 
 ## Overview
 
-An event management web application for Clover Park Technical College. Students, staff, and community members can discover, create, and manage campus events through an interactive calendar. The platform supports group-based event organization, role-based access control, and automated email notifications.
+An event management web application for Clover Park Technical College. Students, staff, and community members can discover, create, and manage campus events through an interactive calendar. The platform supports group-based event organization, role-based access control, admin features, and email integration via SendGrid.
 
 ## Features
 
