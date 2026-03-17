@@ -67,7 +67,7 @@ cd CptcEvents
 docker network create CptcEventsNetwork
 
 # Start SQL Server with Docker Compose
-cd SqlServerDev
+cd DevServices
 docker compose up -d
 
 # Run the application (migrations run automatically)
@@ -105,7 +105,7 @@ CptcEvents/
 ├── Views/
 └── wwwroot/
 
-SqlServerDev/
+DevServices/
 docs/
 deploy/
 ```
