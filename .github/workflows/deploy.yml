@@ -61,7 +61,7 @@ jobs:
         run: |
           docker compose -f deploy/docker-compose.yml up -d sqlserver cloudflared
 
-      # Step 5: Run migrations then recreate the app container with the new image
+      # Step 5: Recreate the app container with the new image
       - name: Deploy app
         run: |
-          docker compose -f deploy/docker-compose.yml up -d --force-recreate migrations cptcevents-app
+          docker compose -f deploy/docker-compose.yml up -d --force-recreate cptcevents-app

@@ -150,12 +150,8 @@ async Task SeedDB(WebApplication app)
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-    if (app.Environment.IsDevelopment())
-    {
-        // Apply pending migrations in dev mode only
-        // Production migrations are applied in docker-compose.production.yml
-        await context.Database.MigrateAsync();
-    }
+    // Apply pending migrations
+    await context.Database.MigrateAsync();
 
     // Get admin user configuration from appsettings
     var adminEmail = configuration.GetValue<string>("AdminUser:Email");

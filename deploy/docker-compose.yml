@@ -3,7 +3,6 @@
 # We set up:
 # - A cloudflare tunnel to expose the application securely.
 # - A SQL Server database container with persistent storage and initialization scripts.
-# - A migrations container that runs migrations on startup.
 # - The application container that depends on the database.
 
 services:
@@ -40,26 +39,12 @@ services:
     networks:
       - CptcEventsNetwork
 
-  migrations:
-    image: cptcevents:latest
-    container_name: cptcevents-migrations
-    depends_on:
-      sqlserver:
-        condition: service_healthy
-    command: ["dotnet", "ef", "database", "update"]
-    environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CptcEvents;User Id=cptcevents_app;Password=${CPTCEVENTS_DB_PASSWORD};TrustServerCertificate=True
-    networks:
-      - CptcEventsNetwork
-
   cptcevents-app:
     image: cptcevents:latest
     container_name: cptcevents-app
     depends_on:
       sqlserver:
         condition: service_healthy
-      migrations:
-        condition: service_completed_successfully
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CptcEvents;User Id=cptcevents_app;Password=${CPTCEVENTS_DB_PASSWORD};TrustServerCertificate=True
