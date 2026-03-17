@@ -114,17 +114,19 @@ namespace CptcEvents.Controllers
         /// GET /Admin/ApprovePublicEvents
         /// </summary>
         /// <returns>View listing pending, approved, and denied public events.</returns>
-        public async Task<IActionResult> ApprovePublicEvents()
+        public async Task<IActionResult> ApprovePublicEvents(int pendingPage = 1, int approvedPage = 1, int deniedPage = 1)
         {
-            IEnumerable<Event> pendingEvents = await _eventService.GetEventsPendingPublicApproval();
-            IEnumerable<Event> approvedEvents = await _eventService.GetApprovedPublicEventsAsync();
-            IEnumerable<Event> deniedEvents = await _eventService.GetDeniedPublicEventsAsync();
+            const int pageSize = 6;
+
+            var (pendingEvents, pendingTotal) = await _eventService.GetEventsPendingPublicApprovalPagedAsync(pendingPage, pageSize);
+            var (approvedEvents, approvedTotal) = await _eventService.GetApprovedPublicEventsPagedAsync(approvedPage, pageSize);
+            var (deniedEvents, deniedTotal) = await _eventService.GetDeniedPublicEventsPagedAsync(deniedPage, pageSize);
 
             var viewModel = new ApprovePublicEventsViewModel
             {
-                PendingEvents = pendingEvents,
-                ApprovedEvents = approvedEvents,
-                DeniedEvents = deniedEvents
+                PendingEvents = new PagedResult<Event> { Items = pendingEvents, CurrentPage = pendingPage, TotalPages = (int)Math.Ceiling(pendingTotal / (double)pageSize), TotalCount = pendingTotal },
+                ApprovedEvents = new PagedResult<Event> { Items = approvedEvents, CurrentPage = approvedPage, TotalPages = (int)Math.Ceiling(approvedTotal / (double)pageSize), TotalCount = approvedTotal },
+                DeniedEvents = new PagedResult<Event> { Items = deniedEvents, CurrentPage = deniedPage, TotalPages = (int)Math.Ceiling(deniedTotal / (double)pageSize), TotalCount = deniedTotal },
             };
 
             return View(viewModel);

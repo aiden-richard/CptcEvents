@@ -78,6 +78,51 @@ public class EventService : IEventService
     }
 
     /// <inheritdoc/>
+    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetEventsPendingPublicApprovalPagedAsync(int page, int pageSize)
+    {
+        var query = _context.Events
+            .Include(e => e.Group)
+            .Include(e => e.CreatedByUser)
+            .Where(e => e.ApprovalStatus == ApprovalStatus.PendingApproval)
+            .OrderBy(e => e.DateOfEvent)
+            .ThenBy(e => e.StartTime);
+
+        int totalCount = await query.CountAsync();
+        var events = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        return (events, totalCount);
+    }
+
+    /// <inheritdoc/>
+    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetApprovedPublicEventsPagedAsync(int page, int pageSize)
+    {
+        var query = _context.Events
+            .Include(e => e.Group)
+            .Include(e => e.CreatedByUser)
+            .Where(e => e.ApprovalStatus == ApprovalStatus.Approved)
+            .OrderByDescending(e => e.DateOfEvent)
+            .ThenBy(e => e.StartTime);
+
+        int totalCount = await query.CountAsync();
+        var events = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        return (events, totalCount);
+    }
+
+    /// <inheritdoc/>
+    public async Task<(IEnumerable<Event> Events, int TotalCount)> GetDeniedPublicEventsPagedAsync(int page, int pageSize)
+    {
+        var query = _context.Events
+            .Include(e => e.Group)
+            .Include(e => e.CreatedByUser)
+            .Where(e => e.ApprovalStatus == ApprovalStatus.Denied)
+            .OrderBy(e => e.DateOfEvent)
+            .ThenBy(e => e.StartTime);
+
+        int totalCount = await query.CountAsync();
+        var events = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        return (events, totalCount);
+    }
+
+    /// <inheritdoc/>
     public async Task<IEnumerable<Event>> GetEventsForGroupAsync(int groupId)
     {
         return await _context.Events
