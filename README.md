@@ -105,7 +105,7 @@ CptcEvents/
 ├── Views/
 └── wwwroot/
 
-CptcEvents.Tests
+CptcEvents.Tests/
 DevServices/
 docs/
 deploy/
