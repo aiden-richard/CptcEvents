@@ -10,23 +10,26 @@ An event management web application for Clover Park Technical College. Students,
 - Interactive calendar
 - Create, edit, and delete events
 - Public events for the community, private events for groups
+- RSVP tracking (Attending, Maybe, Not Attending)
 - Admin approval system for homepage events
 
 ### Groups
 - Create groups for classes, clubs, departments, or interests
 - Role-based permissions: Owner, Moderator, and Member
-- Invite members using secure codes
+- Invite members using invite codes (targeted or general, with configurable expiration time and usage limits)
 - Dedicated calendar for each group
 
 ### Authentication
 - ASP.NET Core Identity
-- Email verification using @cptc.edu addresses
 - Special instructor registration codes
 - Custom authorization policies for group roles
 
+### Admin Dashboard
+- Approve or deny public event requests
+- Manage instructor registration codes
+
 ### Email
 - SendGrid integration for email delivery
-- Automated group invitations
 - Account confirmation emails
 
 ## Tech Stack
@@ -45,9 +48,11 @@ An event management web application for Clover Park Technical College. Students,
 
 ### Database & Infrastructure
 - **Development**: SQL Server 2022 (Docker)
-- **Production**: Azure SQL Database
-- **Hosting**: Azure Container Apps (serverless)
-- **CI/CD**: GitHub Actions
+- **Production**: SQL Server 2022 (Docker, self-hosted)
+- **Hosting**: Self-hosted server with Docker containers
+- **CDN/Tunnel**: Cloudflare Tunnel (public access via `cptcevents.org`)
+- **File Storage**: Azure Blob Storage
+- **CI/CD**: GitHub Actions (self-hosted runner)
 
 See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for complete infrastructure details.
 
@@ -58,8 +63,11 @@ See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for complete infrastructure details.
 git clone https://github.com/aiden-richard/CptcEvents.git
 cd CptcEvents
 
+# Create the Docker network (once)
+docker network create CptcEventsNetwork
+
 # Start SQL Server with Docker Compose
-cd SqlDevServer
+cd SqlServerDev
 docker compose up -d
 
 # Run the application (migrations run automatically)
@@ -67,13 +75,13 @@ cd ../CptcEvents
 dotnet run
 ```
 
-Open https://localhost:7274 or http://localhost:5000 and log in with `admin@cptc.edu` / `CptcDev`
+Open http://localhost:5000 (or https://localhost:7274 with the HTTPS profile) and log in with `admin@cptc.edu` / `CptcDev123!`
 
 See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed setup instructions.
 
 ## Deployment
 
-GitHub Actions handles CI/CD with build validation on pull requests and automatic deployment to Azure Container Apps after merging to `main`.
+GitHub Actions handles CI/CD with build validation on pull requests and automatic deployment to self-hosted runner.
 
 See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for infrastructure details.
 
@@ -97,19 +105,32 @@ CptcEvents/
 ├── Views/
 └── wwwroot/
 
-SqlDevServer/
+SqlServerDev/
 docs/
+deploy/
 ```
 
 ## Documentation
 
 - [DEVELOPMENT.md](docs/DEVELOPMENT.md) - Local setup and troubleshooting
-- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Cloud architecture and CI/CD
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Infrastructure and CI/CD
+- [docs/analysis/](docs/analysis/) - Class work done for CPW 207 - Object Oriented Analysis and Design
 
 ## License
 
 See [LICENSE.txt](LICENSE.txt)
 
+## Screenshots
+
+### Homepage: [cptcevents.org](https://cptcevents.org)
+![Homepage](docs/screenshots/homepage.png)
+
+### Upcoming Events
+![Upcoming Events](docs/screenshots/UpcomingEvents.png)
+
+### Editing an Event
+![Edit Event](docs/screenshots/EditEvent.png)
+
 ---
 
-Built for Clover Park Technical College
+#### Built for Clover Park Technical College
