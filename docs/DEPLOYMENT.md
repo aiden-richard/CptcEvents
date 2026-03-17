@@ -41,14 +41,14 @@ The application and database both run directly on the production server as Docke
 
 ### SQL Server 2022 (Docker)
 
-The database runs as a Docker container managed by `deploy/docker-compose.yml`. It uses a named volume (`data`) to persist data across container restarts and redeployments.
+The database runs as a Docker container managed by `deploy/docker-compose.yml`. It uses a named volume (`sqlserver-data`) to persist data across container restarts and redeployments.
 
 Database migrations are applied on app startup
 
 **Key configuration:**
 - Container name/hostname: `sqlserver`
 - Port: `1433` (internal to `CptcEventsNetwork`)
-- Data persistence: `data` Docker volume
+- Data persistence: `sqlserver-data` Docker volume
 - SA password: managed via `SA_PASSWORD` secret
 - App DB user: `cptcevents_app` with password from `CPTCEVENTS_DB_PASSWORD` secret
 
@@ -104,7 +104,7 @@ The pipeline uses GitHub Secrets to securely manage sensitive configuration:
 | `ADMIN_PASSWORD` | Initial admin account password |
 | `AZURE_BLOB_CONNECTION_STRING` | Azure Blob Storage for file uploads |
 
-These secrets are injected as environment variables via at deployment time
+These secrets are injected as environment variables at deployment
 
 ## Additional Resources
 
