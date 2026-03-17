@@ -37,6 +37,21 @@ public interface IEventService
     Task<IEnumerable<Event>> GetDeniedPublicEventsAsync();
 
     /// <summary>
+    /// Retrieves a paginated set of events with <see cref="ApprovalStatus.PendingApproval"/> status.
+    /// </summary>
+    Task<(IEnumerable<Event> Events, int TotalCount)> GetEventsPendingPublicApprovalPagedAsync(int page, int pageSize);
+
+    /// <summary>
+    /// Retrieves a paginated set of events with <see cref="ApprovalStatus.Approved"/> status.
+    /// </summary>
+    Task<(IEnumerable<Event> Events, int TotalCount)> GetApprovedPublicEventsPagedAsync(int page, int pageSize);
+
+    /// <summary>
+    /// Retrieves a paginated set of events with <see cref="ApprovalStatus.Denied"/> status.
+    /// </summary>
+    Task<(IEnumerable<Event> Events, int TotalCount)> GetDeniedPublicEventsPagedAsync(int page, int pageSize);
+
+    /// <summary>
     /// Retrieves all events belonging to a specific group.
     /// </summary>
     /// <param name="groupId">The ID of the group to retrieve events for.</param>
