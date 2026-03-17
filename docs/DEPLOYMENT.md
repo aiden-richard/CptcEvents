@@ -31,7 +31,7 @@ User Browser (cptcevents.org)
                       CptcEventsNetwork (Docker bridge)
 ```
 
-All components run on the same self-hosted server. The app, database, and Cloudflare tunnel containers all communicate over a shared Docker bridge network (`CptcEventsNetwork`) using the `sqlserver` hostname. Cloudflare Tunnel handles public traffic routing directly to the app — no Caddy reverse proxy is used.
+All components run on the same self-hosted server. The app, database, and Cloudflare tunnel containers all communicate over a shared Docker bridge network (`CptcEventsNetwork`).
 
 ## Infrastructure Components
 
@@ -43,18 +43,14 @@ The application and database both run directly on the production server as Docke
 
 The database runs as a Docker container managed by `deploy/docker-compose.yml`. It uses a named volume (`sqlserver-data`) to persist data across container restarts and redeployments.
 
-Database migrations are applied by a dedicated `migrations` container (running `dotnet ef database update`) that starts after SQL Server is healthy and completes before the app container starts.
+Database migrations are applied on app startup
 
 **Key configuration:**
 - Container name/hostname: `sqlserver`
 - Port: `1433` (internal to `CptcEventsNetwork`)
 - Data persistence: `sqlserver-data` Docker volume
-- SA password: managed via `SA_PASSWORD` GitHub secret
+- SA password: managed via `SA_PASSWORD` secret
 - App DB user: `cptcevents_app` with password from `CPTCEVENTS_DB_PASSWORD` secret
-
-### Caddy Reverse Proxy
-
-Caddy sits in front of the application container and handles HTTPS termination and routing. It receives traffic forwarded by the Cloudflare Tunnel.
 
 ### Cloudflare Tunnel
 
@@ -68,7 +64,7 @@ The application uses GitHub Actions with a **self-hosted runner** installed on t
 
 **Trigger**: Pull requests to `main` branch
 
-**Purpose**: Validates code quality before merging by ensuring the application compiles successfully.
+**Purpose**: Validates that the code builds and passes tests
 
 **Pipeline Stages**:
 
@@ -85,13 +81,13 @@ The application uses GitHub Actions with a **self-hosted runner** installed on t
 
 1. **Checkout** — Pull the latest source code onto the runner
 
-2. **Validate Secrets** — Verify all required GitHub secrets are present before touching any running containers; fails fast with a clear error listing missing secrets
+2. **Validate Secrets** — Verify all required GitHub secrets are present before taking any action
 
 3. **Build Image** — Build the Docker image from `CptcEvents/Dockerfile`, tagging it with both the commit SHA and `latest`
 
-4. **Start Infrastructure** — Run `docker compose -f deploy/docker-compose.yml up -d sqlserver cloudflared` to ensure the database and Cloudflare tunnel are running (no-op if already healthy)
+4. **Start Infrastructure** — Run `docker compose -f deploy/docker-compose.yml up -d sqlserver cloudflared` to ensure the database and Cloudflare tunnel are running (leave alone if already healthy)
 
-5. **Deploy App** — Run `docker compose -f deploy/docker-compose.yml up -d --force-recreate migrations cptcevents-app` to run migrations in a short-lived container and then recreate the app container with the new image
+5. **Deploy App** — Run `docker compose -f deploy/docker-compose.yml up -d --force-recreate cptcevents-app` to recreate the app container with the new image (migrations run during app startup)
 
 ### Secrets Management
 
@@ -100,7 +96,7 @@ The pipeline uses GitHub Secrets to securely manage sensitive configuration:
 | Secret | Purpose |
 |---|---|
 | `SA_PASSWORD` | SQL Server SA password (used to start the DB container) |
-| `CPTCEVENTS_DB_PASSWORD` | Password for the `cptcevents_app` database user (used by the app and migrations containers) |
+| `CPTCEVENTS_DB_PASSWORD` | Password for the `cptcevents_app` database user (used by the app container) |
 | `CLOUDFLARE_TUNNEL_TOKEN` | Token for the Cloudflare tunnel container |
 | `SENDGRID_API_KEY` | Email service API key |
 | `ADMIN_EMAIL` | Initial admin account email |
@@ -108,7 +104,7 @@ The pipeline uses GitHub Secrets to securely manage sensitive configuration:
 | `ADMIN_PASSWORD` | Initial admin account password |
 | `AZURE_BLOB_CONNECTION_STRING` | Azure Blob Storage for file uploads |
 
-These secrets are injected as environment variables via `deploy/docker-compose.yml` at deployment time. The app connects to the database as the `cptcevents_app` user (not SA), keeping the SA credential isolated to the database container itself.
+These secrets are injected as environment variables at deployment
 
 ## Additional Resources
 

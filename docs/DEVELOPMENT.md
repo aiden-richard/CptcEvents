@@ -31,7 +31,7 @@ cd CptcEvents
 The application uses SQL Server for data storage. A Docker Compose configuration is provided for easy setup:
 
 ```bash
-cd SqlDevServer
+cd SqlServerDev
 docker compose up -d
 ```
 
@@ -51,7 +51,7 @@ docker network create CptcEventsNetwork
 docker compose ps
 ```
 
-You should see the `sqlserver` container with status "Up".
+You should see the `sqlserver-dev` container with status "Up".
 
 **Common Docker Compose Commands:**
 ```bash
@@ -79,9 +79,9 @@ docker compose down -v
 **Development settings are pre-configured** in `appsettings.Development.json`:
 - Database: `CptcEvents-Sql-DevServer` on localhost:1433 (using SA account)
 - Admin credentials: `admin@cptc.edu` / `CptcDev123!`
-- SA password: `CptcDev123!` (from `SqlDevServer/.env`)
+- SA password: `CptcDev123!` (from `SqlServerDev/.env`)
 
-**User Secrets (Optional - for production-like testing):**
+**User Secrets (Optional):**
 
 If you need to override development settings or test with production services:
 
@@ -112,30 +112,31 @@ The application will:
 - Create the database if it doesn't exist
 - Seed the admin user and default data
 
+By default, `dotnet run` uses the HTTP launch profile and starts on `http://localhost:5000`.
+To start with HTTPS, run:
+
+```bash
+dotnet run --launch-profile https
+```
+
 ### 5. Access the Application
 
-- Navigate to `https://localhost:7134` or `http://localhost:5000`
+- Navigate to `http://localhost:5000` (default)
+- If using the HTTPS launch profile, navigate to `https://localhost:7274`
 - Log in with admin credentials: `admin@cptc.edu` / `CptcDev123!`
 - Register new accounts or create events/groups
 
 **If you encounter database connection issues:**
-- Ensure SQL Server container is running: `docker compose ps` (in SqlDevServer/)
-- Check Docker logs: `docker compose logs sqlserver`
+- Ensure SQL Server container is running: `docker compose ps` (in SqlServerDev/)
+- Check Docker logs: `docker compose logs sqlserver-dev`
 
 ### Running with HTTPS
 
-HTTPS is enabled by default. The application runs on:
-- `https://localhost:7274` (HTTPS - default)
+HTTPS is available via the `https` launch profile. The application runs on:
+- `https://localhost:7274` (HTTPS)
 - `http://localhost:5000` (HTTP)
 
-## IDE Setup
-
-### Visual Studio 2022
-
-1. Open `CptcEvents.slnx` in Visual Studio
-2. Set `CptcEvents` as the startup project
-3. Press F5 to run with debugging
-
+## IDE
 ### VS Code
 
 1. Install the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension
