@@ -1,8 +1,8 @@
 services:
-  sqlserver:
+  sqlserver-dev:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
-    hostname: sqlserver
+    container_name: sqlserver-dev
+    hostname: sqlserver-dev
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${SA_PASSWORD}
@@ -10,7 +10,7 @@ services:
     ports:
       - "1433:1433"
     volumes:
-      - sqlserver-data:/var/opt/mssql
+      - data:/var/opt/mssql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./entrypoint.sh:/entrypoint.sh
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
@@ -19,7 +19,7 @@ services:
       - CptcEventsNetwork
 
 volumes:
-  sqlserver-data:
+  data:
 
 networks:
   CptcEventsNetwork:
