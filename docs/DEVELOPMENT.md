@@ -14,7 +14,7 @@ Before you begin, ensure you have the following installed:
 ## Quick Start
 
 1. Clone the repository
-2. Start SQL Server with Docker Compose
+2. Start local services with Docker Compose (SQL Server + Azurite)
 3. Run the application (migrations run automatically)
 
 ## Setup Instructions
@@ -26,9 +26,9 @@ git clone https://github.com/aiden-richard/CptcEvents.git
 cd CptcEvents
 ```
 
-### 2. Start SQL Server with Docker Compose
+### 2. Start Local Services with Docker Compose (SQL Server + Azurite)
 
-The application uses SQL Server for data storage. A Docker Compose configuration is provided for easy setup:
+Local development uses SQL Server for relational data and Azurite for blob storage. A Docker Compose configuration is provided for easy setup:
 
 ```bash
 cd DevServices
@@ -46,12 +46,12 @@ This will:
 docker network create CptcEventsNetwork
 ```
 
-**Verify SQL Server is running:**
+**Verify local services are running:**
 ```bash
 docker compose ps
 ```
 
-You should see the `sqlserver-dev` container with status "Up".
+You should see both `sqlserver-dev` and `azurite` containers with status "Up".
 
 **Common Docker Compose Commands:**
 ```bash
