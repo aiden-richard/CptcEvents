@@ -120,7 +120,7 @@ namespace CptcEvents.Controllers
             // Only Staff and Admin roles can request public approval
             if (model.ApprovalStatus != ApprovalStatus.Private)
             {
-                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(null, User);
+                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(null, User, model.ApprovalStatus);
                 if (!publicCheck.Succeeded)
                 {
                     ModelState.AddModelError(string.Empty, "Only staff members can create public events.");
@@ -206,7 +206,7 @@ namespace CptcEvents.Controllers
             // Only Staff and Admin roles can request public approval; student-created events can never be made public
             if (model.ApprovalStatus != ApprovalStatus.Private)
             {
-                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(existingEvent, User);
+                ServicesAuthorizationResult publicCheck = await _eventAuthorization.CanMakeEventPublicAsync(existingEvent, User, model.ApprovalStatus);
                 if (!publicCheck.Succeeded)
                 {
                     TempData["Error"] = publicCheck.Failure == CptcEvents.Authorization.AuthorizationFailure.CreatorIsStudent
@@ -437,12 +437,20 @@ namespace CptcEvents.Controllers
             if (existingRsvp != null)
             {
                 // Update existing RSVP
-                await _rsvpService.UpdateRsvpAsync(existingRsvp.Id, status);
+                EventRsvp? updated = await _rsvpService.UpdateRsvpAsync(existingRsvp.Id, status);
+                if (updated == null)
+                {
+                    TempData["Error"] = "Unable to update your RSVP. Please try again.";
+                }
             }
             else
             {
                 // Create new RSVP
-                await _rsvpService.CreateRsvpAsync(eventId, userId, status);
+                EventRsvp? created = await _rsvpService.CreateRsvpAsync(eventId, userId, status);
+                if (created == null)
+                {
+                    TempData["Error"] = "Unable to RSVP for this event. You may not be a member of this group.";
+                }
             }
 
             return RedirectToAction(nameof(Details), new { eventId });

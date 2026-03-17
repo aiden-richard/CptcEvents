@@ -248,6 +248,9 @@ public class EventService : IEventService
         Event? existingEvent = await _context.Events.FindAsync(eventId);
         if (existingEvent == null) return false;
 
+        // UC10 A2: Only events in PendingApproval status can be approved
+        if (existingEvent.ApprovalStatus != ApprovalStatus.PendingApproval) return false;
+
         existingEvent.ApprovalStatus = ApprovalStatus.Approved;
         await _context.SaveChangesAsync();
         return true;
@@ -258,6 +261,9 @@ public class EventService : IEventService
     {
         Event? existingEvent = await _context.Events.FindAsync(eventId);
         if (existingEvent == null) return false;
+
+        // UC10 A2: Only events in PendingApproval status can be denied
+        if (existingEvent.ApprovalStatus != ApprovalStatus.PendingApproval) return false;
 
         existingEvent.ApprovalStatus = ApprovalStatus.Denied;
         await _context.SaveChangesAsync();
