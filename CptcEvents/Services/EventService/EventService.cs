@@ -209,7 +209,10 @@ public class EventService : IEventService
         // Update event properties
         existingEvent.Title = updatedEvent.Title;
         existingEvent.Description = updatedEvent.Description;
-        existingEvent.ApprovalStatus = updatedEvent.ApprovalStatus;
+        // If the event was approved, reset to PendingApproval on edit so it can be re-reviewed
+        existingEvent.ApprovalStatus = existingEvent.ApprovalStatus == ApprovalStatus.Approved
+            ? ApprovalStatus.PendingApproval
+            : updatedEvent.ApprovalStatus;
         existingEvent.IsRsvpEnabled = updatedEvent.IsRsvpEnabled;
         existingEvent.IsAllDay = updatedEvent.IsAllDay;
         existingEvent.DateOfEvent = updatedEvent.DateOfEvent;
